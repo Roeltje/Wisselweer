@@ -20,12 +20,14 @@ from wisselweer.core import (
     AdviceInput,
     AdviceStatus,
     DrivingProfile,
+    Forecast,
     TireType,
     WarningCode,
     evaluate,
 )
 from wisselweer.core.config import EngineConfig, _parse_month_day
 from wisselweer.i18n import t
+from wisselweer.publisher.outlook import build_outlook
 from wisselweer.publisher.public_schema import (
     PublicAdvice,
     PublicPeriod,
@@ -98,10 +100,17 @@ class NationalConfig(BaseModel):
 
 
 class _RegionResult:
-    def __init__(self, name: str, advice: Advice | None, provider: str | None = None) -> None:
+    def __init__(
+        self,
+        name: str,
+        advice: Advice | None,
+        provider: str | None = None,
+        forecast: Forecast | None = None,
+    ) -> None:
         self.name = name
         self.advice = advice
         self.provider = provider
+        self.forecast = forecast
 
     @property
     def has_data(self) -> bool:
@@ -156,6 +165,7 @@ class NationalAdviceService:
             regional_variation=len({r.status for r in results}) > 1,
             regions=[PublicRegion(name=r.name, status=r.status) for r in results],
             forecast_until=min(horizons) if horizons and status != "INSUFFICIENT_DATA" else None,
+            outlook=self._outlook(results, now),
             generated_at=now,
             stale_after=now + timedelta(hours=cfg.stale_hours),
             source=self._source(results),
@@ -180,7 +190,15 @@ class NationalAdviceService:
                 config=self._cfg.engine,
             )
         )
-        return _RegionResult(loc.name, advice, forecast.provider)
+        return _RegionResult(loc.name, advice, forecast.provider, forecast)
+
+    @staticmethod
+    def _outlook(results: list[_RegionResult], now: datetime):
+        """Vooruitblik uit de eerste referentielocatie (De Bilt); alleen indicatief."""
+        ref = results[0] if results else None
+        if ref is None or ref.forecast is None:
+            return None
+        return build_outlook(ref.forecast, now)
 
     def _aggregate(self, results: list[_RegionResult]) -> tuple[PublicStatus, list[_RegionResult]]:
         with_data = [r for r in results if r.has_data]

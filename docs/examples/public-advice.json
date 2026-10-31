@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "country": "NL",
+  "locale": "nl-NL",
+  "next_season": "winter",
+  "heading": "Wanneer winterbanden?",
+  "status": "KEEP_CURRENT",
+  "status_label": "Nog niet wisselen",
+  "summary": "In de referentieregio's kunnen de zomerbanden er nog op blijven.",
+  "recommended_date": null,
+  "recommended_period": null,
+  "regional_variation": true,
+  "regions": [
+    {
+      "name": "De Bilt",
+      "status": "KEEP_CURRENT"
+    },
+    {
+      "name": "Groningen",
+      "status": "KEEP_CURRENT"
+    },
+    {
+      "name": "Den Helder",
+      "status": "PREPARE_CHANGE"
+    },
+    {
+      "name": "Vlissingen",
+      "status": "KEEP_CURRENT"
+    },
+    {
+      "name": "Maastricht",
+      "status": "KEEP_CURRENT"
+    },
+    {
+      "name": "Twente (Enschede)",
+      "status": "KEEP_CURRENT"
+    },
+    {
+      "name": "Arnhem",
+      "status": "KEEP_CURRENT"
+    }
+  ],
+  "forecast_until": "2026-11-10",
+  "outlook": [
+    {
+      "date": "2026-11-01",
+      "temp_min_c": 5.0,
+      "temp_max_c": 11.0,
+      "frost_night": false,
+      "snow_possible": false,
+      "kind": "concrete"
+    },
+    {
+      "date": "2026-11-02",
+      "temp_min_c": 6.0,
+      "temp_max_c": 12.0,
+      "frost_night": false,
+      "snow_possible": false,
+      "kind": "concrete"
+    },
+    {
+      "date": "2026-11-03",
+      "temp_min_c": 4.0,
+      "temp_max_c": 10.0,
+      "frost_night": false,
+      "snow_possible": false,
+      "kind": "concrete"
+    },
+    {
+      "date": "2026-11-04",
+      "temp_min_c": 3.0,
+      "temp_max_c": 9.0,
+      "frost_night": false,
+      "snow_possible": false,
+      "kind": "concrete"
+    },
+    {
+      "date": "2026-11-05",
+      "temp_min_c": 4.0,
+      "temp_max_c": 10.0,
+      "frost_night": false,
+      "snow_possible": false,
+      "kind": "concrete"
+    },
+    {
+      "date": "2026-11-06",
+      "temp_min_c": 2.0,
+      "temp_max_c": 8.0,
+      "frost_night": false,
+      "snow_possible": false,
+      "kind": "concrete"
+    },
+    {
+      "date": "2026-11-07",
+      "temp_min_c": 1.0,
+      "temp_max_c": 7.0,
+      "frost_night": false,
+      "snow_possible": false,
+      "kind": "concrete"
+    },
+    {
+      "date": "2026-11-08",
+      "temp_min_c": 0.0,
+      "temp_max_c": 8.0,
+      "frost_night": true,
+      "snow_possible": false,
+      "kind": "trend"
+    },
+    {
+      "date": "2026-11-09",
+      "temp_min_c": 2.0,
+      "temp_max_c": 9.0,
+      "frost_night": false,
+      "snow_possible": false,
+      "kind": "trend"
+    },
+    {
+      "date": "2026-11-10",
+      "temp_min_c": -1.0,
+      "temp_max_c": 6.0,
+      "frost_night": true,
+      "snow_possible": false,
+      "kind": "trend"
+    },
+    {
+      "date": "2026-11-11",
+      "temp_min_c": 0.0,
+      "temp_max_c": 7.0,
+      "frost_night": true,
+      "snow_possible": false,
+      "kind": "trend"
+    },
+    {
+      "date": "2026-11-12",
+      "temp_min_c": -2.0,
+      "temp_max_c": 5.0,
+      "frost_night": true,
+      "snow_possible": false,
+      "kind": "trend"
+    },
+    {
+      "date": "2026-11-13",
+      "temp_min_c": 1.0,
+      "temp_max_c": 6.0,
+      "frost_night": false,
+      "snow_possible": false,
+      "kind": "trend"
+    },
+    {
+      "date": "2026-11-14",
+      "temp_min_c": 3.0,
+      "temp_max_c": 8.0,
+      "frost_night": false,
+      "snow_possible": false,
+      "kind": "trend"
+    }
+  ],
+  "generated_at": "2026-11-01T06:00:00Z",
+  "stale_after": "2026-11-02T00:00:00Z",
+  "source": {
+    "name": "MET Norway",
+    "attribution": "Weerdata: MET Norway (CC BY 4.0)",
+    "license_url": "https://api.met.no/doc/License"
+  },
+  "rules_version": "0.1.0"
+}

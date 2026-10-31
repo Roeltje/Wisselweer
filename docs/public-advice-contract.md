@@ -17,6 +17,7 @@ Enige koppeling tussen de privé-app en de publieke site. Bevat uitsluitend deze
 | `regional_variation` | bool | Regio's verschillen |
 | `regions` | lijst `{name, status}` | Referentielocaties (plaatsnamen, publiek) |
 | `forecast_until` | ISO-datum \| null | Einde van de gebruikte voorspellingshorizon |
+| `outlook` | lijst `{date, temp_min_c, temp_max_c, frost_night, snow_possible, kind}` \| ontbreekt/null | Optionele vooruitblik tot 14 dagen (zie hieronder) |
 | `generated_at` | ISO-datetime (UTC, `Z`) | Moment van genereren |
 | `stale_after` | ISO-datetime (UTC, `Z`) | Daarna toont de site een "verouderd"-melding |
 | `source` | `{name, attribution, license_url}` | Weerbron + verplichte bronvermelding |
@@ -27,3 +28,9 @@ Regels:
 - Geen datums die niet door voorspellingsdata onderbouwd zijn.
 - Status `REGIONAL_DIFFERENCES` ⇒ summary: "De omstandigheden verschillen per regio. Er is nog geen eenduidig landelijk wisselmoment."
 - Landelijk advies is indicatief en vervangt geen lokale gladheidswaarschuwing.
+
+## Optioneel veld `outlook` (additief, `schema_version` blijft 1)
+- Per dag: `date` (lokale dag, Europe/Amsterdam), `temp_min_c`/`temp_max_c` (°C, 1 decimaal, mogen null zijn), `frost_night` (minimumtemperatuur in de nacht 00-08 en 20-24 uur ≤ 0 °C), `snow_possible` (sneeuw/natte sneeuw in de verwachting of `snow_cm` > 0; `false` als de bron dat niet levert) en `kind`: `concrete` (dag 1-7) of `trend` (dag 8-14, indicatief).
+- Alleen dagen die de weerbron daadwerkelijk dekt (MET Norway ca. 9-10 dagen); er worden nooit dagen bijgeschat. Het veld mag ontbreken of null zijn; de site verbergt dan het blok.
+- Gebaseerd op de verwachting van een enkel referentiepunt, De Bilt (eerste locatie in de lijst). Dat is niet representatief voor heel Nederland en wordt op de site zo benoemd.
+- Voorbeeld: [examples/public-advice.json](examples/public-advice.json).

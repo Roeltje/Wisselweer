@@ -44,6 +44,27 @@ class PublicRegion(BaseModel):
     status: RegionStatus
 
 
+class PublicOutlookDay(BaseModel):
+    """Eén dag uit de vooruitblik van het referentiepunt De Bilt (niet landelijk representatief).
+
+    `concrete` = dag 1-7 (betrouwbaarder), `trend` = dag 8-14 (indicatief).
+    """
+
+    model_config = _STRICT
+
+    date: date
+    temp_min_c: float | None = None
+    temp_max_c: float | None = None
+    frost_night: bool
+    snow_possible: bool
+    kind: Literal["concrete", "trend"]
+
+    @field_validator("temp_min_c", "temp_max_c")
+    @classmethod
+    def _round1(cls, v: float | None) -> float | None:
+        return None if v is None else round(v, 1)
+
+
 class PublicSource(BaseModel):
     model_config = _STRICT
 
@@ -78,6 +99,8 @@ class PublicAdvice(BaseModel):
     regional_variation: bool
     regions: list[PublicRegion]
     forecast_until: date | None = None
+    # Optioneel en additief (schema_version blijft 1): ontbreekt als de bron geen dagen dekt.
+    outlook: list[PublicOutlookDay] | None = None
     generated_at: datetime
     stale_after: datetime
     source: PublicSource

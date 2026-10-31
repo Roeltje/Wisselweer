@@ -52,6 +52,8 @@ def test_frozen(advice):
 def test_example_site_file_validates():
     raw = (ROOT / "public-site" / "advice.json").read_text(encoding="utf-8")
     PublicAdvice.model_validate_json(raw)
+    raw = (ROOT / "docs" / "examples" / "public-advice.json").read_text(encoding="utf-8")
+    assert PublicAdvice.model_validate_json(raw).outlook
 
 
 def test_write_local_atomic(advice, tmp_path):
