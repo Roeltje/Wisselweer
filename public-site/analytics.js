@@ -25,7 +25,7 @@
   }
 
   try {
-    fetch('analytics.json', { cache: 'no-store' })
+    fetch('/analytics.json', { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(load)
       .catch(function () {});
