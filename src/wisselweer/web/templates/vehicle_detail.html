@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, tire_icon, badge, warnings, field, csrf with context %}
+{% set adv = card.advice %}
+{% block title %}{{ v.name }} · Wisselweer{% endblock %}
+{% block content %}
+<nav class="crumbs" aria-label="{{ t('nav.breadcrumb') }}"><a href="/">{{ t('nav.dashboard') }}</a> <span aria-hidden="true">/</span> <span>{{ v.name }}</span></nav>
+<div class="page-head">
+  <div>
+    <h1>{{ v.name }}</h1>
+    {% if v.license_plate %}<span class="plate">{{ v.license_plate }}</span>{% endif %}
+  </div>
+  <div class="actions">
+    <a class="btn" href="/vehicles/{{ v.id }}/edit">{{ t('action.edit') }}</a>
+    <a class="btn btn-danger-quiet" href="/vehicles/{{ v.id }}/delete">{{ t('action.delete') }}</a>
+  </div>
+</div>
+
+<section class="card" aria-labelledby="sec-advice">
+  <h2 id="sec-advice">{{ t('vehicle.advice') }}</h2>
+  {% if adv %}
+    {{ warnings(adv) }}
+    <p class="mounted">
+      {% if card.mounted %}{{ tire_icon(card.mounted.type.value, 22) }}<span>{{ t('dashboard.mounted') }}: <strong>{{ t('tire.type.' ~ card.mounted.type.value) }}</strong></span>
+      {% else %}{{ icon('question', 22) }}<span>{{ t('dashboard.no_set') }}</span>{% endif %}
+    </p>
+    <h3 class="question">{{ adv.question }}</h3>
+    {% if adv.no_mounted %}
+      <p>{{ t('dashboard.add_set_hint') }}</p>
+    {% else %}
+      <p>{{ badge(adv) }}</p>
+      <p class="headline">{{ adv.heading }}</p>
+      {% if adv.date_line %}<p class="when">{{ adv.date_line }}</p>{% endif %}
+      {% if adv.plan_by %}<p class="plan">{{ icon('calendar', 16) }} {{ adv.plan_by }}</p>{% endif %}
+    {% endif %}
+    {% for n in adv.notices %}<p class="notice">{{ icon('cloud', 16) }} {{ n }}</p>{% endfor %}
+
+    <details class="why">
+      <summary>{{ t('vehicle.why') }}</summary>
+      {% if adv.reasons %}<ul>{% for r in adv.reasons %}<li>{{ r }}</li>{% endfor %}</ul>{% else %}<p class="muted">{{ t('vehicle.no_reasons') }}</p>{% endif %}
+    </details>
+    <details class="why">
+      <summary>{{ t('vehicle.horizon') }}</summary>
+      <p>{{ adv.horizon_text or t('vehicle.no_horizon') }}</p>
+    </details>
+    <details class="why">
+      <summary>{{ t('vehicle.uncertainties') }}</summary>
+      {% if adv.uncertainties %}<ul>{% for r in adv.uncertainties %}<li>{{ r }}</li>{% endfor %}</ul>{% else %}<p class="muted">{{ t('vehicle.no_uncertainties') }}</p>{% endif %}
+    </details>
+  {% else %}
+    <p class="notice">{{ icon('warning', 16) }} {{ t('dashboard.advice_failed') }}</p>
+  {% endif %}
+  <p class="muted small">
+    {{ t('dashboard.weather_update') }}:
+    {% if card.weather %}{{ card.weather.at }} · {{ card.weather.attribution or card.weather.source }}{% else %}{{ t('dashboard.no_weather') }}{% endif %}
+  </p>
+</section>
+
+<section class="card" aria-labelledby="sec-data">
+  <h2 id="sec-data">{{ t('vehicle.data') }}</h2>
+  <dl class="facts facts-wide">
+    {% if v.make or v.model %}<div><dt>{{ t('vehicle.make_model') }}</dt><dd>{{ v.make or '' }} {{ v.model or '' }}</dd></div>{% endif %}
+    {% if v.build_year %}<div><dt>{{ t('vehicle.build_year') }}</dt><dd>{{ v.build_year }}</dd></div>{% endif %}
+    <div><dt>{{ t('location.label') }}</dt><dd>{{ v.location.name }} <span class="muted">({{ v.location.latitude }}, {{ v.location.longitude }})</span> <a href="/vehicles/{{ v.id }}/location">{{ t('action.edit') }}</a></dd></div>
+    <div><dt>{{ t('profile.label') }}</dt><dd>{{ profile_text }} <a href="/vehicles/{{ v.id }}/profile">{{ t('action.edit') }}</a></dd></div>
+    <div><dt>{{ t('method.label') }}</dt><dd>{{ method_text }}{% if preferred %} · {{ preferred.name }}{% endif %} · {{ t('method.prep_days_value', days=v.prep_days) }} <a href="/vehicles/{{ v.id }}/method">{{ t('action.edit') }}</a></dd></div>
+    {% if v.notes %}<div><dt>{{ t('vehicle.notes') }}</dt><dd>{{ v.notes }}</dd></div>{% endif %}
+  </dl>
+</section>
+
+<section class="card" id="sets" aria-labelledby="sec-sets">
+  <div class="section-head">
+    <h2 id="sec-sets">{{ t('tire.sets') }}</h2>
+    <div class="actions">
+      <a class="btn" href="/vehicles/{{ v.id }}/sets/new">{{ icon('plus', 18) }} {{ t('tire.new') }}</a>
+      {% if can_change %}<a class="btn btn-primary" href="/vehicles/{{ v.id }}/changes/new">{{ icon('swap', 18) }} {{ t('change.register') }}</a>{% endif %}
+    </div>
+  </div>
+  {% if not sets %}<p class="muted">{{ t('tire.none') }}</p>{% endif %}
+  <ul class="rows">
+    {% for r in sets %}
+    <li class="row">
+      <div class="row-main">
+        <strong>{{ tire_icon(r.set.type.value, 18) }} {{ r.label }}</strong>
+        <span class="chip chip-{{ r.set.status.value }}">{{ r.status_text }}</span>
+        <p class="muted small">
+          {{ t('tire.km') }}:
+          {% if r.km.known_km is not none %}{{ r.km.known_km|km }} km{% if not r.km.complete %} ({{ t('tire.km_incomplete') }}){% endif %}
+          {% else %}{{ t('tire.km_unknown') }}{% endif %}
+          {% if r.tread %}
+            · {{ t('tire.tread') }}{% if r.tread_date %} ({{ r.tread_date|d }}){% endif %}:
+            {% for pos in ['FL', 'FR', 'RL', 'RR'] %}{% if r.tread.get(pos) %}{{ t('tread.short.' ~ pos) }} {{ r.tread[pos] }} mm{% if not loop.last %}, {% endif %}{% endif %}{% endfor %}
+          {% endif %}
+        </p>
+      </div>
+      <div class="row-actions">
+        <a class="btn btn-small" href="/vehicles/{{ v.id }}/sets/{{ r.set.id }}/edit">{{ t('action.edit') }}</a>
+        {% if r.set.status.value != 'mounted' %}
+        <form method="post" action="/vehicles/{{ v.id }}/sets/{{ r.set.id }}/delete" data-confirm="{{ t('tire.delete_confirm') }}">
+          {{ csrf() }}<button class="btn btn-small btn-danger-quiet" type="submit">{{ t('action.delete') }}</button>
+        </form>
+        {% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="card" id="history" aria-labelledby="sec-history">
+  <h2 id="sec-history">{{ t('change.history') }}</h2>
+  {% if not changes %}<p class="muted">{{ t('change.none') }}</p>{% endif %}
+  <ul class="rows">
+    {% for c in changes %}
+    <li class="row">
+      <div class="row-main">
+        <strong>{{ c.date|d }}</strong> · {{ c.to }}
+        <p class="muted small">
+          {% if c.from %}{{ t('change.from') }}: {{ c.from }} · {% endif %}
+          {{ c.by }}{% if c.garage %} ({{ c.garage }}){% endif %}
+          {% if c.km is not none %} · {{ c.km|km }} km{% endif %}
+          {% if c.cost_cents is not none %} · {{ c.cost_cents|euro }}{% endif %}
+        </p>
+        {% if c.notes %}<p class="small">{{ c.notes }}</p>{% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="card" id="odometer" aria-labelledby="sec-odo">
+  <h2 id="sec-odo">{{ t('odometer.title') }}</h2>
+  <form method="post" action="/vehicles/{{ v.id }}/odometer" class="inline-form">
+    {{ csrf() }}
+    {% for f in odo_fields %}{{ field(f) }}{% endfor %}
+    <button class="btn btn-primary" type="submit">{{ t('odometer.add') }}</button>
+  </form>
+  {% if not readings %}<p class="muted">{{ t('odometer.none') }}</p>{% endif %}
+  <ul class="rows">
+    {% for r in readings %}
+    <li class="row">
+      <div class="row-main"><strong>{{ r.km|km }} km</strong> <span class="muted small">· {{ r.at }} · {{ r.source }}</span>{% if r.note %}<p class="small">{{ r.note }}</p>{% endif %}</div>
+      <details class="row-actions correct">
+        <summary class="btn btn-small">{{ t('odometer.correct') }}</summary>
+        <form method="post" action="/vehicles/{{ v.id }}/odometer/{{ r.id }}/correct" class="stack">
+          {{ csrf() }}
+          <div class="field">
+            <label for="corr-{{ r.id }}">{{ t('odometer.new_km') }}</label>
+            <input id="corr-{{ r.id }}" name="reading_km" inputmode="numeric" required>
+          </div>
+          <div class="field">
+            <label for="corr-note-{{ r.id }}">{{ t('odometer.note') }}</label>
+            <input id="corr-note-{{ r.id }}" name="note" maxlength="500">
+          </div>
+          <button class="btn btn-primary btn-small" type="submit">{{ t('action.save') }}</button>
+        </form>
+      </details>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="card" id="appointments" aria-labelledby="sec-appt">
+  <div class="section-head">
+    <h2 id="sec-appt">{{ t('appointment.title') }}</h2>
+    {% if mailto %}<a class="btn btn-primary" href="{{ mailto }}">{{ t('appointment.request') }}</a>{% endif %}
+  </div>
+  {% if not mailto %}<p class="muted small">{{ t('appointment.request_hint') }}</p>{% endif %}
+  <ul class="rows">
+    {% for a in appointments %}
+    <li class="row">
+      <div class="row-main">
+        <strong>{{ a.direction }}</strong> <span class="chip chip-{{ a.status }}">{{ a.status_text }}</span>
+        <p class="muted small">
+          {{ a.garage_name }}{% if a.period %} · {{ a.period }}{% endif %}{% if a.at %} · {{ a.at }}{% endif %}
+        </p>
+        {% if a.notes %}<p class="small">{{ a.notes }}</p>{% endif %}
+        {% if a.mailto %}<p><a class="btn btn-small" href="{{ a.mailto }}">{{ t('appointment.request') }}</a></p>{% endif %}
+      </div>
+      {% if a.next_statuses %}
+      <form method="post" action="/vehicles/{{ v.id }}/appointments/{{ a.id }}/status" class="row-actions status-form">
+        {{ csrf() }}
+        <label for="st-{{ a.id }}">{{ t('appointment.change_status') }}</label>
+        <select id="st-{{ a.id }}" name="status">
+          {% for value, text in a.next_statuses %}<option value="{{ value }}">{{ text }}</option>{% endfor %}
+        </select>
+        <label for="at-{{ a.id }}">{{ t('appointment.at') }}</label>
+        <input id="at-{{ a.id }}" name="appointment_at" type="datetime-local">
+        <button class="btn btn-small" type="submit">{{ t('action.save') }}</button>
+      </form>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+
+  <h3>{{ t('appointment.new') }}</h3>
+  {% if has_garages %}
+  <form method="post" action="/vehicles/{{ v.id }}/appointments" class="stack">
+    {{ csrf() }}
+    {% for f in appt_fields %}{{ field(f) }}{% endfor %}
+    <div class="actions"><button class="btn btn-primary" type="submit">{{ t('appointment.create') }}</button></div>
+  </form>
+  {% else %}
+  <p class="muted">{{ t('appointment.need_garage') }} <a href="/garages/new">{{ t('garage.new') }}</a></p>
+  {% endif %}
+</section>
+{% endblock %}

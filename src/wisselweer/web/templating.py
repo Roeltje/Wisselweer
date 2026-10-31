@@ -26,3 +26,50 @@ def _csrf_token(context: dict[str, Any]) -> str:
 
 
 templates.env.globals["csrf_token"] = _csrf_token
+
+
+# --- i18n en opmaak ------------------------------------------------------------------------
+
+
+def _locale(context: Any) -> str:
+    from wisselweer.i18n import DEFAULT_LOCALE
+
+    return context.get("locale") or DEFAULT_LOCALE
+
+
+@pass_context
+def _t(context: Any, key: str, **params: Any) -> str:
+    from wisselweer.i18n import t
+
+    return t(key, _locale(context), **params)
+
+
+@pass_context
+def _date(context: Any, value: Any) -> str:
+    from wisselweer.i18n import format_date
+
+    return format_date(value, _locale(context))
+
+
+@pass_context
+def _datetime(context: Any, value: Any) -> str:
+    from wisselweer.i18n import format_datetime
+
+    return format_datetime(value, _locale(context))
+
+
+def _km(value: int | None) -> str:
+    return "" if value is None else f"{value:,}".replace(",", ".")
+
+
+def _euro(cents: int | None) -> str:
+    if cents is None:
+        return ""
+    return "€ " + f"{cents / 100:,.2f}".replace(",", "_").replace(".", ",").replace("_", ".")
+
+
+templates.env.globals["t"] = _t
+templates.env.filters["d"] = _date
+templates.env.filters["dt"] = _datetime
+templates.env.filters["km"] = _km
+templates.env.filters["euro"] = _euro

@@ -25,6 +25,16 @@ class ForecastService:
         self._cache = cache
         self._default = default_provider
 
+    @property
+    def default_provider(self) -> str:
+        return self._default
+
+    def set_default_provider(self, provider_id: str) -> None:
+        """Wijzigt de standaardbron (bv. vanuit de instellingen); alleen geregistreerde bronnen."""
+        if provider_id not in self._providers:
+            raise UnknownProvider("onbekende provider")
+        self._default = provider_id
+
     def get_forecast(
         self, latitude: float, longitude: float, provider_id: str | None = None
     ) -> Forecast:

@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}{{ t('error.page_title') }} · Wisselweer{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ t('error.not_found') if code == 404 else t('error.generic') }}</h1>
+  <p><a class="btn btn-primary" href="/">{{ t('nav.dashboard') }}</a></p>
+</section>
+{% endblock %}
