@@ -6,6 +6,7 @@ Volledig statische site (geen build-stap, geen frameworks, geen externe fonts/CD
 - `index.html`, `404.html`, `style.css`, `app.js` (render met `textContent`, tijden in Europe/Amsterdam)
 - `advice.json`: voorbeeldbestand; wordt in productie door `wisselweer publish` overschreven
 - `analytics.js` (laadt optioneel Umami, zie "Analytics"), `analytics.example.json`
+- `privacy.html`, `contact.js`, `contact.example.json` (zie "Privacyverklaring en contact")
 - `manifest.webmanifest`, `robots.txt`, `sitemap.xml`
 - `favicon.svg`, `logo.svg`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `og-image.png` (kopieën uit `branding/`)
 
@@ -21,6 +22,13 @@ Standaard staat analytics uit en doet de site geen extra verzoeken, behalve éé
    `src` moet een absolute `https:`-URL zijn en `websiteId` een UUID; `domains` is optioneel. Ongeldige config wordt genegeerd.
 2. Draai `deploy/install-public-site.sh` opnieuw met `--analytics-origin https://umami.example.org` (of `WW_ANALYTICS_ORIGIN`). Dat zet de origin in `script-src` en `connect-src` van de CSP; zonder deze optie blijft de CSP ongewijzigd. Opnieuw draaien is nodig om de CSP te wijzigen.
 3. Umami is cookieloos en het script wordt geladen met `data-do-not-track="true"`. Zodra analytics actief is, verandert de voettekst automatisch in "geen cookies; anonieme bezoekersstatistieken via eigen Umami."
+
+## Privacyverklaring en contact
+`privacy.html` is de Nederlandse privacyverklaring (gelinkt vanuit de voettekst). Het contactadres staat bewust niet in git: zonder config toont de pagina "via een issue op GitHub". Wil je een e-mailadres tonen, maak dan op de server `/srv/wisselweer/site/contact.json` (staat in `.gitignore`; voorbeeld: `public-site/contact.example.json`):
+```json
+{"email": "privacy@example.org"}
+```
+`contact.js` valideert het adres en zet het als `mailto:`-link; ongeldig of ontbrekend wordt stil genegeerd. De privacyverklaring belooft dat webserverlogs maximaal 7 dagen bewaard worden: `deploy/install-public-site.sh` zet daarom `rotate 7` in `/etc/logrotate.d/nginx` (met backup). Pas de tekst aan als je dit wijzigt.
 
 ## Lokaal bekijken
 `python3 -m http.server 8766 -d public-site`

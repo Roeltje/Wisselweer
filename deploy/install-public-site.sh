@@ -313,6 +313,13 @@ server {
         try_files $uri =404;
     }
 
+    # Contact-config (optioneel, alleen op de server): niet cachen
+    location = /contact.json {
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options nosniff always;
+        try_files $uri =404;
+    }
+
     # Statische assets lang cachen
     location ~* \.(css|js|svg|png|ico|webmanifest|woff2)$ {
         add_header Cache-Control "public, max-age=604800" always;
@@ -359,6 +366,25 @@ else
   [ -n "$DEFAULT_LINK_TARGET" ] && ln -sfn "$DEFAULT_LINK_TARGET" /etc/nginx/sites-enabled/default
   [ -e /etc/nginx/sites-available/wisselweer ] || rm -f /etc/nginx/sites-enabled/wisselweer
   die "nginx -t faalt; wijziging teruggedraaid."
+fi
+
+# nginx-logs maximaal 7 dagen bewaren (privacyverklaring). Alleen de
+# rotate-waarde in het bestaande logrotate-bestand wordt aangepast.
+LOGROTATE_FILE=/etc/logrotate.d/nginx
+LOG_RETENTION="niet aangepast (geen $LOGROTATE_FILE)"
+if [ -f "$LOGROTATE_FILE" ]; then
+  sed -E 's/^([[:space:]]*)rotate[[:space:]]+[0-9]+/\1rotate 7/' "$LOGROTATE_FILE" >"$TMPDIR_WW/logrotate-nginx"
+  if ! grep -Eq '^[[:space:]]*daily' "$TMPDIR_WW/logrotate-nginx"; then
+    sed -E -i.orig '0,/^([[:space:]]*)(weekly|monthly)/s//\1daily/' "$TMPDIR_WW/logrotate-nginx" 2>/dev/null || true
+  fi
+  if grep -Eq '^[[:space:]]*rotate 7$' "$TMPDIR_WW/logrotate-nginx"; then
+    install_file "$TMPDIR_WW/logrotate-nginx" "$LOGROTATE_FILE" 644
+    LOG_RETENTION="7 dagen ($LOGROTATE_FILE)"
+  else
+    warn "Geen 'rotate'-regel in $LOGROTATE_FILE gevonden: logretentie niet aangepast. Stel dit zelf in op maximaal 7 dagen."
+  fi
+else
+  warn "$LOGROTATE_FILE ontbreekt: stel zelf in dat nginx-logs maximaal 7 dagen bewaard worden."
 fi
 
 # ----------------------------------------------------------- 5. sitebestanden
@@ -487,6 +513,8 @@ printf '%s================ Klaar ================%s\n' "$c_grn" "$c_reset"
 echo "Domein:        $DOMAIN (+ www.$DOMAIN)"
 echo "Webroot:       /srv/wisselweer/site (SFTP-pad: /site)"
 echo "Analytics:     ${ANALYTICS_ORIGIN:-niet ingesteld}"
+echo "Nginx-logs:    bewaartermijn $LOG_RETENTION"
+echo "Contact:       optioneel /srv/wisselweer/site/contact.json (zie docs/public-site.md)"
 echo "Poort 80:      alleen van $PROXY_IP $( [ "$FW_ACTIVE" -eq 1 ] && echo '(afgedwongen)' || echo '(firewall NIET actief)')"
 echo "Poort 22:      ${SSH_ALLOW:-<niet beperkt>} $( [ "$FW_ACTIVE" -eq 1 ] && echo '(afgedwongen)' || echo '(firewall NIET actief)')"
 echo "Config:        /etc/nginx/sites-available/wisselweer, /etc/ssh/sshd_config.d/10-wisselweer.conf, /etc/nftables.conf"
