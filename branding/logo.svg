@@ -1,9 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="t">
   <title id="t">Wisselweer</title>
-  <!-- band met subtiele profielnokken -->
-  <circle cx="256" cy="256" r="172" fill="none" stroke="#0A3540" stroke-width="6" stroke-dasharray="7 5.03"/>
+  <!-- gladde band met zijwanglijn -->
   <circle cx="256" cy="256" r="170" fill="#0A3540"/>
-  <circle cx="256" cy="256" r="146" fill="none" stroke="#0F4C5C" stroke-width="8" stroke-dasharray="10 12.9"/>
+  <circle cx="256" cy="256" r="144" fill="none" stroke="#0F4C5C" stroke-width="6"/>
   <!-- velg / doel -->
   <circle cx="256" cy="256" r="118" fill="#F7F5F0"/>
   <circle cx="256" cy="256" r="92" fill="#0F4C5C"/>
