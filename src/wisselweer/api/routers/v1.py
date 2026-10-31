@@ -24,6 +24,8 @@ if TYPE_CHECKING:
     from wisselweer.weather.service import ForecastService
 
 router = APIRouter(prefix="/api/v1")
+# Health blijft openbaar (geen authenticatie), de rest van /api/v1 vereist login.
+health_router = APIRouter(prefix="/api/v1")
 
 # ForecastService wordt pas lazy geïmporteerd; tijdens runtime volstaat Any voor FastAPI.
 if TYPE_CHECKING:
@@ -56,7 +58,7 @@ def _respond(
     )
 
 
-@router.get("/health", response_model=HealthResponse)
+@health_router.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     return HealthResponse(status="ok", version=__version__, rules_version=RULES_VERSION)
 

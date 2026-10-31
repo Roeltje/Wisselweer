@@ -347,3 +347,15 @@ def test_existing_routes_still_work(client):
     r = client.get(f"{API}/advice", params={"mounted": "summer", "latitude": 52, "longitude": 5})
     assert r.status_code == 200, r.text
     assert "fake" in {p["id"] for p in _ok(client.get(f"{API}/providers"))["providers"]}
+
+
+def test_manual_odometer_reading(client):
+    v = _vehicle(client)
+    body = {"reading_km": 12345, "note": "handmatig"}
+    r = _ok(client.post(f"{API}/vehicles/{v['id']}/odometer", json=body), 201)
+    assert r["reading_km"] == 12345 and r["source"] == "manual"
+    listed = _ok(client.get(f"{API}/vehicles/{v['id']}/odometer"))
+    assert [x["reading_km"] for x in listed] == [12345]
+    lower = {"reading_km": 100, "recorded_at": "2099-01-01T00:00:00Z"}
+    assert client.post(f"{API}/vehicles/{v['id']}/odometer", json=lower).status_code == 409
+    assert client.post(f"{API}/vehicles/9999/odometer", json=body).status_code == 404

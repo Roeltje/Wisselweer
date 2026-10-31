@@ -2,7 +2,36 @@
 
 Basis-URL: `http://127.0.0.1:8000/api/v1`. Alle bodies en responses zijn JSON.
 
-> **Beveiliging.** Authenticatie volgt in fase 4: tot die tijd is de API open voor iedereen die de poort kan bereiken. De app luistert daarom standaard alleen op `127.0.0.1` (`WISSELWEER_HOST`). Zet hem niet op een extern adres zonder reverse proxy met toegangscontrole.
+## Authenticatie
+
+Alle `/api/v1/*`-routes vereisen authenticatie, behalve `GET /health`. Zonder geldige inlog antwoordt de API `401 {"detail":"unauthorized"}`. `/docs` en `/openapi.json` zijn alleen na login bereikbaar.
+
+**Beheerder aanmaken (CLI, op de server):**
+
+```
+wisselweer create-admin --username roel      # wachtwoord via prompt (min. 10 tekens)
+wisselweer reset-password --username roel    # sessies worden daarmee ongeldig
+echo "$WACHTWOORD" | wisselweer create-admin --username roel --password-stdin
+```
+
+Wachtwoorden gaan nooit als argument mee. Er is één beheerder; registratie via het web bestaat niet.
+
+**Sessie + CSRF (webinterface):** `POST /login` (formulier met `username`, `password`, `csrf_token`, optioneel `next`) zet cookie `ww_session` (`HttpOnly`, `SameSite=Strict`, `Secure` via `WISSELWEER_COOKIE_SECURE=true`, 7 dagen). Muterende requests (POST/PATCH/PUT/DELETE) met sessie moeten het CSRF-token meesturen in header `X-CSRF-Token` of formveld `csrf_token`; anders `403 {"detail":"csrf_failed"}`. Templates gebruiken `{{ csrf_token() }}`. `POST /logout` beëindigt de sessie. Na 5 mislukte pogingen per IP binnen 5 minuten volgt `429`.
+
+**Bearer-token (Home Assistant, scripts):**
+
+```
+wisselweer create-api-token --name ha     # token wordt één keer getoond
+wisselweer revoke-api-token --name ha
+```
+
+```
+curl -H "Authorization: Bearer wwt_..." http://127.0.0.1:8000/api/v1/vehicles
+```
+
+Requests met een Bearer-token zijn vrij van CSRF-controle. Alleen de SHA-256-hash van het token wordt opgeslagen.
+
+**Secret key:** `WISSELWEER_SECRET_KEY`, of automatisch gegenereerd in `<data_dir>/secret_key` (rechten 600). Zie ook `SECURITY.md`.
 
 De database (SQLite) staat in `WISSELWEER_DATA_DIR` (standaard `./data`); de map wordt aangemaakt en de migraties draaien bij het opstarten. De weerscache staat in dezelfde database, zodat meerdere voertuigen op dezelfde locatie één provider-fetch delen.
 
@@ -30,6 +59,7 @@ De database (SQLite) staat in `WISSELWEER_DATA_DIR` (standaard `./data`); de map
 | GET | `/vehicles/{id}/tire-changes` | Wisselhistorie | 200 |
 | POST | `/vehicles/{id}/tire-changes` | Transactionele wissel (stand, historie, setstatussen, advies-reset) | 201 |
 | GET | `/vehicles/{id}/odometer` | Geldige kilometerstanden (`?include_superseded=true` voor alles) | 200 |
+| POST | `/vehicles/{id}/odometer` | Handmatige kilometerstand (`reading_km`, optioneel `recorded_at`, `note`) | 201 |
 | POST | `/odometer/{id}/correct` | Stand corrigeren (nieuwe rij, oude verwijst ernaar) | 200 |
 | GET | `/garages` | Alle garages | 200 |
 | POST | `/garages` | Garage aanmaken | 201 |
