@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wisselweer — Het juiste moment om te wisselen</title>
+  <meta name="description" content="Wanneer wissel je naar winter- of zomerbanden? Wisselweer geeft een landelijk, weergebaseerd advies voor Nederland, onderbouwd met verwachtingen op meerdere locaties.">
+  <link rel="canonical" href="https://wisselweer.nl/">
+  <meta name="theme-color" content="#F7F5F0" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0A2B33" media="(prefers-color-scheme: dark)">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Wisselweer">
+  <meta property="og:locale" content="nl_NL">
+  <meta property="og:title" content="Wisselweer — Het juiste moment om te wisselen">
+  <meta property="og:description" content="Landelijk bandenwisseladvies voor Nederland, gebaseerd op de weersverwachting.">
+  <meta property="og:url" content="https://wisselweer.nl/">
+  <meta property="og:image" content="https://wisselweer.nl/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Wisselweer — Het juiste moment om te wisselen">
+  <meta name="twitter:description" content="Landelijk bandenwisseladvies voor Nederland, gebaseerd op de weersverwachting.">
+  <meta name="twitter:image" content="https://wisselweer.nl/og-image.png">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Naar de inhoud</a>
+  <header class="site-header">
+    <div class="wrap brand">
+      <img src="logo.svg" alt="" width="48" height="48">
+      <div>
+        <p class="name">Wisselweer</p>
+        <p class="tagline">Het juiste moment om te wisselen</p>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="wrap">
+    <section id="advice" class="card" aria-labelledby="advice-heading" aria-live="polite">
+      <h1 id="advice-heading">Wanneer wisselen?</h1>
+      <p id="notice" class="notice" role="status" hidden></p>
+      <div id="advice-body" hidden>
+        <p id="status-badge" class="badge badge-unknown">
+          <span id="status-icon" class="icon" aria-hidden="true">?</span>
+          <span id="status-text"></span>
+        </p>
+        <p id="summary" class="summary"></p>
+        <p id="recommended" class="recommended" hidden>
+          <span class="label" id="recommended-label">Aanbevolen</span>
+          <strong id="recommended-value"></strong>
+        </p>
+        <div id="regions-block" hidden>
+          <h2>Regio's</h2>
+          <ul id="regions" class="regions"></ul>
+        </div>
+        <dl class="meta">
+          <div><dt>Laatste update</dt><dd id="generated"></dd></div>
+          <div id="forecast-row" hidden><dt>Voorspelling tot</dt><dd id="forecast"></dd></div>
+        </dl>
+        <p class="source" id="source" hidden>
+          <span id="source-text"></span>
+          <a id="source-link" href="https://api.met.no/doc/License" rel="noopener">Licentie</a>
+        </p>
+      </div>
+      <noscript>
+        <p>Voor het actuele advies is JavaScript nodig. Zonder JavaScript kun je het ruwe advies bekijken in <a href="advice.json">advice.json</a>.</p>
+      </noscript>
+    </section>
+
+    <aside class="disclaimer" aria-label="Let op">
+      <p><strong>Let op:</strong> dit landelijke advies is indicatief. Regionale omstandigheden kunnen verschillen; volg altijd lokale waarschuwingen, zoals die van het KNMI. Het is geen garantie en geen veiligheidsadvies.</p>
+    </aside>
+
+    <section id="hoe" aria-labelledby="hoe-h">
+      <h2 id="hoe-h">Hoe werkt het?</h2>
+      <ul class="plain">
+        <li>Wisselweer kijkt naar de weersverwachting op meerdere referentielocaties verspreid over Nederland.</li>
+        <li>Of je de winter- of zomerbanden moet overwegen, hangt af van het bandentype dat nu onder de auto zit: dat bepaalt de vraag.</li>
+        <li>De bekende grens van 7 °C is alleen context, geen harde regel.</li>
+        <li>Verschillen de regio's, dan zeggen we dat eerlijk in plaats van een datum te verzinnen.</li>
+      </ul>
+    </section>
+
+    <section id="zelf-hosten" aria-labelledby="host-h">
+      <h2 id="host-h">Zelf hosten</h2>
+      <p>Wisselweer is open source (AGPL-3.0). Naast deze publieke site is er een privé-app voor je eigen auto's, die je zelf draait en waarvan de gegevens bij jou blijven.</p>
+      <p><a href="https://github.com/Roeltje/Wisselweer" rel="noopener">Wisselweer op GitHub</a></p>
+    </section>
+
+    <aside id="partners" hidden>
+      <!-- Hier kunnen later affiliate-links komen, altijd met rel="sponsored noopener" en duidelijke vermelding. Nu bewust leeg. -->
+    </aside>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>Wisselweer &middot; open source onder AGPL-3.0 &middot; geen cookies, geen tracking.</p>
+    </div>
+  </footer>
+</body>
+</html>

@@ -18,6 +18,8 @@ from wisselweer.api.schemas import (
     build_source,
 )
 from wisselweer.core import RULES_VERSION, AdviceInput, DrivingProfile, Forecast, TireType, evaluate
+from wisselweer.publisher.national import NationalAdviceService
+from wisselweer.publisher.public_schema import PublicAdvice
 from wisselweer.settings import Settings
 
 if TYPE_CHECKING:
@@ -88,6 +90,12 @@ def get_advice(
         raise HTTPException(status_code=422, detail="location_required")
     forecast = service.get_forecast(latitude, longitude, provider)
     return _respond(service, forecast, mounted, None, 7)
+
+
+@router.get("/public-preview", response_model=PublicAdvice)
+def public_preview(service: ServiceDep, settings: SettingsDep) -> PublicAdvice:
+    """Berekent het landelijke publieke advies zonder het te publiceren."""
+    return NationalAdviceService(service, settings.national_config()).compute()
 
 
 @router.get("/providers", response_model=ProvidersResponse)
