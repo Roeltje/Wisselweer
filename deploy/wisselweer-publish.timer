@@ -1,0 +1,10 @@
+[Unit]
+Description=Wisselweer: publiceer het landelijke advies elke 6 uur
+
+[Timer]
+OnCalendar=*-*-* 00/6:05:00
+RandomizedDelaySec=10min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

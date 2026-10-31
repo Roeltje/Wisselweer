@@ -19,6 +19,7 @@ from wisselweer.api.routers.tires import router as tires_router
 from wisselweer.api.routers.v1 import health_router
 from wisselweer.api.routers.v1 import router as v1_router
 from wisselweer.api.routers.vehicles import router as vehicles_router
+from wisselweer.publisher.scheduler import start_scheduler, stop_scheduler
 from wisselweer.settings import Settings, get_settings
 from wisselweer.storage.errors import InvalidOperation, NotFoundError
 from wisselweer.weather.base import ProviderNotConfigured, ProviderUnavailable, UnknownProvider
@@ -42,7 +43,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         ensure_db(app)  # data_dir aanmaken + migraties bij opstarten
-        yield
+        task = start_scheduler(app.state.settings)
+        try:
+            yield
+        finally:
+            await stop_scheduler(task)
 
     app = FastAPI(
         lifespan=lifespan,

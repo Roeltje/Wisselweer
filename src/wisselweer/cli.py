@@ -105,6 +105,54 @@ def _publish() -> int:
     return 0
 
 
+def _backtest(args: argparse.Namespace) -> int:
+    from datetime import UTC, date, datetime
+
+    from sqlalchemy import select
+
+    from wisselweer.backtest import ForecastSnapshotData, replay
+    from wisselweer.core import DrivingProfile, EngineConfig, Forecast, TireType
+    from wisselweer.storage.db import migrate, session_scope
+    from wisselweer.storage.orm import ForecastSnapshot
+
+    try:
+        since = datetime.combine(date.fromisoformat(args.since), datetime.min.time(), tzinfo=UTC)
+    except ValueError:
+        print("Fout: --since moet YYYY-MM-DD zijn", file=sys.stderr)
+        return 1
+    migrate()
+    with session_scope() as session:
+        rows = session.scalars(
+            select(ForecastSnapshot)
+            .where(
+                ForecastSnapshot.provider == args.provider,
+                ForecastSnapshot.latitude.between(args.latitude - 5e-5, args.latitude + 5e-5),
+                ForecastSnapshot.longitude.between(args.longitude - 5e-5, args.longitude + 5e-5),
+                ForecastSnapshot.fetched_at >= since,
+            )
+            .order_by(ForecastSnapshot.fetched_at)
+        ).all()
+        snaps = [
+            ForecastSnapshotData(r.fetched_at, Forecast.model_validate(r.forecast)) for r in rows
+        ]
+    if not snaps:
+        print("Geen forecast-snapshots gevonden voor deze locatie/provider.")
+        return 0
+    steps = replay(snaps, TireType(args.mounted), DrivingProfile.commute(), EngineConfig())
+    print(f"{'beslismoment':<17} {'richting':<10} {'status':<20} datum/periode")
+    for st in steps:
+        if st.recommended_date:
+            when = st.recommended_date.isoformat()
+        elif st.recommended_period:
+            when = f"{st.recommended_period[0]} .. {st.recommended_period[1]}"
+        else:
+            when = "-"
+        stamp = st.decided_at.strftime("%Y-%m-%d %H:%M")
+        print(f"{stamp:<17} {st.direction.value:<10} {st.status.value:<20} {when}")
+    print("Let op: adviesregels zijn ongevalideerde heuristieken; zie docs/backtesting.md.")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="wisselweer")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -112,6 +160,14 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("version", help="Toon de versie")
     sub.add_parser("publish", help="Bereken en publiceer het landelijke advies (advice.json)")
     sub.add_parser("migrate", help="Werk de database bij (alembic upgrade head)")
+    bt = sub.add_parser(
+        "backtest", help="Speel opgeslagen forecast-snapshots opnieuw af (geen netwerk)"
+    )
+    bt.add_argument("--latitude", type=float, required=True)
+    bt.add_argument("--longitude", type=float, required=True)
+    bt.add_argument("--provider", default="metno")
+    bt.add_argument("--mounted", choices=["summer", "winter", "all_season"], default="summer")
+    bt.add_argument("--since", default="1970-01-01", help="Vanaf datum (YYYY-MM-DD)")
     for name, help_ in (
         ("create-admin", "Maak de beheerder aan"),
         ("reset-password", "Wijzig het wachtwoord van de beheerder"),
@@ -135,6 +191,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "publish":
         return _publish()
+    if args.command == "backtest":
+        return _backtest(args)
     if args.command in {"create-admin", "reset-password", "create-api-token", "revoke-api-token"}:
         return _admin_command(args)
     return _serve()

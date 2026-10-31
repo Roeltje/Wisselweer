@@ -1,0 +1,41 @@
+services:
+  wisselweer:
+    build: .
+    image: wisselweer:local
+    container_name: wisselweer
+    # Alleen localhost op de host. NIET openzetten naar 0.0.0.0 of het internet: gebruik een
+    # VPN (WireGuard/Tailscale) of een reverse proxy MET extra authenticatie.
+    ports:
+      - "127.0.0.1:8000:8000"
+    env_file: .env
+    # `environment` wint van `env_file`: deze waarden horen bij de container-indeling.
+    environment:
+      WISSELWEER_HOST: "0.0.0.0"  # binnen de container; de host-binding hierboven beperkt dit
+      WISSELWEER_DATA_DIR: /data
+    volumes:
+      - wisselweer-data:/data
+      # SFTP-publicatie (optioneel): zet in .env WISSELWEER_PUBLISH_SFTP_KEY=/run/secrets/deploy_key
+      # en WISSELWEER_PUBLISH_SFTP_KNOWN_HOSTS=/run/secrets/known_hosts
+      # - ./secrets/deploy_key:/run/secrets/deploy_key:ro
+      # - ./secrets/known_hosts:/run/secrets/known_hosts:ro
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=4).status == 200 else 1)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  wisselweer-data:

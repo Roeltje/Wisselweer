@@ -1,0 +1,43 @@
+[Unit]
+Description=Wisselweer (bandenwisseladvies)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=wisselweer
+Group=wisselweer
+WorkingDirectory=/opt/wisselweer
+EnvironmentFile=/etc/wisselweer/wisselweer.env
+ExecStart=/opt/wisselweer/.venv/bin/wisselweer serve
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=wisselweer
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/wisselweer
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+LockPersonality=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+SystemCallFilter=@system-service
+SystemCallArchitectures=native
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

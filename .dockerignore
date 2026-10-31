@@ -1,0 +1,24 @@
+.git
+.gitignore
+.venv
+**/__pycache__
+.pytest_cache
+.ruff_cache
+.claude
+# Nooit geheimen of data in de image
+.env
+.env.*
+!.env.example
+secrets
+data
+*.db
+*.sqlite*
+# Niet nodig om te bouwen
+tests
+docs
+public-site
+branding
+deploy
+compose.yaml
+Dockerfile
+.dockerignore

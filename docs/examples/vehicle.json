@@ -1,0 +1,82 @@
+{
+  "id": 1,
+  "name": "Testauto",
+  "make": null,
+  "model": null,
+  "license_plate": "XX-000-X",
+  "license_plate_normalized": "XX000X",
+  "build_year": null,
+  "location": {
+    "name": "Utrecht",
+    "latitude": 52.0907,
+    "longitude": 5.1214,
+    "timezone": "Europe/Amsterdam",
+    "id": 1
+  },
+  "timezone": "Europe/Amsterdam",
+  "driving_profile": {
+    "kind": "commute",
+    "slots": [
+      {
+        "weekday": 0,
+        "start": "07:00:00",
+        "end": "09:00:00"
+      },
+      {
+        "weekday": 0,
+        "start": "16:00:00",
+        "end": "19:00:00"
+      },
+      {
+        "weekday": 1,
+        "start": "07:00:00",
+        "end": "09:00:00"
+      },
+      {
+        "weekday": 1,
+        "start": "16:00:00",
+        "end": "19:00:00"
+      },
+      {
+        "weekday": 2,
+        "start": "07:00:00",
+        "end": "09:00:00"
+      },
+      {
+        "weekday": 2,
+        "start": "16:00:00",
+        "end": "19:00:00"
+      },
+      {
+        "weekday": 3,
+        "start": "07:00:00",
+        "end": "09:00:00"
+      },
+      {
+        "weekday": 3,
+        "start": "16:00:00",
+        "end": "19:00:00"
+      },
+      {
+        "weekday": 4,
+        "start": "07:00:00",
+        "end": "09:00:00"
+      },
+      {
+        "weekday": 4,
+        "start": "16:00:00",
+        "end": "19:00:00"
+      }
+    ]
+  },
+  "change_method": "self",
+  "preferred_garage_id": null,
+  "prep_days": 7,
+  "notes": null,
+  "countries_of_use": [
+    "NL"
+  ],
+  "plate_lookup_data": null,
+  "created_at": "2026-10-31T18:36:59.315644Z",
+  "updated_at": "2026-10-31T18:36:59.315644Z"
+}

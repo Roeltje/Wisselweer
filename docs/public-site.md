@@ -28,3 +28,33 @@ De site gebruikt geen inline script, stijl of event-handlers, dus deze policy vo
 
 ## Vertalingen later
 Teksten staan in HTML (NL) met schone structuur. Een Engelse versie kan als `/en/` met eigen `index.html` (`lang="en"`, `hreflang`-links in beide pagina's) die `../style.css` hergebruikt. `app.js` heeft NL-teksten en statuslabels in één map bovenin; maak die per taal te kiezen (bv. via `document.documentElement.lang`) en gebruik `advice.json` per `locale` (bv. `advice.en.json`).
+
+## Installatie op een eigen LXC
+Het script `deploy/install-public-site.sh` richt een kale container in als statische webserver (nginx, SFTP-only deploy-gebruiker in een chroot, nftables-firewall, automatische beveiligingsupdates). Het is idempotent: opnieuw draaien is veilig en bestaande configs worden eerst gebackupt (`<bestand>.bak.<datum>`).
+
+**Container**: Debian 13 (trixie) aanbevolen (Ubuntu 24.04+ werkt ook), unprivileged LXC, 1 vCPU, 256–512 MB RAM, 2 GB schijf, vast intern IP, geen gedeelde mounts.
+
+**Aanroep** (als root in de container; de IP's hieronder zijn voorbeelden uit de documentatierange):
+```bash
+./install-public-site.sh \
+  --domain wisselweer.nl \
+  --proxy-ip 192.0.2.10 \
+  --ssh-allow 192.0.2.20,192.0.2.5 \
+  --deny-out 192.0.2.20 \
+  --deploy-key-file /root/deploy.pub \
+  --site-src /root/Wisselweer/public-site
+```
+- `--proxy-ip` (verplicht): alleen dit IP mag poort 80 (en is `set_real_ip_from`).
+- `--ssh-allow`: wie poort 22 mag. Is dit leeg, dan wordt de firewall bewust niet geactiveerd, om uitsluiting te voorkomen; staat je huidige SSH-adres er niet in, dan ook niet (tenzij `--force-firewall`).
+- `--deny-out` (optioneel): blokkeert nieuwe uitgaande verbindingen naar deze IP's, bv. de privé-app.
+- `--deploy-key "<ssh-ed25519 …>"` of `--deploy-key-file` (herhaalbaar): publieke sleutel(s) van de privé-app en eventueel je beheer-pc.
+- `--site-src`: map (`public-site/`) of git-URL om de initiële sitebestanden te kopiëren; een bestaande `advice.json` blijft behouden. Zonder krijg je een minimale placeholder.
+- Alle opties kunnen ook als omgevingsvariabele (`WW_DOMAIN`, `WW_PROXY_IP`, …); zie `--help`.
+
+Let op: wachtwoordlogin via SSH wordt uitgezet. Zorg dat je een sleutel hebt, of gebruik de container-console (`pct enter`).
+
+**Nginx Proxy Manager**: Proxy Host voor `wisselweer.nl` en `www.wisselweer.nl` naar `http://<ip-van-de-container>:80`; SSL via Let's Encrypt met DNS-challenge (Cloudflare) en een API-token met alleen `Zone → DNS → Edit` voor de zone; Force SSL aan; HSTS pas aanzetten als alles werkt.
+
+**Cloudflare**: DNS-records proxied, SSL/TLS op *Full (strict)*, en een cache-regel voor het pad `/advice.json` met Edge TTL "respect origin" (maximaal 5 minuten).
+
+**Privé-app**: stel de `WISSELWEER_PUBLISH_SFTP_*`-variabelen in (zie `publishing.md`), zet de hostkey in de `known_hosts` van de servicegebruiker en test met `wisselweer publish`.
