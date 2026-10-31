@@ -38,6 +38,11 @@ Opties (flag of omgevingsvariabele):
   --site-src <pad|url>   kopieer initiële sitebestanden: een map (bij voorkeur
                          <repo>/public-site) of git-URL met een public-site/ map.
                          Zonder: minimale placeholder-index.       [WW_SITE_SRC]
+  --analytics-origin <https-origin>
+                         optioneel: origin van je eigen Umami (bv. https://umami.example.org);
+                         staat dan in script-src en connect-src van de CSP. De site
+                         laadt analytics alleen als er ook een analytics.json staat.
+                                                                   [WW_ANALYTICS_ORIGIN]
   --force-firewall       activeer firewall ook als jouw huidige SSH-adres niet
                          in --ssh-allow staat (op eigen risico)
   --no-firewall          sla de firewall over
@@ -58,6 +63,7 @@ PROXY_IP="${WW_PROXY_IP:-}"
 SSH_ALLOW="${WW_SSH_ALLOW:-}"
 DENY_OUT="${WW_DENY_OUT:-}"
 SITE_SRC="${WW_SITE_SRC:-}"
+ANALYTICS_ORIGIN="${WW_ANALYTICS_ORIGIN:-}"
 FORCE_FW=0
 NO_FW=0
 DEPLOY_KEYS=()
@@ -85,6 +91,7 @@ while [ "$#" -gt 0 ]; do
     --deploy-key)     need_val "$@"; DEPLOY_KEYS+=("$2"); shift 2 ;;
     --deploy-key-file) need_val "$@"; DEPLOY_KEY_FILES+=("$2"); shift 2 ;;
     --site-src)       need_val "$@"; SITE_SRC="$2"; shift 2 ;;
+    --analytics-origin) need_val "$@"; ANALYTICS_ORIGIN="$2"; shift 2 ;;
     --force-firewall) FORCE_FW=1; shift ;;
     --no-firewall)    NO_FW=1; shift ;;
     -h|--help)        usage; exit 0 ;;
@@ -115,6 +122,10 @@ norm_list() {
   printf '%s' "$out"
 }
 [[ "$DOMAIN" =~ ^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$ ]] || die "Ongeldige domeinnaam: '$DOMAIN'"
+if [ -n "$ANALYTICS_ORIGIN" ]; then
+  [[ "$ANALYTICS_ORIGIN" =~ ^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?$ ]] \
+    || die "Ongeldige --analytics-origin: '$ANALYTICS_ORIGIN' (verwacht bv. https://umami.example.org, zonder pad of slash)."
+fi
 PROXY_IP="${PROXY_IP//[[:space:]]/}"
 valid_ip "$PROXY_IP" || die "Ongeldig --proxy-ip: '$PROXY_IP'"
 SSH_ALLOW="$(norm_list "$SSH_ALLOW")"
@@ -291,6 +302,13 @@ server {
         try_files $uri =404;
     }
 
+    # Analytics-config (optioneel, alleen op de server): niet cachen
+    location = /analytics.json {
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options nosniff always;
+        try_files $uri =404;
+    }
+
     # Statische assets lang cachen
     location ~* \.(css|js|svg|png|ico|webmanifest|woff2)$ {
         add_header Cache-Control "public, max-age=604800" always;
@@ -310,6 +328,11 @@ EOF
 tpl="$(cat "$TMPDIR_WW/nginx-site.tpl")"
 tpl="${tpl//@DOMAIN@/$DOMAIN}"
 tpl="${tpl//@PROXY_IP@/$PROXY_IP}"
+if [ -n "$ANALYTICS_ORIGIN" ]; then
+  q="'"
+  tpl="${tpl//script-src ${q}self${q};/script-src ${q}self${q} $ANALYTICS_ORIGIN;}"
+  tpl="${tpl//connect-src ${q}self${q};/connect-src ${q}self${q} $ANALYTICS_ORIGIN;}"
+fi
 printf '%s\n' "$tpl" >"$TMPDIR_WW/nginx-site.conf"
 
 mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
@@ -459,6 +482,7 @@ echo
 printf '%s================ Klaar ================%s\n' "$c_grn" "$c_reset"
 echo "Domein:        $DOMAIN (+ www.$DOMAIN)"
 echo "Webroot:       /srv/wisselweer/site (SFTP-pad: /site)"
+echo "Analytics:     ${ANALYTICS_ORIGIN:-niet ingesteld}"
 echo "Poort 80:      alleen van $PROXY_IP $( [ "$FW_ACTIVE" -eq 1 ] && echo '(afgedwongen)' || echo '(firewall NIET actief)')"
 echo "Poort 22:      ${SSH_ALLOW:-<niet beperkt>} $( [ "$FW_ACTIVE" -eq 1 ] && echo '(afgedwongen)' || echo '(firewall NIET actief)')"
 echo "Config:        /etc/nginx/sites-available/wisselweer, /etc/ssh/sshd_config.d/10-wisselweer.conf, /etc/nftables.conf"

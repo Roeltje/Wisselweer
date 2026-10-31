@@ -1,14 +1,26 @@
 # Publieke site (`public-site/`)
 
-Volledig statische site (geen build-stap, geen frameworks, geen externe fonts/CDN/analytics). Ze leest uitsluitend `advice.json` (zie `docs/public-advice-contract.md`) en heeft geen netwerkpad naar de privé-app.
+Volledig statische site (geen build-stap, geen frameworks, geen externe fonts/CDN; analytics is optioneel en standaard uit, zie "Analytics"). Ze leest uitsluitend `advice.json` (zie `docs/public-advice-contract.md`) en heeft geen netwerkpad naar de privé-app.
 
 ## Bestanden
 - `index.html`, `404.html`, `style.css`, `app.js` (render met `textContent`, tijden in Europe/Amsterdam)
 - `advice.json`: voorbeeldbestand; wordt in productie door `wisselweer publish` overschreven
+- `analytics.js` (laadt optioneel Umami, zie "Analytics"), `analytics.example.json`
 - `manifest.webmanifest`, `robots.txt`, `sitemap.xml`
 - `favicon.svg`, `logo.svg`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `og-image.png` (kopieën uit `branding/`)
 
 Gedrag: ontbrekend/ongeldig bestand of `schema_version` ≠ 1 geeft "Het actuele advies is tijdelijk niet beschikbaar."; na `stale_after` verschijnt een "verouderd"-melding en wordt de oude inhoud gedimd. Zonder JavaScript staat er een `<noscript>`-uitleg met link naar `advice.json`. De pagina bevat een leeg, verborgen `<aside id="partners">` voor eventuele affiliate-links (`rel="sponsored noopener"`).
+
+## Analytics (optioneel, Umami)
+Standaard staat analytics uit en doet de site geen extra verzoeken, behalve één same-origin `fetch` naar `analytics.json` die stil mag 404'en. Er staan geen hostnaam of website-ID in de repo.
+
+1. Maak op de server `/srv/wisselweer/site/analytics.json` (staat in `.gitignore`, niet in git; zie `public-site/analytics.example.json`):
+   ```json
+   {"src": "https://umami.example.org/script.js", "websiteId": "<uuid>", "domains": "wisselweer.nl"}
+   ```
+   `src` moet een absolute `https:`-URL zijn en `websiteId` een UUID; `domains` is optioneel. Ongeldige config wordt genegeerd.
+2. Draai `deploy/install-public-site.sh` opnieuw met `--analytics-origin https://umami.example.org` (of `WW_ANALYTICS_ORIGIN`). Dat zet de origin in `script-src` en `connect-src` van de CSP; zonder deze optie blijft de CSP ongewijzigd. Opnieuw draaien is nodig om de CSP te wijzigen.
+3. Umami is cookieloos en het script wordt geladen met `data-do-not-track="true"`. Zodra analytics actief is, verandert de voettekst automatisch in "geen cookies; anonieme bezoekersstatistieken via eigen Umami."
 
 ## Lokaal bekijken
 `python3 -m http.server 8766 -d public-site`
