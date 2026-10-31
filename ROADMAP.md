@@ -17,7 +17,7 @@ Plannen kunnen wijzigen. Vinkjes volgen [docs/STATUS.md](docs/STATUS.md); open p
 - [x] REST API
 - [x] Beheerinterface
 - [x] Landelijk advies
-- [x] Statische site
+- [x] Publicatie van `advice.json` (de statische site wordt apart onderhouden)
 - [x] Docker + Debian/Ubuntu-LXC
 - [x] Tests + documentatie
 

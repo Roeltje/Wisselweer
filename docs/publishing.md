@@ -1,6 +1,6 @@
 # Landelijk advies publiceren
 
-`wisselweer publish` berekent één anoniem, landelijk wisseladvies en schrijft dat als `advice.json`. Dat bestand is de enige koppeling met de publieke site; het formaat staat in [`public-advice-contract.md`](public-advice-contract.md) (schema: `src/wisselweer/publisher/public_schema.py`, `extra="forbid"`). Er gaan nooit voertuigen, kentekens, garages, contactgegevens of eigen locaties in: het bestand wordt uitsluitend gebouwd uit berekende waarden, niet uit de database.
+`wisselweer publish` berekent één anoniem, landelijk wisseladvies en schrijft dat als `advice.json`. Dat bestand is de enige koppeling met een publieke site (de site van wisselweer.nl wordt apart onderhouden; je kunt ook een eigen site of Home Assistant gebruiken); het formaat staat in [`public-advice-contract.md`](public-advice-contract.md) (schema: `src/wisselweer/publisher/public_schema.py`, `extra="forbid"`). Er gaan nooit voertuigen, kentekens, garages, contactgegevens of eigen locaties in: het bestand wordt uitsluitend gebouwd uit berekende waarden, niet uit de database.
 
 ## Methode
 

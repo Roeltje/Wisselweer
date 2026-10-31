@@ -25,4 +25,4 @@ description: Bouwwerkwijze voor Wisselweer — architect (Opus) delegeert hapkla
 
 ## Fases
 1. Core-engine + fixtures + tests  2. Weerproviders + cache + API-basis  3. Database + voertuigen/banden/garages
-4. Privé-webinterface + auth  5. Publisher + publieke site  6. Deployment + docs + security-review
+4. Privé-webinterface + auth  5. Publisher  6. Deployment + docs + security-review

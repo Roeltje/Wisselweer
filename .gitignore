@@ -9,7 +9,3 @@ dist/
 data/
 *.egg-info/
 .DS_Store
-
-# Server-specifieke analytics-config (nooit committen)
-public-site/analytics.json
-public-site/contact.json

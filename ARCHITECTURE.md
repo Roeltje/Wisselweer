@@ -10,9 +10,9 @@ Dit document is het bindende contract voor alle code in deze repository. Afwijke
 |---|---|---|
 | **Engine** (`wisselweer.core`) | Pure, uitlegbare adviesberekening | Alleen aangeleverde objecten |
 | **Self-hosted app** (`wisselweer.api` + `wisselweer.web`) | Beheer van voertuigen, banden, garages, advies | Lokale SQLite, privé |
-| **Publieke site** (`public-site/`) | Statische HTML die alleen `advice.json` leest | Uitsluitend allowlisted publieke velden |
+| **Publieke site (apart, niet in deze repo)** | Statische site van wisselweer.nl die alleen `advice.json` leest | Uitsluitend allowlisted publieke velden |
 
-De publieke site heeft **nooit** een netwerkpad naar de privé-app. De privé-app *duwt* `advice.json` naar een map of via SFTP naar de webserver.
+De publieke site wordt apart onderhouden. Deze repo publiceert `advice.json` volgens [docs/public-advice-contract.md](docs/public-advice-contract.md); iedereen kan dat bestand gebruiken (eigen site, Home Assistant). Een publieke site heeft **nooit** een netwerkpad naar de privé-app: de privé-app *duwt* `advice.json` naar een map of via SFTP naar de webserver.
 
 ## 2. Stack
 
@@ -58,7 +58,6 @@ src/wisselweer/
   settings.py             # pydantic-settings uit env (.env)
   cli.py                  # `wisselweer serve|publish|migrate|create-admin|reset-password|create-api-token|revoke-api-token|backtest`
   backtest.py             # replay van forecast-snapshots (zie docs/backtesting.md)
-public-site/              # index.html, style.css, app.js, advice.json, robots.txt, sitemap.xml, icons/
 branding/                 # logo.svg, logo-mono.svg, favicon.svg, PNG's
 deploy/                   # systemd-units, installatiescripts
 Dockerfile  compose.yaml  .env.example

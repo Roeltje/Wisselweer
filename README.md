@@ -12,7 +12,7 @@ Wisselweer adviseert wanneer je van zomer- naar winterbanden wisselt (en terug),
 
 - **Engine** (`wisselweer.core`): pure, uitlegbare adviesberekening. Geen percentages of gladheidskansen; elke uitkomst heeft redenen en onzekerheden.
 - **Self-hosted app** (`wisselweer.api` + `wisselweer.web`): beheer van voertuigen, bandensets, garages en advies, met lokale SQLite-database en privé webinterface.
-- **Publieke site** (`public-site/`): statische HTML die alleen een anoniem landelijk `advice.json` leest. De privé-app duwt dat bestand naar een map of via SFTP naar een webserver; de site heeft geen verbinding met de app.
+- **Landelijk `advice.json`**: een anoniem landelijk advies volgens [docs/public-advice-contract.md](docs/public-advice-contract.md). De privé-app duwt dat bestand naar een map of via SFTP naar een webserver. De publieke site van wisselweer.nl wordt apart onderhouden; iedereen kan het bestand gebruiken (eigen site, Home Assistant). De app heeft geen verbinding met zo'n site.
 
 ## Functies
 
@@ -57,7 +57,7 @@ Details, variabelen en beperkingen: [docs/providers.md](docs/providers.md). Gebr
 
 ## Privacy
 
-Voertuig-, band-, garage- en locatiegegevens blijven in je eigen database. Naar weerbronnen gaan alleen afgeronde coördinaten (4 decimalen) en, bij MET Norway, je contactgegeven in de User-Agent. De publieke site krijgt uitsluitend een anoniem landelijk advies, gebouwd uit een allowlist; er gaan geen kentekens, namen of e-mailadressen in en geen eigen locaties. Geen analytics of externe fonts in de publieke site.
+Voertuig-, band-, garage- en locatiegegevens blijven in je eigen database. Naar weerbronnen gaan alleen afgeronde coördinaten (4 decimalen) en, bij MET Norway, je contactgegeven in de User-Agent. Het gepubliceerde `advice.json` bevat uitsluitend een anoniem landelijk advies, gebouwd uit een allowlist; er gaan geen kentekens, namen of e-mailadressen in en geen eigen locaties.
 
 ## Documentatie
 
@@ -65,7 +65,7 @@ Voertuig-, band-, garage- en locatiegegevens blijven in je eigen database. Naar 
 - [docs/STATUS.md](docs/STATUS.md): voortgang
 - [ROADMAP.md](ROADMAP.md)
 - [docs/advice-rules.md](docs/advice-rules.md), [docs/providers.md](docs/providers.md), [docs/api.md](docs/api.md)
-- [docs/publishing.md](docs/publishing.md), [docs/public-advice-contract.md](docs/public-advice-contract.md), [docs/public-site.md](docs/public-site.md)
+- [docs/publishing.md](docs/publishing.md), [docs/public-advice-contract.md](docs/public-advice-contract.md)
 - [docs/backtesting.md](docs/backtesting.md), [docs/testing.md](docs/testing.md), [docs/examples/](docs/examples)
 - [docs/install-docker.md](docs/install-docker.md), [docs/install-lxc.md](docs/install-lxc.md)
 - [SECURITY.md](SECURITY.md)

@@ -16,7 +16,6 @@ data
 # Niet nodig om te bouwen
 tests
 docs
-public-site
 branding
 deploy
 compose.yaml
