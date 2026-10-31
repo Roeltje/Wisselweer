@@ -68,7 +68,7 @@ Voertuig-, band-, garage- en locatiegegevens blijven in je eigen database. Naar 
 - [docs/publishing.md](docs/publishing.md), [docs/public-advice-contract.md](docs/public-advice-contract.md)
 - [docs/backtesting.md](docs/backtesting.md), [docs/testing.md](docs/testing.md), [docs/examples/](docs/examples)
 - [docs/install-docker.md](docs/install-docker.md), [docs/install-lxc.md](docs/install-lxc.md)
-- [SECURITY.md](SECURITY.md)
+- [SECURITY.md](SECURITY.md), [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Hoe Wisselweer gebouwd is
 

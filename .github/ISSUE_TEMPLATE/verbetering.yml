@@ -1,0 +1,28 @@
+name: Verbetering voorstellen
+description: Een idee voor een nieuwe functie of verbetering.
+title: "[Verbetering]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: probleem
+    attributes:
+      label: Probleem
+      description: Welk probleem los je op, en voor wie?
+    validations:
+      required: true
+
+  - type: textarea
+    id: voorstel
+    attributes:
+      label: Voorstel
+      description: Hoe zou het moeten werken?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatieven
+    attributes:
+      label: Alternatieven
+      description: Welke andere oplossingen heb je overwogen?
+    validations:
+      required: false
