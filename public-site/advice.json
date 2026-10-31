@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "country": "NL",
+  "locale": "nl-NL",
+  "next_season": "winter",
+  "heading": "Wanneer winterbanden?",
+  "status": "INSUFFICIENT_DATA",
+  "status_label": "Nog geen advies",
+  "summary": "Dit is een voorbeeldbestand. Het echte advies wordt periodiek gepubliceerd door Wisselweer.",
+  "recommended_date": null,
+  "recommended_period": null,
+  "regional_variation": false,
+  "regions": [],
+  "forecast_until": null,
+  "generated_at": "2026-10-31T00:00:00Z",
+  "stale_after": "2026-10-31T18:00:00Z",
+  "source": {"name": "MET Norway", "attribution": "Weerdata: MET Norway (CC BY 4.0)", "license_url": "https://api.met.no/doc/License"},
+  "rules_version": "0.1.0"
+}
