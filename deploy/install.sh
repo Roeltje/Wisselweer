@@ -47,7 +47,10 @@ install -d -m 0755 -o root -g root "$APP_DIR"
 install -d -m 0750 -o "$SVC_USER" -g "$SVC_USER" "$DATA_DIR"
 install -d -m 0750 -o root -g "$SVC_USER" "$ETC_DIR"
 
-if ! command -v uv >/dev/null 2>&1 || [[ "$(uv --version | awk '{print $2}')" != "$UV_VERSION" ]]; then
+# Vast pad: /usr/local/bin staat niet in elke root-sessie (bv. `pct enter`) in PATH.
+UV=/usr/local/bin/uv
+export PATH="/usr/local/bin:$PATH"
+if [[ ! -x "$UV" ]] || [[ "$("$UV" --version | awk '{print $2}')" != "$UV_VERSION" ]]; then
   echo "==> uv $UV_VERSION installeren naar /usr/local/bin"
   curl -LsSf "https://astral.sh/uv/$UV_VERSION/install.sh" \
     | env UV_INSTALL_DIR=/usr/local/bin UV_NO_MODIFY_PATH=1 sh
@@ -81,7 +84,7 @@ echo "==> Afhankelijkheden (uv sync --frozen --no-dev) en Python 3.12"
   export UV_PYTHON_PREFERENCE=managed
   export UV_PROJECT_ENVIRONMENT="$APP_DIR/.venv"
   export UV_CACHE_DIR=/var/cache/wisselweer-uv
-  uv sync --frozen --no-dev --no-editable --python 3.12
+  "$UV" sync --frozen --no-dev --no-editable --python 3.12
 )
 chown -R root:root "$APP_DIR"
 chmod -R go+rX,go-w "$APP_DIR"
