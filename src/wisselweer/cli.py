@@ -85,11 +85,32 @@ def _admin_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def _publish() -> int:
+    from wisselweer.publisher.publish import PublishError, run_publish
+    from wisselweer.settings import get_settings
+
+    settings = get_settings()
+    logging.basicConfig(
+        level=settings.log_level.upper(), format="%(asctime)s %(levelname)s %(name)s %(message)s"
+    )
+    try:
+        advice = run_publish(settings)
+    except PublishError as exc:
+        print(f"Fout: {exc}", file=sys.stderr)
+        return 1
+    except Exception as exc:  # noqa: BLE001 - geen details (kunnen paden/secrets bevatten)
+        print(f"Fout: publiceren mislukt ({type(exc).__name__})", file=sys.stderr)
+        return 1
+    print(f"Gepubliceerd: {advice.next_season} / {advice.status} -> {settings.publish_dir}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="wisselweer")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("serve", help="Start de webserver")
     sub.add_parser("version", help="Toon de versie")
+    sub.add_parser("publish", help="Bereken en publiceer het landelijke advies (advice.json)")
     sub.add_parser("migrate", help="Werk de database bij (alembic upgrade head)")
     for name, help_ in (
         ("create-admin", "Maak de beheerder aan"),
@@ -112,6 +133,8 @@ def main(argv: list[str] | None = None) -> int:
 
         migrate()
         return 0
+    if args.command == "publish":
+        return _publish()
     if args.command in {"create-admin", "reset-password", "create-api-token", "revoke-api-token"}:
         return _admin_command(args)
     return _serve()

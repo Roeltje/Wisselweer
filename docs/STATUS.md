@@ -7,5 +7,5 @@
 | 2 | Weerproviders, cache, API-basis (103 tests totaal; live getest) | klaar — SQLite-cache volgt in fase 3; KNMI-veldnamen en Bright Sky/WU-licentie nog verifiëren |
 | 3 | Database, voertuigen, banden, garages, REST-API (154 tests) | klaar — auth volgt in fase 4 |
 | 4 | Privé-webinterface + auth (incl. i18n-basis, providerkeuze, modelvergelijking) | klaar |
-| 5 | Publisher + publieke site | open |
+| 5 | Landelijk advies, publisher (lokaal + SFTP), publieke site | klaar |
 | 6 | Deployment, docs, security | open |

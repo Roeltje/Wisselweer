@@ -280,5 +280,22 @@
  "flash.garage_created": "Garage toegevoegd.",
  "flash.garage_deleted": "Garage verwijderd.",
  "flash.provider_saved": "Standaard weerbron is nu {name}.",
- "flash.token_revoked": "Token ingetrokken."
+ "flash.token_revoked": "Token ingetrokken.",
+ "public.heading.winter": "Wanneer winterbanden?",
+ "public.heading.summer": "Wanneer zomerbanden?",
+ "public.status_label.KEEP_CURRENT": "Nog niet wisselen",
+ "public.status_label.PREPARE_CHANGE": "Bereid de wissel voor",
+ "public.status_label.CHANGE_RECOMMENDED": "Tijd om te wisselen",
+ "public.status_label.REGIONAL_DIFFERENCES": "Verschilt per regio",
+ "public.status_label.INSUFFICIENT_DATA": "Nog geen advies",
+ "public.summary.KEEP_CURRENT.winter": "In de referentieregio's kunnen de zomerbanden er nog op blijven.",
+ "public.summary.KEEP_CURRENT.summer": "In de referentieregio's kunnen de winterbanden er nog op blijven.",
+ "public.summary.PREPARE_CHANGE.winter": "De verwachting wijst op een naderende omslag: bereid de wissel naar winterbanden voor.",
+ "public.summary.PREPARE_CHANGE.summer": "De verwachting wijst op een naderende omslag: bereid de wissel naar zomerbanden voor.",
+ "public.summary.CHANGE_RECOMMENDED.winter": "Volgens de verwachting is het in de referentieregio's tijd voor winterbanden.",
+ "public.summary.CHANGE_RECOMMENDED.summer": "Volgens de verwachting is het in de referentieregio's tijd voor zomerbanden.",
+ "public.summary.REGIONAL_DIFFERENCES": "De omstandigheden verschillen per regio. Er is nog geen eenduidig landelijk wisselmoment.",
+ "public.summary.INSUFFICIENT_DATA": "Er is op dit moment te weinig weersdata voor een betrouwbaar landelijk advies.",
+ "public.warning_note": "Lokaal kan het glad zijn; let op waarschuwingen van het KNMI.",
+ "settings.public_preview": "Publiek advies (voorbeeld)"
 }

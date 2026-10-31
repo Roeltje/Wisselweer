@@ -6,10 +6,13 @@ from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pydantic import SecretStr
+from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from wisselweer.publisher.national import ReferenceLocation
+
 if TYPE_CHECKING:
+    from wisselweer.publisher.national import NationalConfig
     from wisselweer.weather.registry import ProvidersConfig
 
 
@@ -42,6 +45,32 @@ class Settings(BaseSettings):
     secret_key: SecretStr | None = None
     cookie_secure: bool = False
     log_level: str = "INFO"
+
+    # --- Publicatie van het landelijke advies (`wisselweer publish`) ---
+    publish_dir: Path | None = None  # standaard <data_dir>/public
+    publish_sftp_host: str | None = None
+    publish_sftp_user: str | None = None
+    publish_sftp_key: Path | None = None
+    publish_sftp_path: str = "/"
+    publish_sftp_port: int = 22
+    publish_sftp_known_hosts: Path | None = None
+    public_stale_hours: float = 18
+    # Optionele JSON-lijst [{"name": ..., "latitude": ..., "longitude": ...}] i.p.v. de standaard.
+    national_locations: list[ReferenceLocation] | None = None
+
+    @model_validator(mode="after")
+    def _default_publish_dir(self) -> Settings:
+        if self.publish_dir is None:
+            self.publish_dir = self.data_dir / "public"
+        return self
+
+    def national_config(self) -> NationalConfig:
+        from wisselweer.publisher.national import NationalConfig
+
+        cfg = NationalConfig(stale_hours=self.public_stale_hours)
+        if self.national_locations:
+            cfg = cfg.model_copy(update={"locations": self.national_locations})
+        return cfg
 
     def providers_config(self) -> ProvidersConfig:
         from wisselweer.weather.registry import ProvidersConfig

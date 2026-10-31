@@ -17,7 +17,8 @@ class ProviderInfo(BaseModel):
     name: str  # bv. "MET Norway"
     attribution: str  # verplichte bronvermelding
     license_url: str
-    variables: set[str] = Field(default_factory=set)  # HourlyPoint-veldnamen die geleverd kunnen worden
+    # HourlyPoint-veldnamen die geleverd kunnen worden
+    variables: set[str] = Field(default_factory=set)
     horizon_hours: int
     commercial_use_ok: bool
     needs_credentials: bool = False
