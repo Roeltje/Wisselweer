@@ -70,6 +70,15 @@ Voertuig-, band-, garage- en locatiegegevens blijven in je eigen database. Naar 
 - [docs/install-docker.md](docs/install-docker.md), [docs/install-lxc.md](docs/install-lxc.md)
 - [SECURITY.md](SECURITY.md)
 
+## Hoe Wisselweer gebouwd is
+
+Wisselweer is ontwikkeld met [Claude Code](https://claude.com/claude-code). De maker schreef de projectopdracht, nam de product- en ontwerpbeslissingen en beoordeelde het resultaat. De AI deed het ontwerp- en programmeerwerk in vaste rollen:
+
+- **Architect** (Claude Opus): legde het ontwerp vast in [ARCHITECTURE.md](ARCHITECTURE.md), knipte het werk in fases, controleerde elk resultaat, draaide de tests en deed de commits.
+- **Bouwers** (Claude Sonnet): implementeerden per fase één afgebakend deel, zoals de advies-engine, de weerbronnen, de database of de webinterface, met tests.
+
+Elke fase eindigde pas als de tests slaagden en de architect het werk had nagekeken. De werkwijze en de vaste regels staan in [`.claude/skills/wisselweer-build/SKILL.md`](.claude/skills/wisselweer-build/SKILL.md). Commits van de AI zijn herkenbaar aan de regel `Co-Authored-By: Claude`.
+
 ## Licentie
 
 Wisselweer is vrije software onder de [GNU Affero General Public License v3.0](LICENSE).
