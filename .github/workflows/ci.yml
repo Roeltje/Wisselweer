@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.13.6"
+
+      - name: Afhankelijkheden installeren
+        run: uv sync --frozen --extra dev --python 3.12
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Opmaak controleren
+        run: uv run ruff format --check .
+
+      - name: Tests
+        run: uv run pytest -q

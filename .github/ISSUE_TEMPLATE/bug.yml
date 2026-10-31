@@ -1,0 +1,64 @@
+name: Bug melden
+description: Iets werkt niet zoals verwacht.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Bedankt voor je melding. Meld beveiligingsproblemen **niet** hier, maar vertrouwelijk via [SECURITY.md](https://github.com/Roeltje/Wisselweer/blob/main/SECURITY.md).
+
+  - type: textarea
+    id: gebeurd
+    attributes:
+      label: Wat gebeurde er?
+    validations:
+      required: true
+
+  - type: textarea
+    id: verwacht
+    attributes:
+      label: Wat verwachtte je?
+    validations:
+      required: true
+
+  - type: textarea
+    id: stappen
+    attributes:
+      label: Stappen om het te reproduceren
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+
+  - type: input
+    id: versie
+    attributes:
+      label: Versie
+      description: Uitvoer van `wisselweer version`.
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: installatie
+    attributes:
+      label: Installatiewijze
+      options:
+        - Docker
+        - LXC-native
+        - Anders
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logregels
+      description: |
+        **Let op:** verwijder persoonlijke gegevens en sleutels uit de logregels voordat je ze plakt.
+        Denk aan kentekens, namen, e-mailadressen, locaties, API-keys, tokens en wachtwoorden.
+      render: text
+    validations:
+      required: false
