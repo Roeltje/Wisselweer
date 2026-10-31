@@ -16,7 +16,7 @@ description: Bouwwerkwijze voor Wisselweer — architect (Opus) delegeert hapkla
 4. Werk `docs/STATUS.md` bij, commit (`feat(<module>): …`), push. Vóór de eerste werkende release direct naar `main`; daarna alleen via PR.
 
 ## Harde regels
-- Python 3.12+, `uv` (`export PATH=$HOME/Library/Python/3.9/bin:$HOME/.local/bin:$PATH` op deze Mac).
+- Python 3.12+ via [`uv`](https://docs.astral.sh/uv/) (`uv sync --extra dev`, daarna `uv run pytest`). Zorg dat `uv` op je PATH staat.
 - `wisselweer.core` importeert nooit FastAPI, SQLAlchemy, httpx of IO.
 - Tests zonder netwerk (fixtures, `respx`). Nooit testresultaten verzinnen.
 - Geen e-mailadressen, API-keys, kentekens of andere persoonsgegevens in de repo (ook niet in fixtures: gebruik `XX-000-X`, `garage@example.invalid`).

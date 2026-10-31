@@ -43,19 +43,26 @@ class VehicleAdviceService:
         self._config = engine_config or EngineConfig()
 
     def advice_for_vehicle(self, vehicle_id: int, now: datetime) -> Advice:
+        # Eerst lezen en de forecast ophalen buiten de schrijftransactie: een SQLite-cache schrijft
+        # via een eigen sessie, en dat geeft "database is locked" als wij al een leessnapshot hebben.
+        with session_scope(self._factory) as s0:
+            v0 = s0.get(Vehicle, vehicle_id)
+            if v0 is None:
+                raise NotFoundError("voertuig niet gevonden")
+            loc0 = s0.get(Location, v0.location_id)
+            assert loc0 is not None
+            lat, lon = loc0.latitude, loc0.longitude
+        try:
+            forecast: Forecast | None = self._forecasts.get_forecast(lat, lon)
+        except ProviderError:
+            forecast = None
+
         with session_scope(self._factory) as s:
             v = s.get(Vehicle, vehicle_id)
             if v is None:
                 raise NotFoundError("voertuig niet gevonden")
             loc = s.get(Location, v.location_id)
             assert loc is not None
-
-            try:
-                forecast: Forecast | None = self._forecasts.get_forecast(
-                    loc.latitude, loc.longitude
-                )
-            except ProviderError:
-                forecast = None
 
             mounted_set = s.scalar(
                 select(TireSet).where(

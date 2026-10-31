@@ -8,7 +8,7 @@ from wisselweer.observations.base import ObservationProvider
 from wisselweer.observations.wunderground import WundergroundProvider
 from wisselweer.weather.base import ForecastProvider
 from wisselweer.weather.brightsky import BrightSkyObservationProvider, BrightSkyProvider
-from wisselweer.weather.cache import ForecastCache, InMemoryBackend
+from wisselweer.weather.cache import CacheBackend, ForecastCache, InMemoryBackend
 from wisselweer.weather.knmi import KnmiForecastProvider, KnmiObservationProvider
 from wisselweer.weather.metno import MetNoProvider
 from wisselweer.weather.openmeteo import OpenMeteoProvider
@@ -32,7 +32,9 @@ class ProvidersConfig(BaseModel):
     max_stale_hours: float = 24
 
 
-def build_forecast_service(cfg: ProvidersConfig) -> ForecastService:
+def build_forecast_service(
+    cfg: ProvidersConfig, backend: CacheBackend | None = None
+) -> ForecastService:
     providers: dict[str, ForecastProvider] = {
         "metno": MetNoProvider(cfg.contact),
         "openmeteo": OpenMeteoProvider(
@@ -43,7 +45,7 @@ def build_forecast_service(cfg: ProvidersConfig) -> ForecastService:
         "brightsky": BrightSkyProvider(),
         "knmi_forecast": KnmiForecastProvider(_secret(cfg.knmi_api_key)),
     }
-    cache = ForecastCache(InMemoryBackend(), max_stale_hours=cfg.max_stale_hours)
+    cache = ForecastCache(backend or InMemoryBackend(), max_stale_hours=cfg.max_stale_hours)
     return ForecastService(providers, cache, cfg.default_provider)
 
 

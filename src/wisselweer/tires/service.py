@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime, time
 
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
 from wisselweer.storage.enums import ChangeMethod, OdometerSource, TireStatus
@@ -111,6 +111,23 @@ def update_tire_set(session: Session, set_id: int, patch: TireSetPatch) -> TireS
         setattr(s, k, val)
     session.flush()
     return _set_out(s)
+
+
+def delete_tire_set(session: Session, set_id: int) -> None:
+    """Verwijdert een set met metingen; niet als hij gemonteerd is of in de wisselhistorie staat."""
+    s = _set(session, set_id)
+    if s.status == TireStatus.MOUNTED:
+        raise InvalidOperation("een gemonteerde set kan niet verwijderd worden")
+    in_history = session.scalar(
+        select(TireChange.id)
+        .where((TireChange.to_set_id == set_id) | (TireChange.from_set_id == set_id))
+        .limit(1)
+    )
+    if in_history is not None:
+        raise InvalidOperation("set staat in de wisselhistorie; zet de status op 'retired'")
+    session.execute(delete(TreadMeasurement).where(TreadMeasurement.tire_set_id == set_id))
+    session.delete(s)
+    session.flush()
 
 
 def add_tread_measurement(
