@@ -1,4 +1,4 @@
-"""Command-line-ingang: `wisselweer serve|version`."""
+"""Command-line-ingang: `wisselweer serve|version|migrate`."""
 
 from __future__ import annotations
 
@@ -51,9 +51,15 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("serve", help="Start de webserver")
     sub.add_parser("version", help="Toon de versie")
+    sub.add_parser("migrate", help="Werk de database bij (alembic upgrade head)")
     args = parser.parse_args(argv)
     if args.command == "version":
         print(__version__)
+        return 0
+    if args.command == "migrate":
+        from wisselweer.storage.db import migrate
+
+        migrate()
         return 0
     return _serve()
 
