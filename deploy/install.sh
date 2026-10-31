@@ -121,10 +121,14 @@ $( [[ $NEW_ENV -eq 1 ]] && echo "Nieuw env-bestand met gegenereerde geheime sleu
 
 Volgende stappen:
   1. Pas $ENV_FILE aan (minstens WISSELWEER_CONTACT) en herstart: systemctl restart wisselweer
-  2. Maak de beheerder aan:
+  2. Maak de beheerder aan (wachtwoord minimaal 10 tekens; laadt het env-bestand):
        systemd-run --pty --wait --collect -p User=$SVC_USER -p EnvironmentFile=$ENV_FILE \\
          $APP_DIR/.venv/bin/wisselweer create-admin --username <naam>
-  3. Publiceren (kies OF de timer OF WISSELWEER_PUBLISH_INTERVAL_HOURS, niet allebei):
-       systemctl enable --now wisselweer-publish.timer
+     (Commando's als servicegebruiker: runuser -u $SVC_USER -- ... ; sudo is in een LXC vaak niet aanwezig.)
+  3. Publiceren via SFTP: zie docs/install-lxc.md (sleutel maken in $DATA_DIR/.ssh, hostsleutel
+     in known_hosts, WISSELWEER_PUBLISH_SFTP_* instellen). Testen:
+       systemctl start wisselweer-publish.service; journalctl -u wisselweer-publish -n 30
+     Plannen: OF systemctl enable --now wisselweer-publish.timer
+     OF WISSELWEER_PUBLISH_INTERVAL_HOURS, niet allebei.
   4. Logs: journalctl -u wisselweer -f
 MSG

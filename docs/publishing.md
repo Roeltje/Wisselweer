@@ -35,6 +35,21 @@ Richt op de webserver een beperkte deploy-gebruiker in:
 - schrijfrechten alleen op de publicatiemap (de chroot-map zelf is eigendom van root);
 - een eigen sleutelpaar dat nergens anders voor dient; de private sleutel staat alleen op de Wisselweer-host (0600), `WISSELWEER_PUBLISH_SFTP_PATH` is relatief aan de chroot.
 
+**Foutmeldingen** (de publicatie eindigt met exitcode 255 als `sftp` faalt). Diagnose, als servicegebruiker:
+
+```sh
+runuser -u wisselweer -- sftp -v -i /var/lib/wisselweer/.ssh/deploy_wisselweer_web -o BatchMode=yes \
+  -o UserKnownHostsFile=/var/lib/wisselweer/.ssh/known_hosts deploy@<webserver-ip>
+```
+
+| Melding | Oorzaak en oplossing |
+|---|---|
+| `Connection refused` | sshd draait niet op de webserver: `systemctl restart ssh` (de installatie gebruikt een restart, geen reload) |
+| `Host key verification failed` | hostsleutel ontbreekt in known_hosts: `ssh-keyscan` en vingerafdruk controleren, zie [install-lxc.md](install-lxc.md) |
+| `Permission denied (publickey)` | publieke sleutel in `/etc/ssh/authorized_keys/deploy` komt niet overeen met `deploy_wisselweer_web.pub` (volledige regel, geen vingerafdruk) |
+
+Test een publicatie met `systemctl start wisselweer-publish.service` en `journalctl -u wisselweer-publish`: een handmatig `runuser … wisselweer publish` leest het env-bestand niet.
+
 ## Planning
 
 Het advies hoort elke 6 uur te verversen (`stale_after` staat op 18 uur). Gebruik de systemd-timer ([install-lxc.md](install-lxc.md)), cron, of de interne planner (`WISSELWEER_PUBLISH_INTERVAL_HOURS=6`, zie [install-docker.md](install-docker.md)); niet meerdere tegelijk.

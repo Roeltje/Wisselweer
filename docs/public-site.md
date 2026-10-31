@@ -63,10 +63,10 @@ Het script `deploy/install-public-site.sh` richt een kale container in als stati
 - `--site-src`: map (`public-site/`) of git-URL om de initiële sitebestanden te kopiëren; een bestaande `advice.json` blijft behouden. Zonder krijg je een minimale placeholder.
 - Alle opties kunnen ook als omgevingsvariabele (`WW_DOMAIN`, `WW_PROXY_IP`, …); zie `--help`.
 
-Let op: wachtwoordlogin via SSH wordt uitgezet. Zorg dat je een sleutel hebt, of gebruik de container-console (`pct enter`).
+Let op: wachtwoordlogin via SSH wordt uitgezet. Zorg dat je een sleutel hebt, of gebruik de container-console (`pct enter`). Het script herstart sshd (`systemctl restart ssh`); lopende sessies blijven open. De installatie is in de praktijk getest op Debian 13.
 
 **Nginx Proxy Manager**: Proxy Host voor `wisselweer.nl` en `www.wisselweer.nl` naar `http://<ip-van-de-container>:80`; SSL via Let's Encrypt met DNS-challenge (Cloudflare) en een API-token met alleen `Zone → DNS → Edit` voor de zone; Force SSL aan; HSTS pas aanzetten als alles werkt.
 
 **Cloudflare**: DNS-records proxied, SSL/TLS op *Full (strict)*, en een cache-regel voor het pad `/advice.json` met Edge TTL "respect origin" (maximaal 5 minuten).
 
-**Privé-app**: stel de `WISSELWEER_PUBLISH_SFTP_*`-variabelen in (zie `publishing.md`), zet de hostkey in de `known_hosts` van de servicegebruiker en test met `wisselweer publish`.
+**Privé-app**: maak eerst de sleutel op de app-LXC (stap 1-2 onder "Publiceren" in [install-lxc.md](install-lxc.md)) en geef de volledige publieke sleutelregel mee aan `--deploy-key`. Zet daarna de hostkey in de `known_hosts` van de servicegebruiker, stel de `WISSELWEER_PUBLISH_SFTP_*`-variabelen in (`PATH=/site`, zie [publishing.md](publishing.md)) en test met `systemctl start wisselweer-publish.service` en `journalctl -u wisselweer-publish`. Bij SFTP-fouten: zie de tabel in publishing.md.
