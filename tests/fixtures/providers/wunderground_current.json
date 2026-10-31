@@ -1,0 +1,18 @@
+{
+ "observations": [
+  {
+   "stationID": "ITEST000",
+   "obsTimeUtc": "2026-11-01T06:55:00Z",
+   "lat": 52.1,
+   "lon": 5.1,
+   "humidity": 77.0,
+   "metric": {
+    "temp": 4.1,
+    "dewpt": 0.9,
+    "windSpeed": 18.0,
+    "pressure": 1011.0,
+    "precipRate": 0.0
+   }
+  }
+ ]
+}

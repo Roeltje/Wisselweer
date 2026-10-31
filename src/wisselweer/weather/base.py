@@ -33,6 +33,10 @@ class ProviderNotConfigured(ProviderError):
     pass
 
 
+class UnknownProvider(ProviderError):
+    pass
+
+
 class ProviderUnavailable(ProviderError):
     """Netwerkfout, 5xx of time-out."""
 

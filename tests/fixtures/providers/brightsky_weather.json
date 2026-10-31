@@ -1,0 +1,36 @@
+{
+ "weather": [
+  {
+   "timestamp": "2026-11-01T06:00:00+00:00",
+   "temperature": 3.2,
+   "dew_point": 1.0,
+   "relative_humidity": 90,
+   "precipitation": 0.3,
+   "precipitation_probability": 30,
+   "wind_speed": 18.0,
+   "condition": "rain"
+  },
+  {
+   "timestamp": "2026-11-01T07:00:00+00:00",
+   "temperature": 3.0,
+   "dew_point": null,
+   "relative_humidity": null,
+   "precipitation": 0.0,
+   "precipitation_probability": null,
+   "wind_speed": null,
+   "condition": "snow"
+  },
+  {
+   "timestamp": "2026-11-01T08:00:00+00:00",
+   "temperature": 3.5,
+   "precipitation": 0.0,
+   "condition": null
+  }
+ ],
+ "sources": [
+  {
+   "id": 1,
+   "station_name": "Test"
+  }
+ ]
+}

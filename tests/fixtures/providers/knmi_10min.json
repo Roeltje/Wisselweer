@@ -1,0 +1,41 @@
+{
+ "type": "Coverage",
+ "domain": {
+  "type": "Domain",
+  "axes": {
+   "t": {
+    "values": [
+     "2026-11-01T06:30:00Z",
+     "2026-11-01T06:40:00Z",
+     "2026-11-01T06:50:00Z"
+    ]
+   }
+  }
+ },
+ "ranges": {
+  "ta": {
+   "type": "NdArray",
+   "values": [
+    3.0,
+    3.2,
+    null
+   ]
+  },
+  "rh": {
+   "type": "NdArray",
+   "values": [
+    80,
+    81,
+    82
+   ]
+  },
+  "ff": {
+   "type": "NdArray",
+   "values": [
+    2.0,
+    2.5,
+    3.0
+   ]
+  }
+ }
+}

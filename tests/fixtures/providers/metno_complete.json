@@ -1,0 +1,93 @@
+{
+ "type": "Feature",
+ "geometry": {
+  "type": "Point",
+  "coordinates": [
+   5.12,
+   52.09,
+   5
+  ]
+ },
+ "properties": {
+  "meta": {
+   "updated_at": "2026-11-01T06:00:00Z"
+  },
+  "timeseries": [
+   {
+    "time": "2026-11-01T06:00:00Z",
+    "data": {
+     "instant": {
+      "details": {
+       "air_temperature": 2.1,
+       "dew_point_temperature": 0.5,
+       "relative_humidity": 88.0,
+       "wind_speed": 3.4
+      }
+     },
+     "next_1_hours": {
+      "summary": {
+       "symbol_code": "lightsnow_day"
+      },
+      "details": {
+       "precipitation_amount": 0.4
+      }
+     }
+    }
+   },
+   {
+    "time": "2026-11-01T07:00:00Z",
+    "data": {
+     "instant": {
+      "details": {
+       "air_temperature": 2.5,
+       "relative_humidity": 85.0,
+       "wind_speed": 3.0
+      }
+     },
+     "next_1_hours": {
+      "summary": {
+       "symbol_code": "cloudy"
+      },
+      "details": {
+       "precipitation_amount": 0.0
+      }
+     }
+    }
+   },
+   {
+    "time": "2026-11-04T06:00:00Z",
+    "data": {
+     "instant": {
+      "details": {
+       "air_temperature": 6.0,
+       "wind_speed": 5.0
+      }
+     },
+     "next_6_hours": {
+      "summary": {
+       "symbol_code": "sleet"
+      },
+      "details": {
+       "precipitation_amount": 1.2
+      }
+     }
+    }
+   },
+   {
+    "time": "2026-11-04T12:00:00Z",
+    "data": {
+     "instant": {
+      "details": {
+       "air_temperature": 7.0
+      }
+     },
+     "next_6_hours": {
+      "summary": {
+       "symbol_code": "weirdnewsymbol"
+      }
+     }
+    }
+   }
+  ]
+ }
+}
