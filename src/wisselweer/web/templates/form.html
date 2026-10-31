@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field, csrf with context %}
+{% block title %}{{ title }} · Wisselweer{% endblock %}
+{% block content %}
+<section class="card form-card">
+  <h1>{{ title }}</h1>
+  {% if intro %}<p class="muted">{{ intro }}</p>{% endif %}
+  {% if form_errors %}
+  <div class="flash flash-error" role="alert">
+    <ul>{% for e in form_errors %}<li>{{ e }}</li>{% endfor %}</ul>
+  </div>
+  {% endif %}
+  <form method="post" action="{{ action }}" class="stack">
+    {{ csrf() }}
+    {% for f in fields %}{{ field(f) }}{% endfor %}
+    <p class="muted small">{{ t('form.required_legend') }}</p>
+    <div class="actions">
+      <button type="submit" class="btn btn-primary">{{ t(submit) }}</button>
+      <a class="btn" href="{{ cancel }}">{{ t('action.cancel') }}</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

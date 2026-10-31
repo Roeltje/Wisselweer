@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, tire_icon, badge, warnings with context %}
+{% block title %}{{ t('nav.dashboard') }} · Wisselweer{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>{{ t('dashboard.title') }}</h1>
+  {% if cards %}<a class="btn btn-primary" href="/vehicles/new">{{ icon('plus', 18) }} {{ t('vehicle.add') }}</a>{% endif %}
+</div>
+
+{% if not cards %}
+<section class="card empty">
+  {{ icon('car', 48) }}
+  <h2>{{ t('dashboard.empty_title') }}</h2>
+  <p>{{ t('dashboard.empty_text') }}</p>
+  <a class="btn btn-primary" href="/vehicles/new">{{ t('vehicle.add') }}</a>
+</section>
+{% else %}
+<div class="grid">
+  {% for c in cards %}
+  {% set v = c.vehicle %}
+  <article class="card vehicle-card" aria-labelledby="veh-{{ v.id }}">
+    <header class="card-head">
+      <h2 id="veh-{{ v.id }}"><a href="/vehicles/{{ v.id }}">{{ v.name }}</a></h2>
+      {% if v.license_plate %}<span class="plate">{{ v.license_plate }}</span>{% endif %}
+    </header>
+    <p class="mounted">
+      {% if c.mounted %}
+        {{ tire_icon(c.mounted.type.value, 22) }}
+        <span>{{ t('dashboard.mounted') }}: <strong>{{ t('tire.type.' ~ c.mounted.type.value) }}</strong></span>
+      {% else %}
+        {{ icon('question', 22) }}<span>{{ t('dashboard.no_set') }}</span>
+      {% endif %}
+    </p>
+
+    {% if c.advice %}
+      {{ warnings(c.advice) }}
+      <div class="advice">
+        <h3 class="question">{{ c.advice.question }}</h3>
+        {% if c.advice.no_mounted %}
+          <p>{{ t('dashboard.add_set_hint') }}</p>
+          <p><a class="btn" href="/vehicles/{{ v.id }}/sets/new">{{ t('tire.new') }}</a></p>
+        {% else %}
+          <p>{{ badge(c.advice) }}</p>
+          <p class="headline">{{ c.advice.heading }}</p>
+          {% if c.advice.date_line %}<p class="when">{{ c.advice.date_line }}</p>{% endif %}
+          {% if c.advice.plan_by %}<p class="plan">{{ icon('calendar', 16) }} {{ c.advice.plan_by }}</p>{% endif %}
+        {% endif %}
+      </div>
+      {% for n in c.advice.notices %}<p class="notice">{{ icon('cloud', 16) }} {{ n }}</p>{% endfor %}
+    {% else %}
+      <p class="notice">{{ icon('warning', 16) }} {{ t('dashboard.advice_failed') }}</p>
+    {% endif %}
+
+    <dl class="facts">
+      <div>
+        <dt>{{ t('dashboard.next_appointment') }}</dt>
+        <dd>
+          {% if c.appointment %}
+            {{ c.appointment.status_text }}{% if c.appointment.at %}: {{ c.appointment.at }}{% endif %}
+            {% if c.appointment.garage_name %}<span class="muted">· {{ c.appointment.garage_name }}</span>{% endif %}
+          {% else %}<span class="muted">{{ t('dashboard.no_appointment') }}</span>{% endif %}
+        </dd>
+      </div>
+      <div>
+        <dt>{{ t('dashboard.weather_update') }}</dt>
+        <dd>
+          {% if c.weather %}{{ c.weather.at }} <span class="muted">· {{ c.weather.source }}</span>
+          {% else %}<span class="muted">{{ t('dashboard.no_weather') }}</span>{% endif %}
+        </dd>
+      </div>
+    </dl>
+    <p class="card-foot"><a href="/vehicles/{{ v.id }}">{{ t('dashboard.details') }} →</a></p>
+  </article>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

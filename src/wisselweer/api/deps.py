@@ -64,6 +64,24 @@ def get_session(request: Request) -> Iterator[Session]:
         session.close()
 
 
+DEFAULT_PROVIDER_KEY = "default_provider"
+
+
+def apply_default_provider_setting(factory: sessionmaker[Session], service: Any) -> None:
+    """De in de instellingen gekozen standaardbron (`app_setting`) wint van de omgevingsvariabele."""
+    from wisselweer.storage.orm import AppSetting
+    from wisselweer.weather.base import UnknownProvider
+
+    with factory() as s:
+        row = s.get(AppSetting, DEFAULT_PROVIDER_KEY)
+        value = row.value if row is not None else None
+    if isinstance(value, str):
+        try:
+            service.set_default_provider(value)
+        except UnknownProvider:
+            pass
+
+
 def get_forecast_service(request: Request) -> ForecastService:
     """Bouwt de service lazy (met SQLite-cache) en bewaart hem per app."""
     app = request.app
@@ -77,6 +95,7 @@ def get_forecast_service(request: Request) -> ForecastService:
 
                 backend = SqliteCacheBackend(ensure_db(app))
                 service = build_forecast_service(app.state.settings.providers_config(), backend)
+                apply_default_provider_setting(ensure_db(app), service)
                 app.state.forecast_service = service
     return service
 

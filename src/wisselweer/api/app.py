@@ -22,6 +22,7 @@ from wisselweer.api.routers.vehicles import router as vehicles_router
 from wisselweer.settings import Settings, get_settings
 from wisselweer.storage.errors import InvalidOperation, NotFoundError
 from wisselweer.weather.base import ProviderNotConfigured, ProviderUnavailable, UnknownProvider
+from wisselweer.web import routes as web_routes
 
 log = logging.getLogger("wisselweer.api")
 
@@ -69,8 +70,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return _error(503, "provider_unavailable")
 
     @app.exception_handler(NotFoundError)
-    async def _not_found(request: Request, exc: NotFoundError) -> JSONResponse:
-        return _error(404, "not_found")
+    async def _not_found(request: Request, exc: NotFoundError) -> Response:
+        if request.url.path.startswith("/api/"):
+            return _error(404, "not_found")
+        return web_routes.not_found_page(request)
 
     @app.exception_handler(InvalidOperation)
     async def _invalid(request: Request, exc: InvalidOperation) -> JSONResponse:
@@ -114,4 +117,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(vehicles_router, dependencies=protected)
     app.include_router(tires_router, dependencies=protected)
     app.include_router(garages_router, dependencies=protected)
+    app.mount("/static", web_routes.static_files, name="static")
+    app.include_router(web_routes.router)
     return app

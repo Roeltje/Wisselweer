@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, csrf with context %}
+{% block title %}{{ t('nav.settings') }} · Wisselweer{% endblock %}
+{% block content %}
+<h1>{{ t('nav.settings') }}</h1>
+
+{% if new_token %}
+<section class="card token-card" aria-labelledby="sec-newtoken">
+  <h2 id="sec-newtoken">{{ t('settings.token_created', name=token_name) }}</h2>
+  <p>{{ t('settings.token_once') }}</p>
+  <pre class="token"><code>{{ new_token }}</code></pre>
+</section>
+{% endif %}
+
+<section class="card" aria-labelledby="sec-providers">
+  <h2 id="sec-providers">{{ t('settings.providers') }}</h2>
+  <ul class="rows">
+    {% for p in providers %}
+    <li class="row">
+      <div class="row-main">
+        <strong>{{ p.info.name }}</strong>
+        {% if p.default %}<span class="chip chip-mounted">{{ t('settings.default') }}</span>{% endif %}
+        <span class="chip {{ 'chip-ok' if p.info.configured else 'chip-retired' }}">{{ t('settings.configured') if p.info.configured else t('settings.not_configured') }}</span>
+        <span class="chip">{{ t('settings.commercial_ok') if p.info.commercial_use_ok else t('settings.commercial_no') }}</span>
+        {% if p.status %}<p class="small">{{ p.status }}</p>{% endif %}
+        <p class="muted small">{{ p.info.attribution }} · <a href="{{ p.info.license_url }}" rel="noopener noreferrer">{{ t('settings.license') }}</a> · {{ t('settings.horizon_days', days=p.days) }}</p>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  <form method="post" action="/settings/provider" class="inline-form">
+    {{ csrf() }}
+    <div class="field">
+      <label for="provider">{{ t('settings.default_provider') }}</label>
+      <select id="provider" name="provider">
+        {% for pid, name in configured_options %}<option value="{{ pid }}"{% if pid == default_provider %} selected{% endif %}>{{ name }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="btn btn-primary" type="submit">{{ t('action.save') }}</button>
+  </form>
+</section>
+
+<section class="card" aria-labelledby="sec-locations">
+  <h2 id="sec-locations">{{ t('settings.locations') }}</h2>
+  {% if not locations %}<p class="muted">{{ t('settings.no_locations') }}</p>{% endif %}
+  <ul class="rows">
+    {% for l in locations %}
+    <li class="row"><div class="row-main"><strong>{{ l.name }}</strong> <span class="muted small">· {{ l.lat }}, {{ l.lon }} · {{ t('settings.vehicles_count', n=l.vehicles) }}</span></div></li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="card" id="compare" aria-labelledby="sec-compare">
+  <h2 id="sec-compare">{{ t('compare.title') }}</h2>
+  <p class="notice">{{ icon('question', 16) }} {{ t('compare.label') }}</p>
+  {% if locations %}
+  <form method="get" action="/settings" class="inline-form">
+    <div class="field">
+      <label for="location">{{ t('compare.location') }}</label>
+      <select id="location" name="location">
+        {% for l in locations %}<option value="{{ l.id }}"{% if l.id == compare_location %} selected{% endif %}>{{ l.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="btn" type="submit">{{ t('compare.run') }}</button>
+  </form>
+  {% endif %}
+  {% if comparison %}
+    {% if comparison.failed %}<p class="flash flash-error" role="alert">{{ t('compare.failed', names=comparison.failed|join(', ')) }}</p>{% endif %}
+    {% if comparison.rows %}
+    <div class="table-wrap" tabindex="0" role="region" aria-label="{{ t('compare.title') }}: {{ comparison.location }}">
+      <table>
+        <caption>{{ comparison.location }} — {{ comparison.label }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ t('compare.day') }}</th>
+            {% for name in comparison.providers %}<th scope="col">{{ name }}<br><span class="muted small">{{ t('compare.cols') }}</span></th>{% endfor %}
+            <th scope="col">{{ t('compare.spread') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in comparison.rows %}
+          <tr>
+            <th scope="row">{{ r.day|d }}</th>
+            {% for c in r.cells %}
+            <td>{% if c %}{{ '%.1f'|format(c.min) if c.min is not none else '–' }} / {{ '%.1f'|format(c.max) if c.max is not none else '–' }} °C<br><span class="muted small">{{ '%.1f'|format(c.precip) if c.precip is not none else '–' }} mm</span>{% else %}–{% endif %}</td>
+            {% endfor %}
+            <td class="small">{% if r.min_spread is not none %}{{ t('compare.spread_min') }} {{ '%.1f'|format(r.min_spread) }} °C<br>{{ t('compare.spread_max') }} {{ '%.1f'|format(r.max_spread) if r.max_spread is not none else '–' }} °C<br>{{ t('compare.spread_precip') }} {{ '%.1f'|format(r.precip_spread) if r.precip_spread is not none else '–' }} mm{% else %}–{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% elif not comparison.failed %}<p class="muted">{{ t('compare.no_data') }}</p>{% endif %}
+  {% endif %}
+</section>
+
+<section class="card" id="tokens" aria-labelledby="sec-tokens">
+  <h2 id="sec-tokens">{{ t('settings.tokens') }}</h2>
+  <p class="muted">{{ t('settings.tokens_help') }}</p>
+  {% if not tokens %}<p class="muted">{{ t('settings.no_tokens') }}</p>{% endif %}
+  <ul class="rows">
+    {% for tk in tokens %}
+    <li class="row">
+      <div class="row-main"><strong>{{ tk.name }}</strong> <span class="muted small">· {{ t('settings.token_created_on', date=tk.created) }}{% if tk.used %} · {{ t('settings.token_used', date=tk.used) }}{% endif %}</span></div>
+      <form method="post" action="/settings/tokens/revoke" class="row-actions" data-confirm="{{ t('settings.token_revoke_confirm', name=tk.name) }}">
+        {{ csrf() }}<input type="hidden" name="token_name" value="{{ tk.name }}">
+        <button class="btn btn-small btn-danger-quiet" type="submit">{{ t('settings.token_revoke') }}</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  <form method="post" action="/settings/tokens" class="inline-form">
+    {{ csrf() }}
+    <div class="field">
+      <label for="token_name">{{ t('settings.token_name') }}</label>
+      <input id="token_name" name="token_name" required maxlength="80">
+    </div>
+    <button class="btn btn-primary" type="submit">{{ t('settings.token_create') }}</button>
+  </form>
+</section>
+
+<section class="card" aria-labelledby="sec-api">
+  <h2 id="sec-api">{{ t('settings.api') }}</h2>
+  <p><a class="btn" href="/docs">{{ t('settings.api_docs') }}</a></p>
+</section>
+{% endblock %}

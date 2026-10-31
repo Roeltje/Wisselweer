@@ -1,20 +1,27 @@
 {% extends "base.html" %}
-{% block title %}Inloggen · Wisselweer{% endblock %}
+{% block title %}{{ t('login.title') }} · Wisselweer{% endblock %}
 {% block content %}
-  <h1>Inloggen</h1>
+<section class="card login-card">
+  <img class="login-logo" src="/static/logo.svg" alt="" width="72" height="72">
+  <h1>{{ t('login.title') }}</h1>
   {% if no_admin %}
-    <p>Er is nog geen beheerder. Maak er een aan op de server met:</p>
+    <p>{{ t('login.no_admin') }}</p>
     <pre><code>wisselweer create-admin --username &lt;naam&gt;</code></pre>
   {% else %}
-    {% if error %}<p role="alert">{{ error }}</p>{% endif %}
-    <form method="post" action="/login">
+    {% if error %}<p class="flash flash-error" role="alert">{{ error }}</p>{% endif %}
+    <form method="post" action="/login" class="stack">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="next" value="{{ next }}">
-      <label for="username">Gebruikersnaam</label>
-      <input id="username" name="username" autocomplete="username" required>
-      <label for="password">Wachtwoord</label>
-      <input id="password" name="password" type="password" autocomplete="current-password" required>
-      <button type="submit">Inloggen</button>
+      <div class="field">
+        <label for="username">{{ t('login.username') }}</label>
+        <input id="username" name="username" autocomplete="username" required autofocus>
+      </div>
+      <div class="field">
+        <label for="password">{{ t('login.password') }}</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">{{ t('login.submit') }}</button>
     </form>
   {% endif %}
+</section>
 {% endblock %}

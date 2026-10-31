@@ -1,0 +1,68 @@
+{% macro icon(name, size=20) -%}
+<svg class="icon icon-{{ name }}" width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+{%- if name == 'summer' %}<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>
+{%- elif name == 'winter' %}<path d="M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7M9 3.5l3 2.5 3-2.5M9 20.5l3-2.5 3 2.5"/>
+{%- elif name == 'all_season' %}<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/>
+{%- elif name == 'check' %}<path d="M5 12.5l4.5 4.5L19 7.5"/>
+{%- elif name == 'clock' %}<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+{%- elif name == 'swap' %}<path d="M7 8h12l-3-3M17 16H5l3 3"/>
+{%- elif name == 'question' %}<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01"/>
+{%- elif name == 'warning' %}<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/>
+{%- elif name == 'calendar' %}<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>
+{%- elif name == 'cloud' %}<path d="M7 18a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.6 1.2A3.5 3.5 0 0 1 17 18z"/>
+{%- elif name == 'plus' %}<path d="M12 5v14M5 12h14"/>
+{%- elif name == 'car' %}<path d="M4 16v-4l2-5h12l2 5v4M3 16h18M7 19v-3M17 19v-3"/><circle cx="7.5" cy="12.5" r=".5"/><circle cx="16.5" cy="12.5" r=".5"/>
+{%- endif -%}
+</svg>
+{%- endmacro %}
+
+{% macro tire_icon(type, size=20) -%}
+{{ icon({'summer': 'summer', 'winter': 'winter', 'all_season': 'all_season'}.get(type, 'question'), size) }}
+{%- endmacro %}
+
+{% macro field(f) -%}
+{%- set describedby = [] -%}
+{%- if f.help %}{% set _ = describedby.append('h-' ~ f.name) %}{% endif -%}
+{%- if f.error %}{% set _ = describedby.append('e-' ~ f.name) %}{% endif -%}
+<div class="field{% if f.error %} has-error{% endif %}">
+  <label for="f-{{ f.name }}">{{ t(f.label) }}{% if f.required %} <span class="req" aria-hidden="true">*</span>{% endif %}</label>
+  {% if f.help %}<p class="hint" id="h-{{ f.name }}">{{ t(f.help) }}</p>{% endif %}
+  {% if f.kind == 'select' -%}
+  <select id="f-{{ f.name }}" name="{{ f.name }}"{% if f.required %} required{% endif %}{% if describedby %} aria-describedby="{{ describedby|join(' ') }}"{% endif %}{% if f.error %} aria-invalid="true"{% endif %}>
+    {%- for value, text in f.options %}
+    <option value="{{ value }}"{% if value == f.value %} selected{% endif %}>{{ text }}</option>
+    {%- endfor %}
+  </select>
+  {%- elif f.kind == 'textarea' -%}
+  <textarea id="f-{{ f.name }}" name="{{ f.name }}" rows="3"{% if describedby %} aria-describedby="{{ describedby|join(' ') }}"{% endif %}{% if f.error %} aria-invalid="true"{% endif %}>{{ f.value }}</textarea>
+  {%- else -%}
+  <input id="f-{{ f.name }}" name="{{ f.name }}" type="{{ f.kind }}" value="{{ f.value }}"{% if f.required %} required{% endif %}{% for k, v in f.attrs.items() %} {{ k }}="{{ v }}"{% endfor %}{% if describedby %} aria-describedby="{{ describedby|join(' ') }}"{% endif %}{% if f.error %} aria-invalid="true"{% endif %}>
+  {%- endif %}
+  {% if f.error %}<p class="error" id="e-{{ f.name }}">{{ f.error }}</p>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro csrf() -%}
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{%- endmacro %}
+
+{% macro badge(adv) -%}
+<span class="badge badge-{{ adv.badge_class }}">{{ icon(adv.badge_icon, 16) }}<span>{{ adv.badge_text }}</span></span>
+{%- endmacro %}
+
+{% macro warnings(adv) -%}
+{% if adv.warnings %}
+<section class="safety" aria-label="{{ t('warning.safety') }}">
+  {% for w in adv.warnings %}
+  <div class="safety-item safety-{{ w.code }}">
+    {{ icon('warning', 22) }}
+    <div>
+      <strong>{{ w.label }}</strong>
+      <p>{{ w.text }}</p>
+      <p class="muted small">{{ w.window }}</p>
+    </div>
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+{%- endmacro %}

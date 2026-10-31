@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf with context %}
+{% block title %}{{ t('vehicle.delete') }} · Wisselweer{% endblock %}
+{% block content %}
+<section class="card form-card danger-card">
+  <h1>{{ t('vehicle.delete_title', name=v.name) }}</h1>
+  <p>{{ t('vehicle.delete_warning') }}</p>
+  <form method="post" action="/vehicles/{{ v.id }}/delete" class="actions">
+    {{ csrf() }}
+    <button type="submit" class="btn btn-danger">{{ t('vehicle.delete_confirm') }}</button>
+    <a class="btn" href="/vehicles/{{ v.id }}">{{ t('action.cancel') }}</a>
+  </form>
+</section>
+{% endblock %}

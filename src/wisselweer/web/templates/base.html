@@ -1,15 +1,50 @@
 <!doctype html>
-<html lang="nl">
+<html lang="{{ locale or 'nl-NL' }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#0F4C5C">
   <title>{% block title %}Wisselweer{% endblock %}</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/app.js" defer></script>
   {% block head %}{% endblock %}
 </head>
 <body>
-  <main>
+  <a class="skip-link" href="#main">{{ t('nav.skip') }}</a>
+  <header class="site-header">
+    <div class="wrap header-row">
+      <a class="brand" href="/"><img src="/static/logo.svg" alt="" width="36" height="36"><span>Wisselweer</span></a>
+      {% if authed %}
+      <nav class="main-nav" aria-label="{{ t('nav.main') }}">
+        <a href="/"{% if nav == 'dashboard' %} aria-current="page"{% endif %}>{{ t('nav.dashboard') }}</a>
+        <a href="/garages"{% if nav == 'garages' %} aria-current="page"{% endif %}>{{ t('nav.garages') }}</a>
+        <a href="/settings"{% if nav == 'settings' %} aria-current="page"{% endif %}>{{ t('nav.settings') }}</a>
+      </nav>
+      <form class="logout" method="post" action="/logout">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-quiet">{{ t('nav.logout') }}</button>
+      </form>
+      {% endif %}
+    </div>
+  </header>
+  <main id="main" class="wrap" tabindex="-1">
+    {% for kind, text in flashes or [] %}
+    <p class="flash flash-{{ kind }}" role="{{ 'alert' if kind == 'error' else 'status' }}">{{ text }}</p>
+    {% endfor %}
     {% block content %}{% endblock %}
   </main>
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>{{ t('app.tagline') }}</p>
+      {% if authed %}
+      <p class="lang" aria-label="{{ t('nav.language') }}">
+        {% for code in locales %}<a href="?lang={{ code }}" hreflang="{{ code }}"{% if code == locale %} aria-current="true"{% endif %}>{{ code }}</a>{% endfor %}
+      </p>
+      {% endif %}
+    </div>
+  </footer>
 </body>
 </html>
