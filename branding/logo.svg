@@ -1,30 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="t">
   <title id="t">Wisselweer</title>
-  <!-- band -->
-  <circle cx="256" cy="256" r="180" fill="#0A3540"/>
-  <!-- profielblokken -->
-  <circle cx="256" cy="256" r="168" fill="none" stroke="#0F4C5C" stroke-width="18" stroke-dasharray="18 11.3"/>
-  <!-- zijwang -->
-  <circle cx="256" cy="256" r="146" fill="#0F4C5C"/>
-  <circle cx="256" cy="256" r="146" fill="none" stroke="#0A3540" stroke-width="4"/>
-  <!-- velg -->
-  <circle cx="256" cy="256" r="112" fill="#F7F5F0"/>
-  <g fill="#0F4C5C">
-    <path id="gat" d="M238 182 Q256 156 274 182 L266 220 Q256 228 246 220 Z"/>
-    <use href="#gat" transform="rotate(72 256 256)"/>
-    <use href="#gat" transform="rotate(144 256 256)"/>
-    <use href="#gat" transform="rotate(216 256 256)"/>
-    <use href="#gat" transform="rotate(288 256 256)"/>
-    <circle cx="256" cy="256" r="22"/>
-  </g>
-  <circle cx="256" cy="256" r="8" fill="#F7F5F0"/>
+  <!-- band met subtiele profielnokken -->
+  <circle cx="256" cy="256" r="172" fill="none" stroke="#0A3540" stroke-width="6" stroke-dasharray="7 5.03"/>
+  <circle cx="256" cy="256" r="170" fill="#0A3540"/>
+  <circle cx="256" cy="256" r="146" fill="none" stroke="#0F4C5C" stroke-width="8" stroke-dasharray="10 12.9"/>
+  <!-- velg / doel -->
+  <circle cx="256" cy="256" r="118" fill="#F7F5F0"/>
+  <circle cx="256" cy="256" r="92" fill="#0F4C5C"/>
+  <circle cx="256" cy="256" r="58" fill="#F7F5F0"/>
+  <circle cx="256" cy="256" r="30" fill="#0A3540"/>
   <!-- wisselpijlen -->
-  <g id="arrow">
-    <path d="M293.5 43.3 A216 216 0 0 1 472 256" fill="none" stroke="#F28C28" stroke-width="28" stroke-linecap="round"/>
-    <path d="M440 244 L504 244 L472 296 Z" fill="#F28C28" stroke="#F28C28" stroke-width="6" stroke-linejoin="round"/>
-  </g>
+  <path d="M309.3 57 A206 206 0 0 1 462 256" fill="none" stroke="#F28C28" stroke-width="34" stroke-linecap="round"/>
+  <path d="M422 246 L502 246 L462 302 Z" fill="#F28C28" stroke="#F28C28" stroke-width="6" stroke-linejoin="round"/>
   <g transform="rotate(180 256 256)">
-    <path d="M293.5 43.3 A216 216 0 0 1 472 256" fill="none" stroke="#5BA4CF" stroke-width="28" stroke-linecap="round"/>
-    <path d="M440 244 L504 244 L472 296 Z" fill="#5BA4CF" stroke="#5BA4CF" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M309.3 57 A206 206 0 0 1 462 256" fill="none" stroke="#5BA4CF" stroke-width="34" stroke-linecap="round"/>
+    <path d="M422 246 L502 246 L462 302 Z" fill="#5BA4CF" stroke="#5BA4CF" stroke-width="6" stroke-linejoin="round"/>
   </g>
 </svg>
