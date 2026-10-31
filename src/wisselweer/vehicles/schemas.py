@@ -14,7 +14,10 @@ from wisselweer.storage.enums import ChangeMethod
 def _tz_ok(v: str) -> str:
     from zoneinfo import ZoneInfo
 
-    ZoneInfo(v)
+    try:
+        ZoneInfo(v)
+    except (KeyError, ValueError, OSError):  # ZoneInfoNotFoundError is een KeyError
+        raise ValueError("onbekende tijdzone") from None
     return v
 
 

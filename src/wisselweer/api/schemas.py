@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date, datetime
 from typing import Self
 
 from pydantic import BaseModel, Field, model_validator
@@ -9,12 +10,14 @@ from pydantic import BaseModel, Field, model_validator
 from wisselweer.core.messages import DEFAULT_NL
 from wisselweer.core.models import (
     Advice,
+    Direction,
     DrivingProfile,
     Forecast,
     ReasonItem,
     TireType,
     heading_key,
 )
+from wisselweer.storage.enums import AppointmentStatus, ChangeMethod
 from wisselweer.weather.base import ProviderInfo
 
 
@@ -100,3 +103,43 @@ def build_source(forecast_provider: str | None, infos: list[ProviderInfo]) -> So
                 license_url=info.license_url,
             )
     return None
+
+
+class VehicleAdviceResponse(AdviceResponse):
+    plan_appointment_by: date | None = None
+    mailto: str | None = Field(
+        default=None, description="mailto-link naar de gekoppelde garage (alleen bij garagewissel)"
+    )
+
+
+class TireChangeIn(BaseModel):
+    to_set_id: int
+    changed_at: date
+    odometer_km: int | None = Field(default=None, ge=0)
+    performed_by: ChangeMethod = ChangeMethod.SELF
+    garage_id: int | None = None
+    cost_cents: int | None = Field(default=None, ge=0)
+    notes: str | None = None
+    allow_lower_odometer: bool = False
+
+
+class OdometerCorrectionIn(BaseModel):
+    new_km: int = Field(ge=0)
+    note: str | None = None
+
+
+class AppointmentCreate(BaseModel):
+    garage_id: int
+    target_direction: Direction
+    target_period_start: date | None = None
+    target_period_end: date | None = None
+    notes: str | None = None
+
+
+class AppointmentStatusIn(BaseModel):
+    status: AppointmentStatus
+    appointment_at: datetime | None = None
+
+
+class MailtoResponse(BaseModel):
+    mailto: str

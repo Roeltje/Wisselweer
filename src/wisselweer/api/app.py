@@ -3,14 +3,22 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, Response
+from sqlalchemy.exc import IntegrityError
 
 from wisselweer import __version__
+from wisselweer.api.deps import ensure_db
+from wisselweer.api.routers.garages import router as garages_router
+from wisselweer.api.routers.tires import router as tires_router
 from wisselweer.api.routers.v1 import router as v1_router
+from wisselweer.api.routers.vehicles import router as vehicles_router
 from wisselweer.settings import Settings, get_settings
+from wisselweer.storage.errors import InvalidOperation, NotFoundError
 from wisselweer.weather.base import ProviderNotConfigured, ProviderUnavailable, UnknownProvider
 
 log = logging.getLogger("wisselweer.api")
@@ -28,7 +36,13 @@ def _error(status: int, code: str) -> JSONResponse:
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        ensure_db(app)  # data_dir aanmaken + migraties bij opstarten
+        yield
+
     app = FastAPI(
+        lifespan=lifespan,
         title="Wisselweer",
         version=__version__,
         docs_url=None,
@@ -52,6 +66,31 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         log.warning("provider_unavailable path=%s", request.url.path)
         return _error(503, "provider_unavailable")
 
+    @app.exception_handler(NotFoundError)
+    async def _not_found(request: Request, exc: NotFoundError) -> JSONResponse:
+        return _error(404, "not_found")
+
+    @app.exception_handler(InvalidOperation)
+    async def _invalid(request: Request, exc: InvalidOperation) -> JSONResponse:
+        # Servicemeldingen bevatten bewust geen persoonsgegevens; begrensd in lengte.
+        return JSONResponse(
+            status_code=409,
+            content={"detail": "invalid_operation", "reason": str(exc)[:200]},
+        )
+
+    @app.exception_handler(IntegrityError)
+    async def _integrity(request: Request, exc: IntegrityError) -> JSONResponse:
+        log.warning("integrity_error path=%s", request.url.path)  # geen statement/parameters
+        return _error(409, "conflict")
+
+    @app.exception_handler(RequestValidationError)
+    async def _validation(request: Request, exc: RequestValidationError) -> JSONResponse:
+        # Standaard echoot FastAPI de invoer terug (kan PII bevatten): alleen locatie + type.
+        errors = [{"loc": list(e["loc"]), "type": e["type"]} for e in exc.errors()]
+        return JSONResponse(
+            status_code=422, content={"detail": "validation_error", "errors": errors}
+        )
+
     @app.middleware("http")
     async def _security(
         request: Request, call_next: Callable[[Request], Awaitable[Response]]
@@ -67,4 +106,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return response
 
     app.include_router(v1_router)
+    app.include_router(vehicles_router)
+    app.include_router(tires_router)
+    app.include_router(garages_router)
     return app
