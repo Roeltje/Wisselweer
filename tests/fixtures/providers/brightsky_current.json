@@ -1,0 +1,22 @@
+{
+ "weather": {
+  "source_id": 4711,
+  "timestamp": "2026-11-01T06:50:00+00:00",
+  "temperature": 4.5,
+  "dew_point": 2.0,
+  "relative_humidity": 85,
+  "wind_speed_10": 36.0,
+  "wind_speed": 10.0,
+  "precipitation_10": 0.1,
+  "pressure_msl": 1012.3,
+  "condition": "dry"
+ },
+ "sources": [
+  {
+   "id": 4711,
+   "station_name": "Teststation",
+   "lat": 52.1,
+   "lon": 5.2
+  }
+ ]
+}
