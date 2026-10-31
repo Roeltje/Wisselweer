@@ -37,7 +37,7 @@ uv run wisselweer serve         # http://127.0.0.1:8000
 
 De server luistert standaard alleen lokaal. Zie [SECURITY.md](SECURITY.md) voor toegang van buitenaf.
 
-Installeren als dienst: [Docker](docs/install-docker.md) of [Ubuntu/LXC](docs/install-lxc.md).
+Installeren als dienst: [Debian/Ubuntu-LXC](docs/install-lxc.md) (in de praktijk getest op Debian 13) of [Docker](docs/install-docker.md) (nog niet getest).
 
 ## Configuratie
 
