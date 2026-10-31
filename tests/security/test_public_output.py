@@ -18,7 +18,7 @@ from wisselweer.vehicles.service import create_vehicle
 CONTRACT_KEYS = {
     "schema_version", "country", "locale", "next_season", "heading", "status", "status_label",
     "summary", "recommended_date", "recommended_period", "regional_variation", "regions",
-    "forecast_until", "generated_at", "stale_after", "source", "rules_version",
+    "forecast_until", "outlook", "generated_at", "stale_after", "source", "rules_version",
 }  # fmt: skip
 
 
@@ -45,6 +45,15 @@ def test_public_json_contains_no_private_data(tmp_path):
     assert set(data["source"]) == {"name", "attribution", "license_url"}
     for r in data["regions"]:
         assert set(r) == {"name", "status"}
+    for d in data["outlook"]:
+        assert set(d) == {
+            "date",
+            "temp_min_c",
+            "temp_max_c",
+            "frost_night",
+            "snow_possible",
+            "kind",
+        }
     for secret in (
         "XX-000-X",
         "XX000X",

@@ -54,7 +54,12 @@ def test_no_coverage_gives_none():
 
 
 def test_frost_and_snow_detection():
-    days = [Day(-3, 2), Day(2, 8), Day(-1, 3, 6.0, PrecipType.SNOW), Day(4, 9, 3.0, PrecipType.RAIN)]
+    days = [
+        Day(-3, 2),
+        Day(2, 8),
+        Day(-1, 3, 6.0, PrecipType.SNOW),
+        Day(4, 9, 3.0, PrecipType.RAIN),
+    ]
     out = build_outlook(fc(days), NOW)
     assert out is not None
     assert [d.frost_night for d in out] == [True, False, True, False]
