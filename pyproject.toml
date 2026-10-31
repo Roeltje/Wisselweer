@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Het juiste moment om te wisselen — weersafhankelijk bandenwisseladvies en garageplanner."
 readme = "README.md"
 requires-python = ">=3.12"
+license = "AGPL-3.0-or-later"
 dependencies = [
     "pydantic>=2.7",
 ]
