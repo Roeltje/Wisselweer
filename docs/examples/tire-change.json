@@ -1,0 +1,12 @@
+{
+  "id": 1,
+  "vehicle_id": 1,
+  "changed_at": "2026-10-31",
+  "odometer_reading_id": 1,
+  "from_set_id": 1,
+  "to_set_id": 2,
+  "performed_by": "self",
+  "garage_id": null,
+  "cost_cents": null,
+  "notes": null
+}

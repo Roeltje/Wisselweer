@@ -1,0 +1,62 @@
+{
+  "api_version": "v1",
+  "advice": {
+    "direction": "to_winter",
+    "heading": "heading.to_winter.change_recommended",
+    "status": "change_recommended",
+    "warnings": [
+      {
+        "code": "possible_frost",
+        "start": "2026-10-31T18:00:00Z",
+        "end": "2026-11-03T19:00:00Z",
+        "detail_key": "warning.frost.summer_tires"
+      }
+    ],
+    "recommended_date": "2026-10-31",
+    "recommended_period": null,
+    "plan_appointment_by": "2026-10-31",
+    "horizon_until": "2026-11-09",
+    "reasons": [
+      {
+        "key": "reason.drive_window_fallback",
+        "params": {
+          "days": 4
+        }
+      },
+      {
+        "key": "reason.persistent_frost",
+        "params": {
+          "start": "2026-10-31",
+          "days": 3
+        }
+      },
+      {
+        "key": "reason.appointment_urgent",
+        "params": {
+          "days_late": 7
+        }
+      }
+    ],
+    "uncertainties": [],
+    "rules_version": "0.1.0",
+    "evaluated_at": "2026-10-31T18:36:59.326184Z",
+    "forecast_provider": "fake",
+    "raw_status": "change_recommended",
+    "confirm_streak": 0
+  },
+  "messages_nl": {
+    "heading.to_winter.change_recommended": "Tijd voor winterbanden",
+    "reason.drive_window_fallback": "Voor 4 dag(en) zonder rijmoment is het daggemiddelde gebruikt.",
+    "reason.persistent_frost": "Vanaf 2026-10-31 wordt aanhoudende vorst verwacht (3 dagen).",
+    "reason.appointment_urgent": "Plan zo snel mogelijk: de gewenste afspraakdatum is al verstreken.",
+    "warning.frost.summer_tires": "Vorst mogelijk: let op, je rijdt op zomerbanden."
+  },
+  "source": {
+    "provider": "fake",
+    "name": "Fake",
+    "attribution": "Fictieve data",
+    "license_url": "https://example.invalid/license"
+  },
+  "plan_appointment_by": "2026-10-31",
+  "mailto": null
+}

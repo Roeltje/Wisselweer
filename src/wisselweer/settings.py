@@ -55,6 +55,8 @@ class Settings(BaseSettings):
     publish_sftp_port: int = 22
     publish_sftp_known_hosts: Path | None = None
     public_stale_hours: float = 18
+    # Interne publicatieplanner: 0 = uit, anders elke N uur (eerste run na 1 minuut).
+    publish_interval_hours: int = 0
     # Optionele JSON-lijst [{"name": ..., "latitude": ..., "longitude": ...}] i.p.v. de standaard.
     national_locations: list[ReferenceLocation] | None = None
 

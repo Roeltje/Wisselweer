@@ -56,10 +56,11 @@ src/wisselweer/
     locales/{nl-NL,nl-BE,en,de-DE}.json
     regulations/          # (leeg) toekomstige landenregels met bron/geldigheid
   settings.py             # pydantic-settings uit env (.env)
-  cli.py                  # `wisselweer serve|publish|create-admin|migrate`
+  cli.py                  # `wisselweer serve|publish|migrate|create-admin|reset-password|create-api-token|revoke-api-token|backtest`
+  backtest.py             # replay van forecast-snapshots (zie docs/backtesting.md)
 public-site/              # index.html, style.css, app.js, advice.json, robots.txt, sitemap.xml, icons/
 branding/                 # logo.svg, logo-mono.svg, favicon.svg, PNG's
-deploy/                   # systemd-unit, install-ubuntu.sh
+deploy/                   # systemd-units, installatiescripts
 Dockerfile  compose.yaml  .env.example
 docs/                     # api.md, providers.md, advice-rules.md, install-*.md, testing.md
 tests/                    # unit/ integration/ security/ fixtures/
@@ -88,14 +89,14 @@ tests/                    # unit/ integration/ security/ fixtures/
 - **MET Norway** (standaard): `User-Agent` verplicht uit config (`WISSELWEER_CONTACT`), anders `configured=False`. Coördinaten max. 4 decimalen. Respecteer `Expires`/`If-Modified-Since`/304, 429/403.
 - **Open-Meteo**: `commercial_use_ok=False` voor de gratis host; als `WISSELWEER_COMMERCIAL=true` en geen eigen `OPENMETEO_BASE_URL`/key ⇒ weigeren.
 - **Bright Sky (DWD)**: forecast + observaties, open data.
-- **KNMI Open Data**: vereist API-key; zonder key `configured=False`. MVP: observaties (actueel 10-min) + datacontract voor modeldata.
-- **Weather Underground PWS**: observatieprovider; station-ID + API-key.
+- **KNMI Open Data**: vereist API-key; zonder key `configured=False`. MVP: alleen observaties (EDR, 10-min). Een KNMI-forecast is niet beschikbaar (HARMONIE alleen als GRIB/NetCDF): `KnmiForecastProvider` meldt `configured=False`.
+- **Weather Underground PWS**: observatieprovider; station-ID + API-key. Adapter bestaat; het advies gebruikt nog geen waarnemingen.
 - Cache: SQLite-tabel `forecast_cache` per `(provider, lat4, lon4)`; meerdere auto's op dezelfde locatie delen één fetch; fallback naar oudere data tot `max_stale_hours`, gemarkeerd.
 - `compare.py`: toont verschillen tussen providers ter diagnose; combineert niets.
 
 ## 6. Data (SQLite)
 
-`vehicle`, `tire_set`, `tread_measurement`, `odometer_reading`, `tire_change`, `garage`, `appointment`, `location`, `forecast_cache`, `advice_snapshot` (voor stabiliteit + backtest), `app_setting`, `admin_user`.
+`vehicle`, `tire_set`, `tread_measurement`, `odometer_reading`, `tire_change`, `garage`, `appointment`, `location`, `forecast_cache`, `forecast_snapshot` (één per provider/locatie/fetch, voor backtests), `advice_snapshot` (voor stabiliteit + backtest; `invalidated_at` wordt gezet bij een bandenwissel zodat de hysterese reset maar de rij bewaard blijft), `app_setting`, `admin_user`, `api_token` (alleen SHA-256-hash).
 - Max. één `tire_set.status='mounted'` per voertuig (partial unique index).
 - Bandenwissel = één transactie (historie, statussen, km, advies-snapshot ongeldig).
 - Km per set = som van verschillen tussen opeenvolgende **geldige** meetpunten tijdens montage; correcties via `superseded_by`, nooit verwijderen.
@@ -110,7 +111,7 @@ tests/                    # unit/ integration/ security/ fixtures/
 
 ## 8. Publicatie
 
-`wisselweer publish` (cron/systemd-timer, elke 6 u): referentielocaties (De Bilt, Groningen, Vlissingen, Maastricht, Den Helder, Twente — configureerbaar) → per locatie engine met `mounted=SUMMER` resp. `WINTER` afhankelijk van seizoensrichting → regionale spreiding → `PublicAdvice` → temp-bestand → valideren → `os.replace`. Optioneel SFTP met beperkte deploy-user (alleen `advice.json`).
+`wisselweer publish` (cron/systemd-timer, of de interne planner via `WISSELWEER_PUBLISH_INTERVAL_HOURS`): referentielocaties (De Bilt, Groningen, Vlissingen, Maastricht, Den Helder, Twente, Arnhem — configureerbaar) → per locatie engine met `mounted=SUMMER` resp. `WINTER` afhankelijk van seizoensrichting → samenvoegen (bij onenigheid tussen regio's status `REGIONAL_DIFFERENCES`) → `PublicAdvice` → temp-bestand → valideren → `os.replace`. Optioneel SFTP met beperkte deploy-user (alleen `advice.json`).
 
 ## 9. i18n
 

@@ -37,4 +37,4 @@ Richt op de webserver een beperkte deploy-gebruiker in:
 
 ## Planning
 
-Het advies hoort elke 6 uur te verversen (`stale_after` staat op 18 uur). Een systemd-timer of cron-regel (`wisselweer publish`) volgt in fase 6 (deployment); tot dan is handmatig draaien voldoende.
+Het advies hoort elke 6 uur te verversen (`stale_after` staat op 18 uur). Gebruik de systemd-timer ([install-lxc.md](install-lxc.md)), cron, of de interne planner (`WISSELWEER_PUBLISH_INTERVAL_HOURS=6`, zie [install-docker.md](install-docker.md)); niet meerdere tegelijk.

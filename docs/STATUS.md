@@ -8,4 +8,4 @@
 | 3 | Database, voertuigen, banden, garages, REST-API (154 tests) | klaar — auth volgt in fase 4 |
 | 4 | Privé-webinterface + auth (incl. i18n-basis, providerkeuze, modelvergelijking) | klaar |
 | 5 | Landelijk advies, publisher (lokaal + SFTP), publieke site | klaar |
-| 6 | Deployment, docs, security | open |
+| 6 | Docker, Debian/Ubuntu-LXC (app + website), backtest, docs | klaar — Docker/systemd/installscripts nog niet op echte host getest |
