@@ -45,7 +45,7 @@ def test_public_json_contains_no_private_data(tmp_path):
     assert set(data["source"]) == {"name", "attribution", "license_url"}
     for r in data["regions"]:
         assert set(r) == {"name", "status"}
-    for d in data["outlook"]:
+    for d in data["outlook"] or []:
         assert set(d) == {
             "date",
             "temp_min_c",
