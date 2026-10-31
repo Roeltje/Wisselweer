@@ -258,8 +258,12 @@ install_file "$TMPDIR_WW/10-wisselweer.conf" /etc/ssh/sshd_config.d/10-wisselwee
 if [ "$LAST_BACKUP" != "same" ]; then
   if sshd -t; then
     systemctl enable ssh >/dev/null 2>&1 || systemctl enable sshd >/dev/null 2>&1 || true
-    systemctl reload-or-restart ssh 2>/dev/null || systemctl reload-or-restart sshd
-    ok "sshd getest (sshd -t) en herladen; bestaande sessies blijven open"
+    # Herstart i.p.v. reload: een SIGHUP-reload kan in een LXC falen met
+    # "Cannot bind any address", waarna sshd uit blijft. Lopende sessies overleven een restart.
+    systemctl restart ssh 2>/dev/null || systemctl restart sshd
+    systemctl is-active --quiet ssh 2>/dev/null || systemctl is-active --quiet sshd \
+      || die "sshd draait niet na herstart; zie: journalctl -u ssh -n 20"
+    ok "sshd getest (sshd -t) en herstart; bestaande sessies blijven open"
   else
     rollback_file /etc/ssh/sshd_config.d/10-wisselweer.conf
     die "sshd -t faalt; sshd-configuratie teruggedraaid. Er is niets herstart."
