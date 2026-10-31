@@ -38,7 +38,7 @@ Richt op de webserver een beperkte deploy-gebruiker in:
 **Foutmeldingen** (de publicatie eindigt met exitcode 255 als `sftp` faalt). Diagnose, als servicegebruiker:
 
 ```sh
-runuser -u wisselweer -- sftp -v -i /var/lib/wisselweer/.ssh/deploy_key -o BatchMode=yes \
+runuser -u wisselweer -- sftp -v -i /var/lib/wisselweer/.ssh/deploy_wisselweer_web -o BatchMode=yes \
   -o UserKnownHostsFile=/var/lib/wisselweer/.ssh/known_hosts deploy@<webserver-ip>
 ```
 
@@ -46,7 +46,7 @@ runuser -u wisselweer -- sftp -v -i /var/lib/wisselweer/.ssh/deploy_key -o Batch
 |---|---|
 | `Connection refused` | sshd draait niet op de webserver: `systemctl restart ssh` (de installatie gebruikt een restart, geen reload) |
 | `Host key verification failed` | hostsleutel ontbreekt in known_hosts: `ssh-keyscan` en vingerafdruk controleren, zie [install-lxc.md](install-lxc.md) |
-| `Permission denied (publickey)` | publieke sleutel in `/etc/ssh/authorized_keys/deploy` komt niet overeen met `deploy_key.pub` (volledige regel, geen vingerafdruk) |
+| `Permission denied (publickey)` | publieke sleutel in `/etc/ssh/authorized_keys/deploy` komt niet overeen met `deploy_wisselweer_web.pub` (volledige regel, geen vingerafdruk) |
 
 Test een publicatie met `systemctl start wisselweer-publish.service` en `journalctl -u wisselweer-publish`: een handmatig `runuser … wisselweer publish` leest het env-bestand niet.
 

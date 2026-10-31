@@ -51,17 +51,17 @@ Volgorde voor publicatie via SFTP naar de website-LXC (zie [public-site.md](publ
 
 1. **Sleutel maken** op de app-LXC, als servicegebruiker (de map `.ssh` bestaat al na `install.sh`):
    ```sh
-   runuser -u wisselweer -- ssh-keygen -t ed25519 -N '' -C wisselweer-publish -f /var/lib/wisselweer/.ssh/deploy_key
-   cat /var/lib/wisselweer/.ssh/deploy_key.pub
+   runuser -u wisselweer -- ssh-keygen -t ed25519 -N '' -C wisselweer-publish -f /var/lib/wisselweer/.ssh/deploy_wisselweer_web
+   cat /var/lib/wisselweer/.ssh/deploy_wisselweer_web.pub
    ```
-2. **Publieke sleutel op de website-LXC**: draai `install-public-site.sh` met `--deploy-key "<inhoud van deploy_key.pub>"`, de volledige regel `ssh-ed25519 AAAA… wisselweer-publish` (dus niet de SHA256-vingerafdruk). Of plak die regel achteraf in `/etc/ssh/authorized_keys/deploy`.
+2. **Publieke sleutel op de website-LXC**: draai `install-public-site.sh` met `--deploy-key "<inhoud van deploy_wisselweer_web.pub>"`, de volledige regel `ssh-ed25519 AAAA… wisselweer-publish` (dus niet de SHA256-vingerafdruk). Of plak die regel achteraf in `/etc/ssh/authorized_keys/deploy`.
 3. **Hostsleutel vastleggen** op de app-LXC en de vingerafdruk op beide kanten vergelijken:
    ```sh
-   ssh-keyscan -p 22 <webserver-ip> | runuser -u wisselweer -- tee /var/lib/wisselweer/.ssh/known_hosts
+   ssh-keyscan -t ed25519 -p 22 <webserver-ip> | runuser -u wisselweer -- tee /var/lib/wisselweer/.ssh/known_hosts
    runuser -u wisselweer -- ssh-keygen -lf /var/lib/wisselweer/.ssh/known_hosts   # app-LXC
    ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub                                # website-LXC
    ```
-4. **Env instellen** in `/etc/wisselweer/wisselweer.env`: `WISSELWEER_PUBLISH_SFTP_HOST=<webserver-ip>`, `..._USER=deploy`, `..._KEY=/var/lib/wisselweer/.ssh/deploy_key`, `..._KNOWN_HOSTS=/var/lib/wisselweer/.ssh/known_hosts` en `..._PATH=/site`.
+4. **Env instellen** in `/etc/wisselweer/wisselweer.env`: `WISSELWEER_PUBLISH_SFTP_HOST=<webserver-ip>`, `..._USER=deploy`, `..._KEY=/var/lib/wisselweer/.ssh/deploy_wisselweer_web`, `..._KNOWN_HOSTS=/var/lib/wisselweer/.ssh/known_hosts` en `..._PATH=/site`.
 5. **Test-publicatie** via systemd, zodat het env-bestand wordt geladen:
    ```sh
    systemctl start wisselweer-publish.service
