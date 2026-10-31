@@ -128,6 +128,12 @@ class OdometerCorrectionIn(BaseModel):
     note: str | None = None
 
 
+class OdometerIn(BaseModel):
+    reading_km: int = Field(ge=0)
+    recorded_at: datetime | None = None
+    note: str | None = None
+
+
 class AppointmentCreate(BaseModel):
     garage_id: int
     target_direction: Direction

@@ -5,6 +5,7 @@ from datetime import UTC, date, datetime
 import pytest
 from fastapi.testclient import TestClient
 
+from tests.fixtures.auth import bearer
 from tests.fixtures.builders import Day, make_forecast, repeat
 from wisselweer.api.app import create_app
 from wisselweer.api.deps import ensure_db, get_forecast_service
@@ -63,7 +64,7 @@ def app(tmp_path, provider):
 
 @pytest.fixture
 def client(app):
-    with TestClient(app, raise_server_exceptions=False) as c:
+    with TestClient(app, raise_server_exceptions=False, headers=bearer(app)) as c:
         yield c
 
 

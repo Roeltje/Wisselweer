@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 
 from wisselweer.api.deps import get_session
-from wisselweer.api.schemas import OdometerCorrectionIn, TireChangeIn
+from wisselweer.api.schemas import OdometerCorrectionIn, OdometerIn, TireChangeIn
 from wisselweer.tires import service
 from wisselweer.tires.schemas import (
     KmSummary,
@@ -105,3 +106,13 @@ def correct_odometer(
     reading_id: int, body: OdometerCorrectionIn, session: SessionDep
 ) -> OdometerOut:
     return service.correct_odometer(session, reading_id, body.new_km, body.note)
+
+
+@router.post("/vehicles/{vehicle_id}/odometer", response_model=OdometerOut, status_code=201)
+def add_odometer(vehicle_id: int, body: OdometerIn, session: SessionDep) -> OdometerOut:
+    recorded_at = body.recorded_at or datetime.now(UTC)
+    if recorded_at.tzinfo is None:
+        recorded_at = recorded_at.replace(tzinfo=UTC)
+    return service.add_odometer_reading(
+        session, vehicle_id, body.reading_km, recorded_at, body.note
+    )

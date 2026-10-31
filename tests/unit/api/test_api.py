@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 from datetime import date
+from pathlib import Path
+from tempfile import mkdtemp
 
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
 
+from tests.fixtures.auth import bearer
 from tests.fixtures.builders import Day, make_forecast, repeat
 from wisselweer.api.app import create_app
 from wisselweer.api.deps import get_forecast_service
@@ -40,12 +43,14 @@ class FakeService:
         ]
 
 
-def make_client(service=None, **settings_kw):
+def make_client(service=None, authed=True, **settings_kw):
+    settings_kw.setdefault("data_dir", Path(mkdtemp()) / "data")
     settings = Settings(_env_file=None, **settings_kw)
     app = create_app(settings)
     svc = service or FakeService()
     app.dependency_overrides[get_forecast_service] = lambda: svc
-    return TestClient(app, raise_server_exceptions=False), svc
+    headers = bearer(app) if authed else {}
+    return TestClient(app, raise_server_exceptions=False, headers=headers), svc
 
 
 def test_health():
@@ -135,10 +140,11 @@ def test_unexpected_error_is_generic():
     assert r.headers["X-Frame-Options"] == "DENY"
 
 
-def test_docs_disabled():
-    c, _ = make_client()
-    for path in ("/docs", "/redoc", "/openapi.json"):
-        assert c.get(path).status_code == 404
+def test_docs_need_login():
+    c, _ = make_client(authed=False)
+    assert c.get("/redoc").status_code == 404
+    assert c.get("/openapi.json").status_code == 401
+    assert c.get("/docs", follow_redirects=False).status_code == 303
 
 
 def test_security_headers():

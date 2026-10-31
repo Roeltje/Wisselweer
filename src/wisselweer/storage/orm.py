@@ -250,3 +250,16 @@ class AdminUser(Base):
     username: Mapped[str] = mapped_column(sa.String(80), unique=True)
     password_hash: Mapped[str] = mapped_column(sa.String(255))
     created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=_now)
+
+
+class ApiToken(Base):
+    """Bearer-token voor integraties; alleen de SHA-256-hash wordt bewaard."""
+
+    __tablename__ = "api_token"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(sa.String(80))
+    token_hash: Mapped[str] = mapped_column(sa.String(64), unique=True)
+    created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=_now)
+    last_used_at: Mapped[datetime | None] = mapped_column(UtcDateTime)
+    revoked_at: Mapped[datetime | None] = mapped_column(UtcDateTime)

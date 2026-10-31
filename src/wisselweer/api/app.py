@@ -6,15 +6,17 @@ import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, Response
 from sqlalchemy.exc import IntegrityError
 
 from wisselweer import __version__
+from wisselweer.api.auth import install_auth, require_user
 from wisselweer.api.deps import ensure_db
 from wisselweer.api.routers.garages import router as garages_router
 from wisselweer.api.routers.tires import router as tires_router
+from wisselweer.api.routers.v1 import health_router
 from wisselweer.api.routers.v1 import router as v1_router
 from wisselweer.api.routers.vehicles import router as vehicles_router
 from wisselweer.settings import Settings, get_settings
@@ -102,11 +104,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             log.error("internal_error type=%s path=%s", type(exc).__name__, request.url.path)
             response = _error(500, "internal_error")
         for k, v in SECURITY_HEADERS.items():
-            response.headers[k] = v
+            response.headers.setdefault(k, v)  # een route mag een eigen CSP zetten (/docs)
         return response
 
-    app.include_router(v1_router)
-    app.include_router(vehicles_router)
-    app.include_router(tires_router)
-    app.include_router(garages_router)
+    install_auth(app, app.state.settings)
+    protected = [Depends(require_user)]
+    app.include_router(health_router)  # enige openbare API-route
+    app.include_router(v1_router, dependencies=protected)
+    app.include_router(vehicles_router, dependencies=protected)
+    app.include_router(tires_router, dependencies=protected)
+    app.include_router(garages_router, dependencies=protected)
     return app
