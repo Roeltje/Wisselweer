@@ -12,3 +12,4 @@ data/
 
 # Server-specifieke analytics-config (nooit committen)
 public-site/analytics.json
+public-site/contact.json
