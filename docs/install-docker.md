@@ -48,4 +48,4 @@ Open de poort niet naar het internet en bind niet aan `0.0.0.0` op de host. Gebr
 
 ## Niet getest
 
-Dockerfile en compose.yaml zijn geschreven op een machine zonder Docker en daar niet gebouwd of gedraaid. Controleer bij de eerste build vooral de uv-image-tag en de healthcheck (`docker compose ps`).
+Dockerfile en compose.yaml (anders dan de LXC-installatie, die wel getest is) zijn geschreven op een machine zonder Docker en daar niet gebouwd of gedraaid. Controleer bij de eerste build vooral de uv-image-tag en de healthcheck (`docker compose ps`).
