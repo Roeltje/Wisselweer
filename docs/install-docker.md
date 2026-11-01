@@ -7,7 +7,7 @@
 
 ## Stappen
 
-1. Maak je configuratie: `cp .env.example .env` en vul minstens `WISSELWEER_CONTACT` en `WISSELWEER_SECRET_KEY` in (`python -c "import secrets; print(secrets.token_urlsafe(48))"`). Zet `WISSELWEER_COOKIE_SECURE=true` zodra je achter HTTPS draait. `compose.yaml` forceert zelf `WISSELWEER_HOST=0.0.0.0` en `WISSELWEER_DATA_DIR=/data` binnen de container; die twee regels in `.env` worden genegeerd. `.env` komt niet in de image (`.dockerignore`).
+1. Maak je configuratie: `cp .env.example .env` en vul minstens `WISSELWEER_CONTACT` en `WISSELWEER_SECRET_KEY` in (minimaal 32 tekens; `python -c "import secrets; print(secrets.token_urlsafe(48))"`). Zet `WISSELWEER_COOKIE_SECURE=true` zodra je achter HTTPS draait. `compose.yaml` forceert zelf `WISSELWEER_HOST=0.0.0.0` en `WISSELWEER_DATA_DIR=/data` binnen de container; die twee regels in `.env` worden genegeerd. `.env` komt niet in de image (`.dockerignore`).
 2. Bouwen en starten: `docker compose up -d --build`. Migraties draaien automatisch bij het opstarten.
 3. Beheerder aanmaken: `docker compose exec wisselweer wisselweer create-admin --username <naam>` (het wachtwoord wordt gevraagd).
 4. Open `http://127.0.0.1:8000`. De poort is op de host alleen aan localhost gebonden.
