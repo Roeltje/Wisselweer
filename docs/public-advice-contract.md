@@ -1,6 +1,6 @@
 # Publiek adviescontract — `advice.json` (schema_version 1)
 
-Enige koppeling tussen de privé-app en elke publieke site of andere afnemer (eigen site, Home Assistant). Bevat uitsluitend deze velden (allowlist, `extra="forbid"`).
+Enige koppeling tussen de privé-app en afnemers zoals Home Assistant of een eigen dashboard. Bevat uitsluitend deze velden (allowlist, `extra="forbid"`).
 
 | Veld | Type | Betekenis |
 |---|---|---|

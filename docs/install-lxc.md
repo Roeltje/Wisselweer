@@ -47,21 +47,21 @@ Dezelfde stappen als in `deploy/install.sh`: gebruiker en mappen aanmaken, code 
 
 ## Publiceren
 
-Volgorde voor publicatie via SFTP naar een webserver (elke statische host met een gechroote SFTP-gebruiker; zie [publishing.md](publishing.md)). De webserver zelf valt buiten deze repo:
+Volgorde voor publicatie via SFTP naar een server (met een gechroote SFTP-gebruiker; zie [publishing.md](publishing.md)). De doelserver zelf valt buiten deze repo:
 
 1. **Sleutel maken** op de app-LXC, als servicegebruiker (de map `.ssh` bestaat al na `install.sh`):
    ```sh
    runuser -u wisselweer -- ssh-keygen -t ed25519 -N '' -C wisselweer-publish -f /var/lib/wisselweer/.ssh/deploy_wisselweer_web
    cat /var/lib/wisselweer/.ssh/deploy_wisselweer_web.pub
    ```
-2. **Publieke sleutel op de webserver**: zet de volledige regel `ssh-ed25519 AAAA… wisselweer-publish` (dus niet de SHA256-vingerafdruk) in de `authorized_keys` van de deploy-gebruiker, bijvoorbeeld `/etc/ssh/authorized_keys/deploy`.
+2. **Publieke sleutel op de doelserver**: zet de volledige regel `ssh-ed25519 AAAA… wisselweer-publish` (dus niet de SHA256-vingerafdruk) in de `authorized_keys` van de deploy-gebruiker, bijvoorbeeld `/etc/ssh/authorized_keys/deploy`.
 3. **Hostsleutel vastleggen** op de app-LXC en de vingerafdruk op beide kanten vergelijken:
    ```sh
-   ssh-keyscan -t ed25519 -p 22 <webserver-ip> | runuser -u wisselweer -- tee /var/lib/wisselweer/.ssh/known_hosts
+   ssh-keyscan -t ed25519 -p 22 <server-ip> | runuser -u wisselweer -- tee /var/lib/wisselweer/.ssh/known_hosts
    runuser -u wisselweer -- ssh-keygen -lf /var/lib/wisselweer/.ssh/known_hosts   # app-LXC
-   ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub                                # webserver
+   ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub                                # doelserver
    ```
-4. **Env instellen** in `/etc/wisselweer/wisselweer.env`: `WISSELWEER_PUBLISH_SFTP_HOST=<webserver-ip>`, `..._USER=deploy`, `..._KEY=/var/lib/wisselweer/.ssh/deploy_wisselweer_web`, `..._KNOWN_HOSTS=/var/lib/wisselweer/.ssh/known_hosts` en `..._PATH=/site` (relatief aan de chroot van de deploy-gebruiker).
+4. **Env instellen** in `/etc/wisselweer/wisselweer.env`: `WISSELWEER_PUBLISH_SFTP_HOST=<server-ip>`, `..._USER=deploy`, `..._KEY=/var/lib/wisselweer/.ssh/deploy_wisselweer_web`, `..._KNOWN_HOSTS=/var/lib/wisselweer/.ssh/known_hosts` en `..._PATH=/site` (relatief aan de chroot van de deploy-gebruiker).
 5. **Test-publicatie** via systemd, zodat het env-bestand wordt geladen:
    ```sh
    systemctl start wisselweer-publish.service
@@ -72,7 +72,7 @@ Volgorde voor publicatie via SFTP naar een webserver (elke statische host met ee
    systemctl enable --now wisselweer-publish.timer   # elke 6 uur, 5 min over, met willekeurige vertraging
    ```
 
-Zie [publishing.md](publishing.md) voor de beperkte deploy-gebruiker op de webserver en het oplossen van SFTP-fouten.
+Zie [publishing.md](publishing.md) voor de beperkte deploy-gebruiker op de doelserver en het oplossen van SFTP-fouten.
 
 ## Toegang
 
@@ -90,4 +90,4 @@ Zet dit voor blijvend gebruik in `/etc/nftables.conf`. Houd de app bij voorkeur 
 
 ## Getest
 
-De native installatie op Debian 13 (unprivileged LXC) is in de praktijk getest, samen met een aparte statische webserver op een tweede LXC. De units en het script zijn niet door shellcheck of `systemd-analyze verify` gehaald. Docker is nog niet getest, zie [install-docker.md](install-docker.md).
+De native installatie op Debian 13 (unprivileged LXC) is in de praktijk getest, inclusief SFTP-publicatie naar een tweede LXC. De units en het script zijn niet door shellcheck of `systemd-analyze verify` gehaald. Docker is nog niet getest, zie [install-docker.md](install-docker.md).

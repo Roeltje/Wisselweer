@@ -12,7 +12,7 @@ Dit document is het bindende contract voor alle code in deze repository. Afwijke
 | **Self-hosted app** (`wisselweer.api` + `wisselweer.web`) | Beheer van voertuigen, banden, garages, advies | Lokale SQLite, privé |
 | **Publieke site (apart, niet in deze repo)** | Statische site van wisselweer.nl die alleen `advice.json` leest | Uitsluitend allowlisted publieke velden |
 
-De publieke site wordt apart onderhouden. Deze repo publiceert `advice.json` volgens [docs/public-advice-contract.md](docs/public-advice-contract.md); iedereen kan dat bestand gebruiken (eigen site, Home Assistant). Een publieke site heeft **nooit** een netwerkpad naar de privé-app: de privé-app *duwt* `advice.json` naar een map of via SFTP naar de webserver.
+De publieke site wordt apart onderhouden. Deze repo publiceert `advice.json` volgens [docs/public-advice-contract.md](docs/public-advice-contract.md); het bestand is ook bruikbaar voor bijvoorbeeld Home Assistant of een dashboard. Een publieke site heeft **nooit** een netwerkpad naar de privé-app: de privé-app *duwt* `advice.json` naar een map of via SFTP naar de webserver.
 
 ## 2. Stack
 
