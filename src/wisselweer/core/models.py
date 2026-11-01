@@ -73,8 +73,8 @@ class HourlyPoint(BaseModel):
 
 class Forecast(BaseModel):
     provider: str
-    latitude: float
-    longitude: float
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
     timezone: str = Field(description="IANA-tijdzone, bv. Europe/Amsterdam")
     fetched_at: datetime
     valid_until: datetime | None = None

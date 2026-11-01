@@ -13,6 +13,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from wisselweer.publisher.national import ReferenceLocation
 
+MIN_SECRET_KEY_LENGTH = 32
+
 if TYPE_CHECKING:
     from wisselweer.publisher.national import NationalConfig
     from wisselweer.weather.registry import ProvidersConfig
@@ -34,6 +36,8 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
         env_ignore_empty=True,
+        # Foutmeldingen mogen de ingevoerde waarde (secret key, API-keys) niet herhalen.
+        hide_input_in_errors=True,
     )
 
     host: str = "127.0.0.1"
@@ -74,6 +78,19 @@ class Settings(BaseSettings):
     publish_countries: bool = False
     # Optionele JSON-lijst [{"name": ..., "latitude": ..., "longitude": ...}] i.p.v. de standaard.
     national_locations: list[ReferenceLocation] | None = None
+
+    @field_validator("secret_key")
+    @classmethod
+    def _secret_key_length(cls, value: SecretStr | None) -> SecretStr | None:
+        """Leeg = automatisch genereren (None); anders minimaal 32 tekens. De waarde zelf staat nooit in de fout."""
+        if value is None or value.get_secret_value() == "":
+            return None
+        if len(value.get_secret_value()) < MIN_SECRET_KEY_LENGTH:
+            raise ValueError(
+                f"WISSELWEER_SECRET_KEY moet minimaal {MIN_SECRET_KEY_LENGTH} tekens bevatten "
+                "(of leeg zijn: dan wordt een sleutel gegenereerd)"
+            )
+        return value
 
     @field_validator("openmeteo_base_url")
     @classmethod

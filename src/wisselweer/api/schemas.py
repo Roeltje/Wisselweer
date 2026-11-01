@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Self
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from wisselweer.core.messages import DEFAULT_NL
 from wisselweer.core.models import (
@@ -20,6 +20,10 @@ from wisselweer.core.models import (
 from wisselweer.storage.enums import AppointmentStatus, ChangeMethod
 from wisselweer.weather.base import ProviderInfo
 
+# Een verwachting van 16 dagen is 384 uur; 17 dagen geeft ruimte aan alle bronnen.
+MAX_FORECAST_HOURS = 24 * 17
+MAX_FORECAST_VARIABLES = 64
+
 
 class CalculateRequest(BaseModel):
     forecast: Forecast | None = None
@@ -29,6 +33,16 @@ class CalculateRequest(BaseModel):
     mounted: TireType
     profile: DrivingProfile | None = None
     lead_time_days: int = Field(default=7, ge=0, le=60)
+
+    @field_validator("forecast")
+    @classmethod
+    def _forecast_size(cls, value: Forecast | None) -> Forecast | None:
+        if value is not None:
+            if len(value.hourly) > MAX_FORECAST_HOURS:
+                raise ValueError(f"forecast.hourly mag maximaal {MAX_FORECAST_HOURS} uren bevatten")
+            if len(value.available_variables) > MAX_FORECAST_VARIABLES:
+                raise ValueError("forecast.available_variables bevat te veel waarden")
+        return value
 
     @model_validator(mode="after")
     def _one_source(self) -> Self:

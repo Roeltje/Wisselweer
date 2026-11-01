@@ -15,7 +15,7 @@ from wisselweer.api.deps import get_forecast_service
 from wisselweer.settings import Settings
 from wisselweer.weather.base import ProviderInfo, ProviderNotConfigured, ProviderUnavailable
 
-SECRET = "super-geheim-key-123"
+SECRET = "super-geheim-key-123-voldoende-lang-voor-de-validator"
 
 
 class FakeService:
@@ -108,6 +108,59 @@ def test_get_advice_and_default_location():
 def test_calculate_validation(body):
     c, _ = make_client()
     assert c.post("/api/v1/advice/calculate", json=body).status_code == 422
+
+
+def _inline_forecast(hours: int | None = None, **overrides) -> dict:
+    fc = make_forecast(date.today(), repeat(Day(tmin=12, tmax=20), 10), provider="metno")
+    data = fc.model_dump(mode="json")
+    if hours is not None:
+        template = data["hourly"][0]
+        base = fc.hourly[0].time
+        from datetime import timedelta
+
+        data["hourly"] = [
+            {**template, "time": (base + timedelta(hours=i)).isoformat()} for i in range(hours)
+        ]
+    return {**data, **overrides}
+
+
+def test_calculate_inline_forecast_grens():
+    from wisselweer.api.schemas import MAX_FORECAST_HOURS
+
+    c, _ = make_client()
+    ok = c.post(
+        "/api/v1/advice/calculate",
+        json={"forecast": _inline_forecast(MAX_FORECAST_HOURS), "mounted": "summer"},
+    )
+    assert ok.status_code == 200, ok.text
+    te_veel = c.post(
+        "/api/v1/advice/calculate",
+        json={"forecast": _inline_forecast(MAX_FORECAST_HOURS + 1), "mounted": "summer"},
+    )
+    assert te_veel.status_code == 422
+    assert te_veel.json()["detail"] == "validation_error"
+
+
+def test_calculate_inline_forecast_te_veel_variabelen():
+    c, _ = make_client()
+    fc = _inline_forecast(available_variables=[f"v{i}" for i in range(65)])
+    assert (
+        c.post("/api/v1/advice/calculate", json={"forecast": fc, "mounted": "summer"}).status_code
+        == 422
+    )
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [{"latitude": 90.5}, {"latitude": -91}, {"longitude": 180.5}, {"longitude": -181}],
+)
+def test_calculate_inline_forecast_coordinaten_buiten_bereik(extra):
+    c, _ = make_client()
+    fc = _inline_forecast(**extra)
+    assert (
+        c.post("/api/v1/advice/calculate", json={"forecast": fc, "mounted": "summer"}).status_code
+        == 422
+    )
 
 
 def test_get_advice_validation():
