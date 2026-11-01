@@ -238,7 +238,7 @@ def test_3pmsf_alleen_bij_winter_en_vierseizoenen(web):
     html = web.get(f"/vehicles/{vid}/sets/new").text
     assert 'name="g1_has_3pmsf"' in html and "only-winter" in html
     assert "3PMSF-symbool (bergtop met sneeuwvlok) op de band" in html
-    assert "het oude M+S-merk alleen is in o.a. Duitsland en Oostenrijk niet meer genoeg" in html
+    assert "het oude M+S-merk alleen is in o.a. Duitsland en Frankrijk niet meer genoeg" in html
     assert 'class="icon icon-3pmsf"' in html
     css = web.c.get("/static/app.css").text
     assert ':has(select[name="type"] option[value="summer"]:checked) .only-winter' in css
