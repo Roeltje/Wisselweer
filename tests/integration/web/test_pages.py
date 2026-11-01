@@ -52,6 +52,7 @@ def test_static_assets_are_public(anon):
         ("/static/app.js", "javascript"),
         ("/static/logo.svg", "image/svg+xml"),
         ("/static/favicon.svg", "image/svg+xml"),
+        ("/static/favicon.ico", "icon"),
     ):
         r = anon.get(path)
         assert r.status_code == 200 and ctype in r.headers["content-type"], path
