@@ -141,10 +141,15 @@ def form_page(
     nav: str = "vehicles",
     status: int = 200,
 ) -> Response:
+    # Locatieformulieren krijgen de zoekhulp; "enabled" = geocoderen staat aan (anders alleen
+    # de knop "Gebruik mijn locatie", die geen externe dienst gebruikt).
+    is_location = any(f.name == "latitude" for f in fields)
+    geo = {"enabled": request.app.state.settings.geocoding_enabled} if is_location else None
     return render(
         request,
         "form.html",
         {
+            "geo": geo,
             "title": title,
             "fields": fields,
             "action": action,

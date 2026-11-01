@@ -3,7 +3,8 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
-from tests.fixtures.auth import bearer, make_admin
+from tests.fixtures.auth import ADMIN_PASSWORD, ADMIN_USER, bearer, make_admin
+from tests.integration.web.conftest import Web, csrf_from
 from wisselweer import geocoding
 from wisselweer.api.app import create_app
 from wisselweer.settings import Settings
@@ -59,3 +60,20 @@ def client(app):
 def anon(app):
     with TestClient(app, raise_server_exceptions=False) as c:
         yield c
+
+
+def login_web(client: TestClient):
+    """Ingelogde `Web`-hulp (met CSRF) voor de pagina-tests."""
+    page = client.get("/login")
+    r = client.post(
+        "/login",
+        data={
+            "username": ADMIN_USER,
+            "password": ADMIN_PASSWORD,
+            "csrf_token": csrf_from(page.text),
+            "next": "/",
+        },
+        follow_redirects=False,
+    )
+    assert r.status_code == 303
+    return Web(client)

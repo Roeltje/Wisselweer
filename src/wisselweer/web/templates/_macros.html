@@ -42,6 +42,32 @@
 </div>
 {%- endmacro %}
 
+{#- Locatie opzoeken (zoekveld) en "Gebruik mijn locatie". Verborgen tot app.js het activeert; de
+    handmatige velden werken ook zonder JavaScript. Het zoekveld heeft bewust geen name: de
+    zoektekst wordt nooit met het formulier meegestuurd. -#}
+{% macro geocode_widget(geo) -%}
+<div class="geo" data-geo hidden role="group" aria-label="{{ t('geo.group') }}" data-url="/api/v1/geocode"
+  data-msg-searching="{{ t('geo.searching') }}" data-msg-short="{{ t('geo.short') }}" data-msg-none="{{ t('geo.none') }}"
+  data-msg-found="{{ t('geo.found') }}" data-msg-filled="{{ t('geo.filled') }}" data-msg-busy="{{ t('geo.busy') }}"
+  data-msg-error="{{ t('geo.error') }}" data-msg-locating="{{ t('geo.locating') }}" data-msg-located="{{ t('geo.located') }}"
+  data-msg-denied="{{ t('geo.denied') }}" data-msg-unavailable="{{ t('geo.unavailable') }}" data-msg-insecure="{{ t('geo.insecure') }}">
+  {% if geo.enabled %}
+  <div class="field">
+    <label for="geo-q">{{ t('geo.query') }}</label>
+    <div class="geo-row">
+      <input id="geo-q" type="search" maxlength="200" autocomplete="off" aria-describedby="geo-source" data-geo-query>
+      <button type="button" class="btn" data-geo-search>{{ t('geo.search') }}</button>
+    </div>
+    <p class="hint" id="geo-source">{{ t('geo.source') }} <a href="https://www.openstreetmap.org/copyright" rel="noopener noreferrer">{{ t('geo.source_link') }}</a></p>
+    <p class="hint">{{ t('geo.privacy') }}</p>
+    <ul class="geo-results" data-geo-results aria-label="{{ t('geo.pick') }}" hidden></ul>
+  </div>
+  {% endif %}
+  <div><button type="button" class="btn" data-geo-locate hidden>{{ t('geo.locate') }}</button></div>
+  <p class="hint" role="status" aria-live="polite" data-geo-status></p>
+</div>
+{%- endmacro %}
+
 {% macro csrf() -%}
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 {%- endmacro %}
