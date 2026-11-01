@@ -11,6 +11,7 @@ from alembic import command
 from alembic.config import Config
 from pydantic import ValidationError
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 import wisselweer.storage.db as storage_db
 from tests.integration.conftest import vehicle_in
@@ -340,6 +341,16 @@ def test_vervangen_is_atomair(session, monkeypatch):
     monkeypatch.undo()
     groups = list(session.scalars(select(TireGroup).where(TireGroup.tire_set_id == s.id)))
     assert [(g.quantity, g.dot_code, g.removed_on) for g in groups] == [(4, "2319", None)]
+
+
+@pytest.mark.parametrize("quantity", [0, 5])
+def test_database_weigert_aantal_buiten_een_tot_vier(session, quantity):
+    v = _vehicle(session)
+    s = _set(session, v.id)
+    session.add(TireGroup(tire_set_id=s.id, quantity=quantity))
+    with pytest.raises(IntegrityError):
+        session.flush()
+    session.rollback()
 
 
 def test_set_verwijderen_ruimt_groepen_op(session):
