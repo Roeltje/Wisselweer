@@ -30,6 +30,10 @@ ProtectKernelLogs=true
 ProtectControlGroups=true
 ProtectClock=true
 ProtectHostname=true
+# Andere processen en /proc-onderdelen onzichtbaar; geen IPC-objecten laten staan.
+ProtectProc=invisible
+ProcSubset=pid
+RemoveIPC=true
 LockPersonality=true
 RestrictRealtime=true
 RestrictSUIDSGID=true
@@ -37,5 +41,14 @@ RestrictNamespaces=true
 RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
 CapabilityBoundingSet=
 SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+# De ssh-client (via sftp) zet bij het starten zijn eigen uid opnieuw (setresuid naar dezelfde uid);
+# dat blijft toegestaan (zonder capabilities en met NoNewPrivileges kan er niets mee). Een geweigerde
+# syscall geeft EPERM in plaats van het proces te doden, zodat een fout in de journal leesbaar blijft.
+SystemCallFilter=setuid setgid setresuid setresgid
+SystemCallErrorNumber=EPERM
 SystemCallArchitectures=native
 UMask=0027
+# Ruime grenzen; vangen een op hol geslagen proces af.
+TasksMax=128
+MemoryMax=512M
