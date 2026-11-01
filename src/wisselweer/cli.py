@@ -5,7 +5,9 @@ from __future__ import annotations
 import argparse
 import getpass
 import logging
+import signal
 import sys
+import threading
 
 from wisselweer import __version__
 from wisselweer.logsetup import configure_logging
@@ -86,6 +88,45 @@ def _publish() -> int:
     return 0
 
 
+def _positive_hours(value: str) -> float:
+    try:
+        hours = float(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError("moet een getal zijn") from None
+    if not hours > 0 or hours == float("inf"):
+        raise argparse.ArgumentTypeError("moet groter zijn dan 0")
+    return hours
+
+
+def _publish_every(every_hours: float) -> int:
+    """Publiceert periodiek (voor een aparte container); sluit netjes af op SIGTERM/SIGINT.
+
+    Zelfde ritme als de interne planner: eerste run na `FIRST_RUN_DELAY_S`, daarna elke
+    `every_hours`. Een mislukte run (melding op stderr) stopt de lus niet. Een signaal tijdens
+    het wachten beëindigt de lus direct; tijdens een run wordt die eerst afgemaakt.
+    """
+    from wisselweer.publisher import scheduler
+
+    stop = threading.Event()
+
+    def _request_stop(signum: int, frame: object) -> None:
+        stop.set()
+
+    previous = {sig: signal.signal(sig, _request_stop) for sig in (signal.SIGTERM, signal.SIGINT)}
+    try:
+        print(f"Publicatielus gestart: elke {every_hours:g} uur.", flush=True)
+        delay = scheduler.FIRST_RUN_DELAY_S
+        while not stop.wait(delay):
+            _publish()
+            sys.stdout.flush()
+            delay = every_hours * 3600.0
+        print("Publicatielus gestopt.", flush=True)
+    finally:
+        for sig, handler in previous.items():
+            signal.signal(sig, handler)
+    return 0
+
+
 def _backtest(args: argparse.Namespace) -> int:
     from datetime import UTC, date, datetime
 
@@ -139,7 +180,13 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("serve", help="Start de webserver")
     sub.add_parser("version", help="Toon de versie")
-    sub.add_parser("publish", help="Bereken en publiceer het landelijke advies (advice.json)")
+    pub = sub.add_parser("publish", help="Bereken en publiceer het landelijke advies (advice.json)")
+    pub.add_argument(
+        "--every-hours",
+        type=_positive_hours,
+        metavar="N",
+        help="Blijf draaien en publiceer elke N uur (eerste run na 1 minuut); stopt op SIGTERM",
+    )
     sub.add_parser("migrate", help="Werk de database bij (alembic upgrade head)")
     bt = sub.add_parser(
         "backtest", help="Speel opgeslagen forecast-snapshots opnieuw af (geen netwerk)"
@@ -171,6 +218,8 @@ def main(argv: list[str] | None = None) -> int:
         migrate()
         return 0
     if args.command == "publish":
+        if args.every_hours is not None:
+            return _publish_every(args.every_hours)
         return _publish()
     if args.command == "backtest":
         return _backtest(args)
