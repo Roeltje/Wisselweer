@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from wisselweer.settings import Settings
 
 if TYPE_CHECKING:
+    from wisselweer.geocoding import Geocoder
     from wisselweer.vehicles.advice import VehicleAdviceService
     from wisselweer.weather.service import ForecastService
 
@@ -98,6 +99,22 @@ def get_forecast_service(request: Request) -> ForecastService:
                 apply_default_provider_setting(ensure_db(app), service)
                 app.state.forecast_service = service
     return service
+
+
+def get_geocoder(request: Request) -> Geocoder:
+    """Bouwt de geocoder lazy en bewaart hem per app (cache blijft zo bewaard)."""
+    app = request.app
+    geocoder = getattr(app.state, "geocoder", None)
+    if geocoder is None:
+        with _init_lock:
+            geocoder = getattr(app.state, "geocoder", None)
+            if geocoder is None:
+                from wisselweer.geocoding import Geocoder
+
+                settings: Settings = app.state.settings
+                geocoder = Geocoder(settings.geocoder_url, settings.contact)
+                app.state.geocoder = geocoder
+    return geocoder
 
 
 def get_advice_service(

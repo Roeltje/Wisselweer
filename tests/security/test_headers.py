@@ -10,7 +10,7 @@ def _basis(r):
     assert "form-action 'self'" in csp
     assert "object-src 'none'" in csp
     assert "frame-ancestors 'none'" in csp
-    assert r.headers["permissions-policy"] == "geolocation=(), camera=(), microphone=()"
+    assert r.headers["permissions-policy"] == "geolocation=(self), camera=(), microphone=()"
     assert r.headers["x-content-type-options"] == "nosniff"
 
 
