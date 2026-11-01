@@ -44,6 +44,8 @@ RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
 CapabilityBoundingSet=
 SystemCallFilter=@system-service
 SystemCallFilter=~@privileged @resources
+# Een geweigerde syscall geeft EPERM in plaats van het proces te doden (leesbare fout in de journal).
+SystemCallErrorNumber=EPERM
 SystemCallArchitectures=native
 UMask=0027
 # Ruime grenzen voor één beheerder; vangen een op hol geslagen proces af.
