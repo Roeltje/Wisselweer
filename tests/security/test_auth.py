@@ -52,10 +52,45 @@ def test_docs_not_reachable_without_login(client):
 def test_docs_after_login(session_client):
     r = session_client.get("/docs")
     assert r.status_code == 200 and "swagger" in r.text.lower()
-    assert "cdn.jsdelivr.net" in r.headers["content-security-policy"]
+    csp = r.headers["content-security-policy"]
+    # Vaste versie, en de CSP beperkt de CDN tot precies dat pad-prefix.
+    prefix = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14/"
+    assert f"script-src 'self' 'unsafe-inline' {prefix};" in csp
+    assert f"style-src 'self' 'unsafe-inline' {prefix};" in csp
+    assert "https://cdn.jsdelivr.net;" not in csp and "tiangolo" not in csp
+    assert f"{prefix}swagger-ui-bundle.js" in r.text and f"{prefix}swagger-ui.css" in r.text
+    assert "swagger-ui-dist@5/" not in r.text
     assert "paths" in session_client.get("/openapi.json").json()
     # De CSP-uitbreiding geldt alleen voor /docs.
     assert "jsdelivr" not in session_client.get("/api/v1/health").headers["content-security-policy"]
+
+
+@pytest.fixture
+def geen_docs_client(tmp_path):
+    from fastapi.testclient import TestClient
+
+    from tests.fixtures.auth import make_admin
+    from wisselweer.api.app import create_app
+
+    app = create_app(Settings(_env_file=None, data_dir=tmp_path / "data", enable_docs=False))
+    make_admin(app)
+    with TestClient(app, raise_server_exceptions=False) as c:
+        yield c
+
+
+def test_docs_uitgezet(geen_docs_client):
+    c = geen_docs_client
+    for pad in ("/docs", "/openapi.json", "/redoc"):
+        assert c.get(pad, follow_redirects=False).status_code == 404
+    assert login(c).status_code == 303  # inloggen blijft werken
+    for pad in ("/docs", "/openapi.json"):
+        assert c.get(pad, follow_redirects=False).status_code == 404
+    assert c.get("/api/v1/health").status_code == 200
+
+
+def test_docs_staat_standaard_aan():
+    assert Settings(_env_file=None).enable_docs is True
+    assert Settings(_env_file=None, enable_docs="false").enable_docs is False
 
 
 def test_login_ok_and_wrong(client):

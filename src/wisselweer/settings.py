@@ -55,6 +55,8 @@ class Settings(BaseSettings):
     secret_key: SecretStr | None = None
     cookie_secure: bool = False
     log_level: str = "INFO"
+    # /docs (Swagger UI, laadt van een CDN) en /openapi.json; uit = beide routes bestaan niet.
+    enable_docs: bool = True
 
     # --- Publicatie van het landelijke advies (`wisselweer publish`) ---
     publish_dir: Path | None = None  # standaard <data_dir>/public

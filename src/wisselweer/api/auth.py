@@ -380,10 +380,14 @@ def _client_ip(request: Request) -> str:
 
 router = APIRouter(include_in_schema=False)
 
+# Swagger UI komt van de CDN met een vaste versie; de CSP staat alleen dit pad-prefix toe.
+SWAGGER_VERSION = "5.17.14"
+SWAGGER_CDN = f"https://cdn.jsdelivr.net/npm/swagger-ui-dist@{SWAGGER_VERSION}/"
 DOCS_CSP = (
-    "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
-    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
-    "img-src 'self' data: https://fastapi.tiangolo.com; frame-ancestors 'none'; base-uri 'none'"
+    f"default-src 'self'; script-src 'self' 'unsafe-inline' {SWAGGER_CDN}; "
+    f"style-src 'self' 'unsafe-inline' {SWAGGER_CDN}; "
+    "img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; "
+    "form-action 'self'; object-src 'none'"
 )
 
 
@@ -461,14 +465,24 @@ async def logout(request: Request) -> Response:
     return RedirectResponse("/login", status_code=303)
 
 
-@router.get("/openapi.json", dependencies=[Depends(require_user)])
+# Alleen aangehangen als `enable_docs` aan staat (WISSELWEER_ENABLE_DOCS).
+docs_router = APIRouter(include_in_schema=False)
+
+
+@docs_router.get("/openapi.json", dependencies=[Depends(require_user)])
 async def openapi_json(request: Request) -> JSONResponse:
     return JSONResponse(request.app.openapi())
 
 
-@router.get("/docs", dependencies=[Depends(require_user_html)])
+@docs_router.get("/docs", dependencies=[Depends(require_user_html)])
 async def swagger_docs() -> HTMLResponse:
-    html = get_swagger_ui_html(openapi_url="/openapi.json", title="Wisselweer API")
+    html = get_swagger_ui_html(
+        openapi_url="/openapi.json",
+        title="Wisselweer API",
+        swagger_js_url=f"{SWAGGER_CDN}swagger-ui-bundle.js",
+        swagger_css_url=f"{SWAGGER_CDN}swagger-ui.css",
+        swagger_favicon_url="/static/favicon.ico",
+    )
     html.headers["Content-Security-Policy"] = DOCS_CSP
     return html
 
@@ -495,3 +509,5 @@ def install_auth(app: FastAPI, settings: Settings) -> None:
         https_only=settings.cookie_secure,
     )
     app.include_router(router)
+    if settings.enable_docs:
+        app.include_router(docs_router)
