@@ -7,6 +7,7 @@ De parser is daarom defensief: ontbrekende parameters worden None.
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from urllib.parse import quote
 
 import httpx
 
@@ -117,7 +118,7 @@ class KnmiObservationProvider:
         end = now.strftime("%Y-%m-%dT%H:%M:%SZ")
         resp = http_get(
             self._client,
-            f"{EDR_BASE}/collections/{COLLECTION}/locations/{self._station}",
+            f"{EDR_BASE}/collections/{COLLECTION}/locations/{quote(self._station, safe='')}",
             provider=self.id,
             params={
                 "datetime": f"{start}/{end}",

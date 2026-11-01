@@ -6,8 +6,9 @@ import ipaddress
 from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING
+from urllib.parse import urlparse
 
-from pydantic import SecretStr, model_validator
+from pydantic import SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from wisselweer.publisher.national import ReferenceLocation
@@ -73,6 +74,21 @@ class Settings(BaseSettings):
     publish_countries: bool = False
     # Optionele JSON-lijst [{"name": ..., "latitude": ..., "longitude": ...}] i.p.v. de standaard.
     national_locations: list[ReferenceLocation] | None = None
+
+    @field_validator("openmeteo_base_url")
+    @classmethod
+    def _https_base_url(cls, value: str) -> str:
+        """De Open-Meteo-URL kan een API-key in de query-string dragen: alleen https (of loopback)."""
+        parts = urlparse(value.strip())
+        host = parts.hostname or ""
+        if parts.scheme == "https" and host:
+            return value.strip()
+        if parts.scheme == "http" and is_loopback_host(host):
+            return value.strip()
+        raise ValueError(
+            "WISSELWEER_OPENMETEO_BASE_URL moet een https://-URL zijn "
+            "(http:// is alleen toegestaan voor localhost of een loopback-adres)"
+        )
 
     @model_validator(mode="after")
     def _default_publish_dir(self) -> Settings:

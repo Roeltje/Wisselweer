@@ -15,6 +15,7 @@ from wisselweer.core.models import Forecast, HourlyPoint
 from wisselweer.weather.base import ProviderRateLimited, ProviderUnavailable
 
 TIMEOUT_S = 15.0
+MAX_RESPONSE_BYTES = 5 * 1024 * 1024  # een weerbron levert hooguit enkele honderden kB
 DEFAULT_TZ = "Europe/Amsterdam"
 
 _HOURLY_FIELDS = tuple(f for f in HourlyPoint.model_fields if f != "time")
@@ -71,19 +72,39 @@ def http_get(
     headers: dict[str, str] | None = None,
     allow_status: tuple[int, ...] = (),
 ) -> httpx.Response:
-    """GET met uniforme foutmapping. 2xx en `allow_status` komen terug; de rest raised."""
+    """GET met uniforme foutmapping. 2xx en `allow_status` komen terug; de rest raised.
+
+    De body wordt gestreamd gelezen en afgebroken bij meer dan `MAX_RESPONSE_BYTES` (na
+    decompressie), zodat een foute of kwaadwillende bron het geheugen niet kan vullen.
+    """
     try:
-        resp = client.get(url, params=params, headers=headers, timeout=TIMEOUT_S)
+        with client.stream("GET", url, params=params, headers=headers, timeout=TIMEOUT_S) as resp:
+            code = resp.status_code
+            if not (code in allow_status or 200 <= code < 300):
+                if code == 429:
+                    raise ProviderRateLimited(parse_retry_after(resp.headers.get("Retry-After")))
+                if code in (401, 403):
+                    raise ProviderUnavailable(f"{provider}: toegang geweigerd (HTTP {code})")
+                raise ProviderUnavailable(f"{provider}: onverwachte HTTP-status {code}")
+            declared = resp.headers.get("Content-Length", "")
+            if declared.isdigit() and int(declared) > MAX_RESPONSE_BYTES:
+                raise ProviderUnavailable(f"{provider}: antwoord te groot")
+            body = bytearray()
+            for chunk in resp.iter_bytes():
+                body += chunk
+                if len(body) > MAX_RESPONSE_BYTES:
+                    raise ProviderUnavailable(f"{provider}: antwoord te groot")
+            # De inhoud is al gedecodeerd: kopieer de headers zonder codering/lengte.
+            headers_out = [
+                (k, v)
+                for k, v in resp.headers.multi_items()
+                if k.lower() not in ("content-encoding", "content-length", "transfer-encoding")
+            ]
+            return httpx.Response(
+                code, headers=headers_out, content=bytes(body), request=resp.request
+            )
     except httpx.HTTPError as exc:  # geen str(exc): kan URL bevatten
         raise ProviderUnavailable(f"{provider}: netwerkfout ({type(exc).__name__})") from None
-    code = resp.status_code
-    if code in allow_status or 200 <= code < 300:
-        return resp
-    if code == 429:
-        raise ProviderRateLimited(parse_retry_after(resp.headers.get("Retry-After")))
-    if code in (401, 403):
-        raise ProviderUnavailable(f"{provider}: toegang geweigerd (HTTP {code})")
-    raise ProviderUnavailable(f"{provider}: onverwachte HTTP-status {code}")
 
 
 def json_body(resp: httpx.Response, provider: str) -> dict:
