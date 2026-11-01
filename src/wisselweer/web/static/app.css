@@ -358,10 +358,11 @@ form:has(select[name="type"] option[value="summer"]:checked) .only-winter { disp
 .warn-text .icon { vertical-align: -2px; }
 .size-hint { color: var(--muted); font-size: .88rem; margin: 0; }
 
-/* Voertuigfoto: vaste verhouding, zodat de pagina niet verspringt als de foto laadt */
+/* Voertuigfoto: vaste verhouding, zodat de pagina niet verspringt als de foto laadt. De breedte
+   is begrensd (niet de hoogte), anders wordt de uitsnede op een breed scherm een smalle strook. */
 .vehicle-photo { margin: 0 0 1rem; }
 .vehicle-photo img {
-  display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; max-height: 22rem;
+  display: block; width: 100%; max-width: 44rem; height: auto; aspect-ratio: 16 / 9;
   object-fit: cover; border-radius: var(--radius); background: var(--surface-2);
 }
 .card-head.has-thumb { align-items: center; justify-content: flex-start; }
