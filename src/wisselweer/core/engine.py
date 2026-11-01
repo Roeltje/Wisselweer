@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
+from typing import NamedTuple
 from zoneinfo import ZoneInfo
 
 from wisselweer.core.config import EngineConfig
@@ -131,6 +132,24 @@ def _icy(p: HourlyPoint, cfg: EngineConfig) -> bool:
     return False
 
 
+class HourFlags(NamedTuple):
+    """Winterse kenmerken van één uur, met dezelfde detectie als de adviesengine."""
+
+    frost: bool
+    snow: bool
+    icy: bool
+
+
+def hour_flags(p: HourlyPoint, cfg: EngineConfig) -> HourFlags:
+    """Vorst / sneeuw / gladheid voor één uur (gedeeld met o.a. de landenregels)."""
+    t = p.temperature_c
+    return HourFlags(
+        frost=t is not None and t <= cfg.frost_threshold_c,
+        snow=_is_wintry(p),
+        icy=_icy(p, cfg),
+    )
+
+
 def _warnings(
     points: list[HourlyPoint], now: datetime, cfg: EngineConfig, mounted: TireType | None
 ) -> list[AdviceWarning]:
@@ -139,12 +158,12 @@ def _warnings(
     for p in points:
         if not (now - _HOUR < p.time < end_window):
             continue
-        t = p.temperature_c
-        if t is not None and t <= cfg.frost_threshold_c:
+        flags = hour_flags(p, cfg)
+        if flags.frost:
             spans.setdefault(WarningCode.POSSIBLE_FROST, []).append(p.time)
-        if _is_wintry(p):
+        if flags.snow:
             spans.setdefault(WarningCode.POSSIBLE_SNOW, []).append(p.time)
-        if _icy(p, cfg):
+        if flags.icy:
             spans.setdefault(WarningCode.POSSIBLE_ICY_CONDITIONS, []).append(p.time)
     names = {
         WarningCode.POSSIBLE_FROST: "warning.frost",
