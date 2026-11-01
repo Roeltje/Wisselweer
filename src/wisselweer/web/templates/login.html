@@ -7,6 +7,8 @@
   {% if no_admin %}
     <p>{{ t('login.no_admin') }}</p>
     <pre><code>wisselweer create-admin --username &lt;naam&gt;</code></pre>
+    <p class="muted small">{{ t('login.no_admin_docker') }}</p>
+    <pre><code>docker compose exec wisselweer wisselweer create-admin --username &lt;naam&gt;</code></pre>
   {% else %}
     {% if error %}<p class="flash flash-error" role="alert">{{ error }}</p>{% endif %}
     <form method="post" action="/login" class="stack">

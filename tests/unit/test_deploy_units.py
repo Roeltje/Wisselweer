@@ -48,3 +48,20 @@ def test_webapp_kan_sftp_sleutel_niet_lezen():
     assert not any(
         r.startswith("InaccessiblePaths=") for r in _regels("wisselweer-publish.service")
     )
+
+
+def test_cli_wrapper_runs_as_service_user_with_env_file():
+    import subprocess
+
+    wrapper = DEPLOY / "wisselweer-cli.sh"
+    text = wrapper.read_text()
+    assert subprocess.run(["sh", "-n", str(wrapper)]).returncode == 0
+    for needle in (
+        "-p User=wisselweer",
+        "-p EnvironmentFile=/etc/wisselweer/wisselweer.env",
+        '/opt/wisselweer/.venv/bin/wisselweer "$@"',
+        "--wait",
+    ):
+        assert needle in text, needle
+    install = (DEPLOY / "install.sh").read_text()
+    assert 'wisselweer-cli.sh" /usr/local/bin/wisselweer' in install
