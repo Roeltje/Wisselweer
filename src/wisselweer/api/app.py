@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -35,6 +36,33 @@ SECURITY_HEADERS = {
 }
 
 
+def _key_readable(path: Path | None) -> bool:
+    if path is None:
+        return False
+    try:
+        with open(path, "rb"):
+            return True
+    except OSError:
+        return False
+
+
+def startup_warnings(settings: Settings) -> list[str]:
+    """Configuratie die waarschijnlijk niet werkt of onveilig is; alleen waarschuwen, nooit crashen."""
+    out: list[str] = []
+    if (
+        settings.publish_interval_hours > 0
+        and settings.publish_sftp_host
+        and not _key_readable(settings.publish_sftp_key)
+    ):
+        out.append(
+            "WISSELWEER_PUBLISH_INTERVAL_HOURS staat aan met een SFTP-host, maar de SFTP-sleutel is "
+            "niet leesbaar voor de webapp (bij systemd is .ssh bewust afgeschermd): SFTP-publicatie "
+            "vanuit de webapp zal mislukken. Gebruik de timer wisselweer-publish.timer en zet "
+            "WISSELWEER_PUBLISH_INTERVAL_HOURS=0."
+        )
+    return out
+
+
 def _error(status: int, code: str) -> JSONResponse:
     return JSONResponse(status_code=status, content={"detail": code})
 
@@ -42,6 +70,8 @@ def _error(status: int, code: str) -> JSONResponse:
 def create_app(settings: Settings | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        for warning in startup_warnings(app.state.settings):
+            log.warning(warning)
         ensure_db(app)  # data_dir aanmaken + migraties bij opstarten
         task = start_scheduler(app.state.settings)
         try:

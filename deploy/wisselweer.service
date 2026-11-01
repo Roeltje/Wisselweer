@@ -20,6 +20,9 @@ SyslogIdentifier=wisselweer
 NoNewPrivileges=true
 ProtectSystem=strict
 ReadWritePaths=/var/lib/wisselweer
+# De SFTP-sleutel is alleen voor wisselweer-publish.service; de webapp (internetgericht) mag hem niet lezen.
+# Gevolg: publiceren via SFTP vanuit de webapp (WISSELWEER_PUBLISH_INTERVAL_HOURS) werkt niet; gebruik de timer.
+InaccessiblePaths=-/var/lib/wisselweer/.ssh
 ProtectHome=true
 PrivateTmp=true
 PrivateDevices=true

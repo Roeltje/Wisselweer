@@ -128,7 +128,7 @@ Volgende stappen:
   3. Publiceren via SFTP: zie docs/install-lxc.md (sleutel maken in $DATA_DIR/.ssh, hostsleutel
      in known_hosts, WISSELWEER_PUBLISH_SFTP_* instellen). Testen:
        systemctl start wisselweer-publish.service; journalctl -u wisselweer-publish -n 30
-     Plannen: OF systemctl enable --now wisselweer-publish.timer
-     OF WISSELWEER_PUBLISH_INTERVAL_HOURS, niet allebei.
+     Plannen (SFTP): systemctl enable --now wisselweer-publish.timer. Gebruik hiervoor niet
+     WISSELWEER_PUBLISH_INTERVAL_HOURS: de webapp heeft geen toegang tot $DATA_DIR/.ssh.
   4. Logs: journalctl -u wisselweer -f
 MSG

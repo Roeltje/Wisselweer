@@ -37,7 +37,7 @@ Richt op de doelserver een beperkte deploy-gebruiker in:
 - schrijfrechten alleen op de publicatiemap (de chroot-map zelf is eigendom van root);
 - een eigen sleutelpaar dat nergens anders voor dient; de private sleutel staat alleen op de Wisselweer-host (0600), `WISSELWEER_PUBLISH_SFTP_PATH` is relatief aan de chroot.
 
-**Foutmeldingen** (de publicatie eindigt met exitcode 255 als `sftp` faalt). Diagnose, als servicegebruiker:
+**Foutmeldingen** (faalt `sftp`, dan eindigt de CLI met exitcode 1 en de melding `Fout: SFTP-upload mislukt (exitcode 255)`; die 255 is de exitcode van `sftp` zelf). Diagnose, als servicegebruiker:
 
 ```sh
 runuser -u wisselweer -- sftp -v -i /var/lib/wisselweer/.ssh/deploy_wisselweer_web -o BatchMode=yes \
@@ -55,3 +55,5 @@ Test een publicatie met `systemctl start wisselweer-publish.service` en `journal
 ## Planning
 
 Het advies hoort elke 6 uur te verversen (`stale_after` staat op 18 uur). Gebruik de systemd-timer ([install-lxc.md](install-lxc.md)), cron, of de interne planner (`WISSELWEER_PUBLISH_INTERVAL_HOURS=6`, zie [install-docker.md](install-docker.md)); niet meerdere tegelijk.
+
+**Bij SFTP onder systemd: gebruik de timer, niet `WISSELWEER_PUBLISH_INTERVAL_HOURS`.** De webapp (`wisselweer.service`) heeft geen toegang tot `/var/lib/wisselweer/.ssh` (`InaccessiblePaths=-`), zodat een gecompromitteerde webapp de SFTP-sleutel niet kan lezen. Alleen `wisselweer-publish.service` (door `wisselweer-publish.timer` gestart) leest de sleutel. Staat de interne planner toch aan terwijl een SFTP-host is ingesteld en de sleutel niet leesbaar is, dan logt de app bij het opstarten een waarschuwing en mislukt elke geplande SFTP-upload. Zonder SFTP (alleen lokaal schrijven) en in Docker blijft de interne planner bruikbaar.

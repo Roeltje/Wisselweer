@@ -72,3 +72,39 @@ def test_lifespan_starts_and_stops_task(monkeypatch):
 
 
 _orig = scheduler.publish_loop
+
+
+def _sftp_settings(tmp_path, **kw) -> Settings:
+    base = {
+        "data_dir": tmp_path / "data",
+        "publish_interval_hours": 6,
+        "publish_sftp_host": "sftp.example.invalid",
+        "publish_sftp_user": "deploy",
+    }
+    return Settings(_env_file=None, **{**base, **kw})
+
+
+def test_waarschuwt_bij_planner_met_sftp_en_onleesbare_sleutel(tmp_path, caplog):
+    from wisselweer.api.app import startup_warnings
+
+    s = _sftp_settings(tmp_path, publish_sftp_key=tmp_path / "bestaat-niet")
+    (waarschuwing,) = startup_warnings(s)
+    assert "SFTP-sleutel" in waarschuwing and "wisselweer-publish.timer" in waarschuwing
+    assert str(tmp_path) not in waarschuwing  # geen sleutelpad in de log
+
+    # Ook zonder ingestelde sleutel; en via de lifespan: een WARNING, geen crash.
+    assert len(startup_warnings(_sftp_settings(tmp_path))) == 1
+    with caplog.at_level(logging.WARNING, logger="wisselweer.api"):
+        with TestClient(create_app(s)):
+            pass
+    assert any("SFTP-sleutel" in r.getMessage() for r in caplog.records)
+
+
+def test_geen_waarschuwing_bij_leesbare_sleutel_of_zonder_planner_of_sftp(tmp_path):
+    from wisselweer.api.app import startup_warnings
+
+    sleutel = tmp_path / "key"
+    sleutel.write_text("niet-echt")
+    assert startup_warnings(_sftp_settings(tmp_path, publish_sftp_key=sleutel)) == []
+    assert startup_warnings(_sftp_settings(tmp_path, publish_interval_hours=0)) == []
+    assert startup_warnings(_sftp_settings(tmp_path, publish_sftp_host=None)) == []

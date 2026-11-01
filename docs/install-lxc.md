@@ -67,10 +67,11 @@ Volgorde voor publicatie via SFTP naar een server (met een gechroote SFTP-gebrui
    systemctl start wisselweer-publish.service
    journalctl -u wisselweer-publish -n 30
    ```
-6. **Plannen**: kies **of** de timer **of** de interne planner (`WISSELWEER_PUBLISH_INTERVAL_HOURS`), niet allebei.
+6. **Plannen met de timer** (verplicht voor SFTP):
    ```sh
    systemctl enable --now wisselweer-publish.timer   # elke 6 uur, 5 min over, met willekeurige vertraging
    ```
+   Laat `WISSELWEER_PUBLISH_INTERVAL_HOURS=0` staan. `wisselweer.service` (de internetgerichte webapp) heeft `InaccessiblePaths=-/var/lib/wisselweer/.ssh`: alleen `wisselweer-publish.service` mag de SFTP-sleutel lezen. Publiceren via SFTP vanuit de webapp (de interne planner) werkt daarom niet en de app waarschuwt daarover bij het opstarten (`journalctl -u wisselweer`). Zonder SFTP (alleen lokaal `advice.json` schrijven) mag de interne planner wel.
 
 Zie [publishing.md](publishing.md) voor de beperkte deploy-gebruiker op de doelserver en het oplossen van SFTP-fouten.
 
