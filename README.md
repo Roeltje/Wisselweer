@@ -21,7 +21,7 @@ Wisselweer adviseert wanneer je van zomer- naar winterbanden wisselt (en terug),
 - Garages en afspraken; een `mailto:`-link voor de garage (de app verstuurt zelf niets).
 - REST API (`/api/v1`) met sessie of Bearer-token, bijvoorbeeld voor Home Assistant: [docs/api.md](docs/api.md).
 - Landelijk advies en publicatie van `advice.json`: [docs/publishing.md](docs/publishing.md).
-- Optioneel in `advice.json`: winterbandenregels per land (`WISSELWEER_PUBLISH_COUNTRIES`, informatief, geen juridisch advies) en een 14-daagse vooruitblik (`outlook`): [docs/regulations.md](docs/regulations.md).
+- Optioneel in `advice.json`: winterbandenregels per land (`WISSELWEER_PUBLISH_COUNTRIES`, informatief, geen juridisch advies) en een 14-daagse vooruitblik (`outlook`): [docs/regulations.md](docs/regulations.md), [docs/public-advice-contract.md](docs/public-advice-contract.md).
 - Vergelijking van weerbronnen (diagnostisch, er wordt niets gecombineerd) en een backtest-commando: [docs/backtesting.md](docs/backtesting.md).
 - Nederlandse interface via i18n-bestanden; er zijn ook `nl-BE`, `en` en `de-DE`-bestanden aanwezig, maar de interface is nog niet volledig meertalig.
 
