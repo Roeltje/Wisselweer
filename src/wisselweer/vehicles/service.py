@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, event, select, update
 from sqlalchemy.orm import Session
 
 from wisselweer.core.models import DrivingProfile
@@ -23,6 +25,7 @@ from wisselweer.storage.orm import (
     TreadMeasurement,
     Vehicle,
 )
+from wisselweer.vehicles import photos
 from wisselweer.vehicles.schemas import (
     LocationIn,
     LocationOut,
@@ -78,6 +81,8 @@ def _out(session: Session, v: Vehicle) -> VehicleOut:
         notes=v.notes,
         countries_of_use=list(v.countries_of_use),
         plate_lookup_data=v.plate_lookup_data,
+        has_photo=v.photo is not None,
+        photo_version=v.photo[:8] if v.photo else None,
         created_at=v.created_at,
         updated_at=v.updated_at,
     )
@@ -178,9 +183,79 @@ def update_vehicle(session: Session, vehicle_id: int, patch: VehiclePatch) -> Ve
     return _out(session, v)
 
 
-def delete_vehicle(session: Session, vehicle_id: int) -> None:
-    """Verwijdert het voertuig en expliciet alle bijbehorende sets en historie."""
+def _after_transaction(
+    session: Session,
+    *,
+    on_commit: Callable[[], None],
+    on_rollback: Callable[[], None] | None = None,
+) -> None:
+    """Voert `on_commit` pas uit als de transactie daadwerkelijk is gecommit (anders `on_rollback`).
+
+    Voor bestanden op schijf: die horen bij de database-rij, maar kunnen niet in dezelfde transactie.
+    """
+    pending = [True]
+
+    def committed(_session: Session) -> None:
+        if pending[0]:
+            pending[0] = False
+            on_commit()
+
+    def rolled_back(_session: Session) -> None:
+        if pending[0]:
+            pending[0] = False
+            if on_rollback is not None:
+                on_rollback()
+
+    event.listen(session, "after_commit", committed)
+    event.listen(session, "after_rollback", rolled_back)
+
+
+def get_photo_name(session: Session, vehicle_id: int) -> str | None:
+    return _get(session, vehicle_id).photo
+
+
+def set_photo(session: Session, vehicle_id: int, data: bytes, photos_dir: Path) -> VehicleOut:
+    """Controleert en bewaart de foto (zie `photos.clean_photo`, kan `PhotoError` geven).
+
+    Het nieuwe bestand wordt eerst geschreven; het oude verdwijnt pas als de database is gecommit.
+    """
     v = _get(session, vehicle_id)
+    clean, ext = photos.clean_photo(data)
+    new = photos.write_photo(photos_dir, clean, ext)
+    old = v.photo
+    try:
+        v.photo = new
+        v.updated_at = datetime.now(UTC)
+        session.flush()
+    except BaseException:
+        photos.remove_photo(photos_dir, new)
+        raise
+    _after_transaction(
+        session,
+        on_commit=lambda: photos.remove_photo(photos_dir, old),
+        on_rollback=lambda: photos.remove_photo(photos_dir, new),
+    )
+    return _out(session, v)
+
+
+def clear_photo(session: Session, vehicle_id: int, photos_dir: Path) -> VehicleOut:
+    v = _get(session, vehicle_id)
+    old = v.photo
+    if old is not None:
+        v.photo = None
+        v.updated_at = datetime.now(UTC)
+        session.flush()
+        _after_transaction(session, on_commit=lambda: photos.remove_photo(photos_dir, old))
+    return _out(session, v)
+
+
+def delete_vehicle(session: Session, vehicle_id: int, photos_dir: Path | None = None) -> None:
+    """Verwijdert het voertuig en expliciet alle bijbehorende sets en historie.
+
+    Met `photos_dir` verdwijnt ook het fotobestand, nadat de transactie is gecommit.
+    """
+    v = _get(session, vehicle_id)
+    photo = v.photo
     set_ids = list(session.scalars(select(TireSet.id).where(TireSet.vehicle_id == vehicle_id)))
     session.execute(delete(TireChange).where(TireChange.vehicle_id == vehicle_id))
     session.execute(
@@ -197,3 +272,5 @@ def delete_vehicle(session: Session, vehicle_id: int) -> None:
     session.execute(delete(AdviceSnapshot).where(AdviceSnapshot.vehicle_id == vehicle_id))
     session.delete(v)
     session.flush()
+    if photo is not None and photos_dir is not None:
+        _after_transaction(session, on_commit=lambda: photos.remove_photo(photos_dir, photo))

@@ -136,6 +136,11 @@ class Settings(BaseSettings):
         return self
 
     @property
+    def photos_dir(self) -> Path:
+        """Voertuigfoto's; privé en nooit onderdeel van de publicatie."""
+        return self.data_dir / "photos"
+
+    @property
     def geocoding_enabled(self) -> bool:
         """Geocoderen staat aan met een URL én een contactgegeven (verplicht voor de User-Agent)."""
         return bool(self.geocoder_url) and bool((self.contact or "").strip())

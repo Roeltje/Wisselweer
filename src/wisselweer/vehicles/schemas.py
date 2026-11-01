@@ -89,5 +89,8 @@ class VehicleOut(BaseModel):
     notes: str | None
     countries_of_use: list[str]
     plate_lookup_data: dict[str, Any] | None
+    has_photo: bool
+    # Alleen voor de webpagina's (cache-buster in de foto-URL); staat bewust niet in de API-uitvoer.
+    photo_version: str | None = Field(default=None, exclude=True)
     created_at: datetime
     updated_at: datetime
