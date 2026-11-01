@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Wisselweer: native installatie op Debian 13 (trixie) en Ubuntu 24.04/26.04 LTS (ook in een LXC).
-# Idempotent; uitvoeren als root:
-#   sudo ./deploy/install.sh                      # broncode uit deze repository
-#   sudo ./deploy/install.sh /pad/naar/wisselweer # of een andere map
-#   sudo ./deploy/install.sh https://host/repo.git [ref]
+# Idempotent; uitvoeren als root (in een LXC is er vaak geen sudo):
+#   ./deploy/install.sh                      # broncode uit deze repository
+#   ./deploy/install.sh /pad/naar/wisselweer # of een andere map
+#   ./deploy/install.sh https://host/repo.git [ref]
 #
 # Keuzes:
 # - uv komt via de officiële standalone installer (vaste versie, naar /usr/local/bin); de
@@ -19,7 +19,7 @@ ENV_FILE="$ETC_DIR/wisselweer.env"
 SVC_USER=wisselweer
 
 if [[ $EUID -ne 0 ]]; then
-  echo "Voer dit script uit als root (sudo)." >&2
+  echo "Voer dit script uit als root." >&2
   exit 1
 fi
 
@@ -121,10 +121,14 @@ $( [[ $NEW_ENV -eq 1 ]] && echo "Nieuw env-bestand met gegenereerde geheime sleu
 
 Volgende stappen:
   1. Pas $ENV_FILE aan (minstens WISSELWEER_CONTACT) en herstart: systemctl restart wisselweer
+     Draait de app achter een https-proxy (bv. Nginx Proxy Manager)? Zet dan ook
+       WISSELWEER_COOKIE_SECURE=true
+     en WISSELWEER_HOST=0.0.0.0 (met poort 8000 beperkt tot het proxy-IP; zie docs/install-lxc.md).
+     Zonder die cookie-instelling gaat de sessiecookie ook over plain http.
   2. Maak de beheerder aan (wachtwoord minimaal 10 tekens; laadt het env-bestand):
        systemd-run --pty --wait --collect -p User=$SVC_USER -p EnvironmentFile=$ENV_FILE \\
          $APP_DIR/.venv/bin/wisselweer create-admin --username <naam>
-     (Commando's als servicegebruiker: runuser -u $SVC_USER -- ... ; sudo is in een LXC vaak niet aanwezig.)
+     (Commando's als servicegebruiker: runuser -u $SVC_USER -- ...)
   3. Publiceren via SFTP: zie docs/install-lxc.md (sleutel maken in $DATA_DIR/.ssh, hostsleutel
      in known_hosts, WISSELWEER_PUBLISH_SFTP_* instellen). Testen:
        systemctl start wisselweer-publish.service; journalctl -u wisselweer-publish -n 30

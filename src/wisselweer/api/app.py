@@ -21,7 +21,7 @@ from wisselweer.api.routers.v1 import health_router
 from wisselweer.api.routers.v1 import router as v1_router
 from wisselweer.api.routers.vehicles import router as vehicles_router
 from wisselweer.publisher.scheduler import start_scheduler, stop_scheduler
-from wisselweer.settings import Settings, get_settings
+from wisselweer.settings import Settings, get_settings, is_loopback_host
 from wisselweer.storage.errors import InvalidOperation, NotFoundError
 from wisselweer.weather.base import ProviderNotConfigured, ProviderUnavailable, UnknownProvider
 from wisselweer.web import routes as web_routes
@@ -49,6 +49,12 @@ def _key_readable(path: Path | None) -> bool:
 def startup_warnings(settings: Settings) -> list[str]:
     """Configuratie die waarschijnlijk niet werkt of onveilig is; alleen waarschuwen, nooit crashen."""
     out: list[str] = []
+    if not is_loopback_host(settings.host) and not settings.cookie_secure:
+        out.append(
+            "Server luistert op een niet-loopback adres terwijl WISSELWEER_COOKIE_SECURE=false: "
+            "de sessiecookie gaat dan ook over plain http. Achter een https-proxy hoort "
+            "WISSELWEER_COOKIE_SECURE=true te staan."
+        )
     if (
         settings.publish_interval_hours > 0
         and settings.publish_sftp_host

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ipaddress
 from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -14,6 +15,15 @@ from wisselweer.publisher.national import ReferenceLocation
 if TYPE_CHECKING:
     from wisselweer.publisher.national import NationalConfig
     from wisselweer.weather.registry import ProvidersConfig
+
+
+def is_loopback_host(host: str) -> bool:
+    if host == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
 
 
 class Settings(BaseSettings):
