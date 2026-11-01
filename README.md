@@ -17,9 +17,10 @@ Wisselweer adviseert wanneer je van zomer- naar winterbanden wisselt (en terug),
 ## Functies
 
 - Wisseladvies per voertuig: richting volgt de gemonteerde set, met waarschuwingen (vorst, sneeuw, gladheid), datum of periode, stabiliteit (hysterese) en "plan een afspraak uiterlijk"-datum.
-- Meerdere voertuigen en bandensets, profieldiepte- en kilometerregistratie, wisselhistorie.
+- Meerdere voertuigen en bandensets, profieldiepte- en kilometerregistratie, wisselhistorie. Een set kan uit groepen banden bestaan (eigen DOT-code, aankoopdatum, merk en 3PMSF-symbool per groep; leeftijdswaarschuwing uit de DOT-code, banden per groep vervangen), met merk- en typesuggesties.
 - Garages en afspraken; een `mailto:`-link voor de garage (de app verstuurt zelf niets).
 - REST API (`/api/v1`) met sessie of Bearer-token, bijvoorbeeld voor Home Assistant: [docs/api.md](docs/api.md).
+- Kilometerstand automatisch uit Home Assistant (elk merk met een odometer-sensor): [docs/home-assistant.md](docs/home-assistant.md).
 - Locatie invullen zonder coördinaten op te zoeken: zoeken op adres, postcode of plaats (Nominatim, instelbaar of uit te zetten) en "Gebruik mijn locatie": [docs/providers.md](docs/providers.md#geocoderen).
 - Landelijk advies en publicatie van `advice.json`: [docs/publishing.md](docs/publishing.md).
 - Optioneel in `advice.json`: winterbandenregels per land (`WISSELWEER_PUBLISH_COUNTRIES`, informatief, geen juridisch advies) en een 14-daagse vooruitblik (`outlook`): [docs/regulations.md](docs/regulations.md), [docs/public-advice-contract.md](docs/public-advice-contract.md).
@@ -66,7 +67,7 @@ Voertuig-, band-, garage- en locatiegegevens blijven in je eigen database. Naar 
 - [ARCHITECTURE.md](ARCHITECTURE.md): ontwerp en contract
 - [docs/STATUS.md](docs/STATUS.md): voortgang
 - [ROADMAP.md](ROADMAP.md)
-- [docs/advice-rules.md](docs/advice-rules.md), [docs/providers.md](docs/providers.md), [docs/api.md](docs/api.md)
+- [docs/advice-rules.md](docs/advice-rules.md), [docs/providers.md](docs/providers.md), [docs/api.md](docs/api.md), [docs/home-assistant.md](docs/home-assistant.md)
 - [docs/publishing.md](docs/publishing.md), [docs/public-advice-contract.md](docs/public-advice-contract.md), [docs/regulations.md](docs/regulations.md)
 - [docs/backtesting.md](docs/backtesting.md), [docs/testing.md](docs/testing.md), [docs/examples/](docs/examples)
 - [docs/install-docker.md](docs/install-docker.md), [docs/install-lxc.md](docs/install-lxc.md)

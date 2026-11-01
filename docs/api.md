@@ -29,6 +29,8 @@ wisselweer revoke-api-token --name ha
 curl -H "Authorization: Bearer wwt_..." http://127.0.0.1:8000/api/v1/vehicles
 ```
 
+Een stap-voor-stap voorbeeld voor de kilometerstand uit Home Assistant staat in [home-assistant.md](home-assistant.md).
+
 Requests met een Bearer-token zijn vrij van CSRF-controle. Alleen de SHA-256-hash van het token wordt opgeslagen.
 
 **Secret key:** `WISSELWEER_SECRET_KEY`, of automatisch gegenereerd in `<data_dir>/secret_key` (rechten 600). Zie ook `SECURITY.md`.
@@ -51,17 +53,21 @@ De database (SQLite) staat in `WISSELWEER_DATA_DIR` (standaard `./data`); de map
 | PATCH | `/vehicles/{id}` | Voertuig deels wijzigen (alleen meegegeven velden) | 200 |
 | DELETE | `/vehicles/{id}` | Voertuig met sets, wissels, standen, afspraken en snapshots verwijderen | 204 |
 | GET | `/vehicles/{id}/advice` | Wisseladvies voor dit voertuig, incl. `plan_appointment_by` en `mailto` | 200 |
-| GET | `/vehicles/{id}/tire-sets` | Bandensets van het voertuig | 200 |
-| POST | `/vehicles/{id}/tire-sets` | Bandenset toevoegen | 201 |
-| GET | `/tire-sets/{id}` | Eén set | 200 |
+| GET | `/vehicles/{id}/tire-sets` | Bandensets van het voertuig, met actieve `tire_groups` (`?include_removed=true` voor ook de vervangen groepen) | 200 |
+| POST | `/vehicles/{id}/tire-sets` | Bandenset toevoegen (optioneel met `tire_groups`; standaard één groep van 4) | 201 |
+| GET | `/tire-sets/{id}` | Eén set (`?include_removed=true` voor de geschiedenis) | 200 |
 | PATCH | `/tire-sets/{id}` | Set wijzigen (monteren kan alleen via een wissel) | 200 |
 | DELETE | `/tire-sets/{id}` | Set verwijderen (niet als gemonteerd of in de wisselhistorie) | 204 |
+| POST | `/tire-sets/{id}/tire-groups` | Groep afwijkende banden toevoegen (totaal actieve banden hooguit 4) | 201 |
+| PATCH | `/tire-groups/{id}` | Groep wijzigen (alleen actieve groepen) | 200 |
+| DELETE | `/tire-groups/{id}` | Groep verwijderen (een set houdt minimaal één actieve groep) | 204 |
+| POST | `/tire-sets/{id}/replace` | Banden vervangen: hele groep of een deel ervan | 200 |
 | POST | `/tire-sets/{id}/tread-measurements` | Profieldiepte registreren | 201 |
 | GET | `/tire-sets/{id}/km` | Gereden kilometers per montageperiode | 200 |
 | GET | `/vehicles/{id}/tire-changes` | Wisselhistorie | 200 |
 | POST | `/vehicles/{id}/tire-changes` | Transactionele wissel (stand, historie, setstatussen, advies-reset) | 201 |
 | GET | `/vehicles/{id}/odometer` | Geldige kilometerstanden (`?include_superseded=true` voor alles) | 200 |
-| POST | `/vehicles/{id}/odometer` | Handmatige kilometerstand (`reading_km`, optioneel `recorded_at`, `note`) | 201 |
+| POST | `/vehicles/{id}/odometer` | Handmatige kilometerstand (`reading_km`, optioneel `recorded_at`, `note`); een lagere stand dan een eerdere geeft 409. Voorbeeld met Home Assistant: [home-assistant.md](home-assistant.md) | 201 |
 | POST | `/odometer/{id}/correct` | Stand corrigeren (nieuwe rij, oude verwijst ernaar) | 200 |
 | GET | `/garages` | Alle garages | 200 |
 | POST | `/garages` | Garage aanmaken | 201 |
@@ -73,14 +79,74 @@ De database (SQLite) staat in `WISSELWEER_DATA_DIR` (standaard `./data`); de map
 | PATCH | `/appointments/{id}` | Statusovergang (`status`, optioneel `appointment_at`) | 200 |
 | GET | `/appointments/{id}/mailto` | `mailto:`-link voor de garage (er wordt niets verzonden) | 200 |
 
+## Banden per groep
+
+Een set bestaat uit 1 tot 4 banden, verdeeld over **groepen**. Elke groep heeft een eigen aantal, DOT-code en aankoopdatum en kan een afwijkend merk en model hebben (bijvoorbeeld een vervangen band). Standaard heeft een set één groep van 4.
+
+**Breaking change:** `dot_code` en `purchase_date` staan niet meer op de set maar op de groep. `POST` en `PATCH` van een set met die velden geven nu `422`. Bestaande databases worden bij het opstarten gemigreerd: elke set krijgt één groep van 4 met de oude DOT-code en aankoopdatum. Er zijn nog geen externe gebruikers van de API; clients die deze velden lazen of schreven, moeten naar `tire_groups` verhuizen.
+
+`GET /tire-sets/1`:
+
+```json
+{
+  "id": 1, "vehicle_id": 1, "type": "winter", "brand": "Michelin", "model": "Alpin 6",
+  "size": "205/55 R16 91H", "purchase_price_cents": null, "notes": null,
+  "status": "stored", "created_at": "2026-10-31T16:53:35Z",
+  "tire_groups": [
+    {"id": 1, "tire_set_id": 1, "quantity": 2, "dot_code": "DOT 4KXH 2319",
+     "purchase_date": "2020-10-01", "brand": null, "model": null, "has_3pmsf": true,
+     "positions": null, "created_at": "2026-10-31T16:53:35Z",
+     "removed_on": null, "removed_note": null, "produced_on": "2019-06-03", "age_years": 7.4},
+    {"id": 2, "tire_set_id": 1, "quantity": 2, "dot_code": "1222", "purchase_date": null,
+     "brand": "Dunlop", "model": "Winter Sport 5", "has_3pmsf": true, "positions": "FL,FR",
+     "created_at": "2026-10-31T16:53:35Z", "removed_on": null, "removed_note": null,
+     "produced_on": "2022-03-21", "age_years": 4.6}
+  ],
+  "tire_count": 4, "oldest_tire_age_years": 7.4, "all_3pmsf": true
+}
+```
+
+| Veld | Betekenis |
+|---|---|
+| `tire_groups` | Actieve groepen (`removed_on` is `null`); met `?include_removed=true` ook de vervangen groepen |
+| `tire_count` | Som van de aantallen van de actieve groepen. Wisselweer weigert een totaal boven 4 of onder 1; een totaal onder 4 mag (de webinterface waarschuwt) |
+| `oldest_tire_age_years` | Leeftijd van de oudste actieve band met een leesbare DOT-code, in jaren met één decimaal; `null` als geen enkele code leesbaar is |
+| `all_3pmsf` | `true` bij winter- of vierseizoenenbanden als alle actieve groepen `has_3pmsf: true` hebben |
+| `quantity` | 1 tot 4 |
+| `brand`, `model` | Leeg = die van de set |
+| `has_3pmsf` | 3PMSF-symbool (bergtop met sneeuwvlok); alleen relevant bij winter en vierseizoenen. `null` = onbekend |
+| `positions` | Optioneel, een of meer van `FL`, `FR`, `RL`, `RR` (ook `LV`, `RV`, `LA`, `RA`), genormaliseerd naar bv. `"FL,FR"` |
+| `produced_on`, `age_years` | Uit de DOT-code (zie hieronder); bij een vervangen groep de leeftijd op `removed_on` |
+
+**DOT-code en leeftijd.** De laatste vier cijfers van de code zijn `WWJJ`: week 01 tot 53 en jaar 20JJ. De code mag er tolerant uitzien (`DOT 4KXH 123 2319`); codes van vóór 2000, week 0 of 54 en datums in de toekomst gelden als onleesbaar: dan blijven `produced_on` en `age_years` `null`, zonder fout. `produced_on` is de maandag van die week. Vanaf `WISSELWEER_TIRE_AGE_WARN_YEARS` (standaard 8) toont de webinterface een waarschuwing; de API geeft alleen de leeftijd.
+
+### Groepen en vervangen
+
+Groep toevoegen, `POST /tire-sets/1/tire-groups` (`quantity` is standaard 4; alle andere velden zijn optioneel):
+
+```json
+{"quantity": 1, "dot_code": "1224", "brand": "Dunlop", "positions": "RL"}
+```
+
+`PATCH /tire-groups/{id}` wijzigt alleen de meegegeven velden. Zodra de som van de actieve groepen boven 4 komt: `409 invalid_operation`. `DELETE` van de laatste actieve groep geeft `409`.
+
+Banden vervangen, `POST /tire-sets/1/replace`. `group_id` is verplicht; `quantity` is het aantal te vervangen banden (leeg = de hele groep); de overige velden zijn de nieuwe banden; `replaced_on` is standaard vandaag:
+
+```json
+{"group_id": 1, "quantity": 1, "dot_code": "1224", "brand": "Dunlop",
+ "has_3pmsf": true, "replaced_on": "2026-10-30", "note": "lekke band"}
+```
+
+Bij `quantity` gelijk aan het aantal van de groep krijgt de oude groep `removed_on` en `removed_note`. Anders wordt de groep gesplitst: de oude groep houdt de overige banden (haar `positions` worden gewist, die kloppen niet meer), er komt een afgesloten kopie met de vervangen banden en `removed_on`, en een nieuwe actieve groep met de nieuwe gegevens. Het totaal aantal actieve banden verandert niet. Alles gebeurt in één transactie; het antwoord is de bijgewerkte set. Meer banden vervangen dan de groep telt, een datum in de toekomst of een al vervangen groep geeft `409`.
+
 ## Foutresponses
 
 Alle fouten hebben de vorm `{"detail": "<code>"}` en bevatten nooit invoerwaarden, stacktraces of persoonsgegevens.
 
 | Status | `detail` | Betekenis |
 |---|---|---|
-| 404 | `not_found` | Voertuig, set, garage, afspraak of stand bestaat niet |
-| 409 | `invalid_operation` | Niet toegestaan in de huidige toestand; korte Nederlandse `reason` erbij (bv. tweede gemonteerde set, lagere kilometerstand, ongeldige statusovergang) |
+| 404 | `not_found` | Voertuig, set, bandengroep, garage, afspraak of stand bestaat niet |
+| 409 | `invalid_operation` | Niet toegestaan in de huidige toestand; korte Nederlandse `reason` erbij (bv. tweede gemonteerde set, lagere kilometerstand, ongeldige statusovergang, meer dan 4 banden in een set) |
 | 409 | `conflict` | Databasebeperking geschonden |
 | 422 | `validation_error` | Ongeldige invoer; `errors` bevat per fout alleen `loc` en `type` |
 | 503 | `provider_unavailable` / `provider_not_configured` | Weerprovider niet bereikbaar of niet ingesteld |
