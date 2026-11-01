@@ -41,7 +41,8 @@ Dezelfde stappen als in `deploy/install.sh`: gebruiker en mappen aanmaken, code 
 
 - Logs: `journalctl -u wisselweer -f` (en `-u wisselweer-publish`).
 - Updaten: `git pull && ./deploy/update.sh`. Dit maakt eerst een back-up in `/var/backups/wisselweer` en migreert bij het herstarten.
-- Back-up (database, online en consistent): `sqlite3 /var/lib/wisselweer/wisselweer.db ".backup '/var/backups/wisselweer/wisselweer-$(date +%F).db'"`. Bewaar ook `/etc/wisselweer/wisselweer.env` (bevat geheimen, houd het 0600). Bewaar back-ups versleuteld en buiten de host.
+- Back-up (database, online en consistent): `sqlite3 /var/lib/wisselweer/wisselweer.db ".backup '/var/backups/wisselweer/wisselweer-$(date +%F).db'"`. Voertuigfoto's staan als bestanden in `/var/lib/wisselweer/photos/` en horen ook in de back-up: `tar -C /var/lib/wisselweer -czf /var/backups/wisselweer/wisselweer-$(date +%F)-photos.tar.gz photos`. `update.sh` doet beide automatisch. Bewaar ook `/etc/wisselweer/wisselweer.env` (bevat geheimen, houd het 0600). Bewaar back-ups versleuteld en buiten de host.
+- Herstellen: stop de service, zet de database terug op `/var/lib/wisselweer/wisselweer.db` en pak de fotomap uit (`tar -C /var/lib/wisselweer -xzf <bestand>-photos.tar.gz`; eigenaar `wisselweer`, map 0700), en start de service. Zonder de fotomap werkt de app gewoon, maar zijn de foto's weg.
 
 ## Publiceren
 
