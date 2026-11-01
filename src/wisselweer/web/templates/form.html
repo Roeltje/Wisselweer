@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import field, csrf, geocode_widget with context %}
+{% from "_macros.html" import field, csrf, geocode_widget, tire_groups with context %}
 {% block title %}{{ title }} · Wisselweer{% endblock %}
 {% block content %}
 <section class="card form-card">
@@ -10,12 +10,17 @@
     <ul>{% for e in form_errors %}<li>{{ e }}</li>{% endfor %}</ul>
   </div>
   {% endif %}
-  <form method="post" action="{{ action }}" class="stack">
+  <form method="post" action="{{ action }}" class="stack"{% if tire_catalog %} data-tire-form data-season="{{ tire_catalog.season }}" data-set-brand="{{ tire_catalog.set_brand }}" data-msg-size-odd="{{ t('tire.size_odd') }}" data-catalog='{{ tire_catalog.data|tojson }}'{% endif %}>
     {{ csrf() }}
     {% for f in fields %}
     {%- if geo and f.name == 'location_name' %}{{ geocode_widget(geo) }}{% endif %}
-    {{ field(f) }}
+    {%- if f.kind == 'groups' %}{{ tire_groups(groups) }}{% else %}{{ field(f) }}{% endif %}
     {%- endfor %}
+    {% if tire_catalog %}
+    {#- Suggesties; vrije invoer blijft mogelijk. app.js past de typen aan op merk en seizoen. -#}
+    <datalist id="dl-brands">{% for b in tire_catalog.brands %}<option value="{{ b }}"></option>{% endfor %}</datalist>
+    <datalist id="dl-models">{% for m in tire_catalog.models %}<option value="{{ m }}"></option>{% endfor %}</datalist>
+    {% endif %}
     <p class="muted small">{{ t('form.required_legend') }}</p>
     <div class="actions">
       <button type="submit" class="btn btn-primary">{{ t(submit) }}</button>

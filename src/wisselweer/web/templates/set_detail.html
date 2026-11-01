@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, tire_icon, csrf with context %}
+{% set sm = d.summary %}
+{% set s = d.set %}
+{% block title %}{{ d.label }} · {{ v.name }} · Wisselweer{% endblock %}
+{% block content %}
+<nav class="crumbs" aria-label="{{ t('nav.breadcrumb') }}"><a href="/">{{ t('nav.dashboard') }}</a> <span aria-hidden="true">/</span> <a href="/vehicles/{{ v.id }}">{{ v.name }}</a> <span aria-hidden="true">/</span> <span>{{ d.label }}</span></nav>
+<div class="page-head">
+  <div>
+    <h1>{{ tire_icon(s.type.value, 28) }} {{ d.label }}</h1>
+    <span class="chip chip-{{ s.status.value }}">{{ d.status_text }}</span>
+  </div>
+  <div class="actions">
+    <a class="btn" href="/vehicles/{{ v.id }}/sets/{{ s.id }}/edit">{{ t('action.edit') }}</a>
+  </div>
+</div>
+
+<section class="card" aria-labelledby="sec-summary">
+  <h2 id="sec-summary">{{ t('tire.summary') }}</h2>
+  {% if sm.count_warn %}
+  <p class="notice notice-warn" role="status">{{ icon('warning', 18) }} {{ t('tire.count_warn', count=sm.count) }}</p>
+  {% endif %}
+  <dl class="facts facts-wide">
+    <div><dt>{{ t('tire.oldest') }}</dt><dd>
+      {% if sm.oldest_text %}{{ sm.oldest_text }}
+        {% if sm.oldest_warn %}<span class="chip chip-warn">{{ icon('warning', 14) }} {{ t('tire.age_warn_chip') }}</span>{% endif %}
+      {% else %}<span class="muted">{{ t('tire.age_unknown') }}</span>{% endif %}
+    </dd></div>
+    {% if sm.oldest_warn %}<div><dt></dt><dd class="small">{{ t('tire.age_warn', years=warn_years) }}</dd></div>{% endif %}
+    {% if sm.pmsf_relevant %}
+    <div><dt>{{ t('tire.pmsf_short') }}</dt><dd>
+      {% if sm.all_3pmsf %}<span class="pmsf-flag">{{ icon('3pmsf', 22) }} {{ t('tire.pmsf_all') }}</span>
+      {% else %}<span class="muted">{{ t('tire.pmsf_not_all') }}</span>{% endif %}
+    </dd></div>
+    {% endif %}
+    {% if s.size %}<div><dt>{{ t('tire.size') }}</dt><dd>{{ s.size }}</dd></div>{% endif %}
+    {% if s.purchase_price_cents is not none %}<div><dt>{{ t('tire.price') }}</dt><dd>{{ s.purchase_price_cents|euro }}</dd></div>{% endif %}
+    <div><dt>{{ t('tire.km') }}</dt><dd>
+      {% if d.km.known_km is not none %}{{ d.km.known_km|km }} km{% if not d.km.complete %} ({{ t('tire.km_incomplete') }}){% endif %}
+      {% else %}{{ t('tire.km_unknown') }}{% endif %}
+    </dd></div>
+    {% if d.tread %}<div><dt>{{ t('tire.tread') }}{% if d.tread_date %} ({{ d.tread_date|d }}){% endif %}</dt><dd>
+      {% for pos in ['FL', 'FR', 'RL', 'RR'] %}{% if d.tread.get(pos) %}{{ t('tread.short.' ~ pos) }} {{ d.tread[pos] }} mm{% if not loop.last %}, {% endif %}{% endif %}{% endfor %}
+    </dd></div>{% endif %}
+    {% if s.notes %}<div><dt>{{ t('tire.notes') }}</dt><dd>{{ s.notes }}</dd></div>{% endif %}
+  </dl>
+</section>
+
+<section class="card" id="groups" aria-labelledby="sec-groups">
+  <div class="section-head">
+    <h2 id="sec-groups">{{ t('tire.groups') }}</h2>
+    {% if d.can_add_group %}<a class="btn" href="/vehicles/{{ v.id }}/sets/{{ s.id }}/groups/new">{{ t('tire.group_extra') }}</a>{% endif %}
+  </div>
+  <div class="table-wrap">
+    <table>
+      <caption class="sr-only">{{ t('tire.groups') }}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{{ t('tire.col.quantity') }}</th>
+          <th scope="col">{{ t('tire.col.dot') }}</th>
+          <th scope="col">{{ t('tire.col.age') }}</th>
+          <th scope="col">{{ t('tire.col.purchased') }}</th>
+          <th scope="col">{{ t('tire.col.tires') }}</th>
+          <th scope="col">{{ t('tire.positions') }}</th>
+          {% if sm.pmsf_relevant %}<th scope="col">{{ t('tire.pmsf_short') }}</th>{% endif %}
+          <th scope="col"><span class="sr-only">{{ t('tire.col.actions') }}</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for g in d.groups %}
+        <tr>
+          <td>{{ g.quantity }}</td>
+          <td>{{ g.dot_code or '–' }}</td>
+          <td>{% if g.age_text %}{{ g.age_text }}{% if g.age_warn %} <span class="chip chip-warn">{{ icon('warning', 14) }} {{ t('tire.age_warn_chip') }}</span>{% endif %}{% else %}–{% endif %}</td>
+          <td>{% if g.purchase_date %}{{ g.purchase_date|d }}{% else %}–{% endif %}</td>
+          <td>{% if g.own_label %}{{ g.own_label }}{% else %}<span class="muted">{{ t('tire.like_set') }}</span>{% endif %}</td>
+          <td>{{ g.positions or '–' }}</td>
+          {% if sm.pmsf_relevant %}<td>{% if g.has_3pmsf %}<span class="pmsf-flag" title="{{ t('tire.pmsf') }}">{{ icon('3pmsf', 22) }}<span class="sr-only">{{ t('tire.pmsf_short') }}</span></span>{% else %}–{% endif %}</td>{% endif %}
+          <td>
+            <div class="row-actions">
+              <a class="btn btn-small" href="/vehicles/{{ v.id }}/sets/{{ s.id }}/groups/{{ g.id }}/edit">{{ t('action.edit') }}</a>
+              <a class="btn btn-small" href="/vehicles/{{ v.id }}/sets/{{ s.id }}/groups/{{ g.id }}/replace">{{ t('tire.group_replace') }}</a>
+              {% if d.groups|length > 1 %}
+              <form method="post" action="/vehicles/{{ v.id }}/sets/{{ s.id }}/groups/{{ g.id }}/delete" data-confirm="{{ t('tire.group_delete_confirm') }}">
+                {{ csrf() }}<button class="btn btn-small btn-danger-quiet" type="submit">{{ t('action.delete') }}</button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="muted small">{{ t('tire.count_total', count=sm.count) }}</p>
+
+  {% if d.history %}
+  <details class="why" id="group-history">
+    <summary>{{ t('tire.history', count=d.history|length) }}</summary>
+    <ul class="rows">
+      {% for g in d.history %}
+      <li class="row">
+        <div class="row-main">
+          <strong>{{ g.quantity }}×</strong>
+          {% if g.own_label %}{{ g.own_label }}{% else %}<span class="muted">{{ t('tire.like_set') }}</span>{% endif %}
+          {% if g.dot_code %}· DOT {{ g.dot_code }}{% endif %}
+          <p class="muted small">
+            {{ t('tire.removed_on', date=g.removed_on|d) }}
+            {% if g.age_text %}· {{ t('tire.age_then', age=g.age_text) }}{% endif %}
+            {% if g.purchase_date %}· {{ t('tire.col.purchased') }}: {{ g.purchase_date|d }}{% endif %}
+            {% if g.positions %}· {{ g.positions }}{% endif %}
+          </p>
+          {% if g.removed_note %}<p class="small">{{ g.removed_note }}</p>{% endif %}
+        </div>
+        <form class="row-actions" method="post" action="/vehicles/{{ v.id }}/sets/{{ s.id }}/groups/{{ g.id }}/delete" data-confirm="{{ t('tire.group_delete_confirm') }}">
+          {{ csrf() }}<button class="btn btn-small btn-danger-quiet" type="submit">{{ t('action.delete') }}</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+  </details>
+  {% endif %}
+</section>
+{% endblock %}

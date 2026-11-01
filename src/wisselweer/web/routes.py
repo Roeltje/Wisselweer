@@ -42,13 +42,21 @@ from wisselweer.storage.enums import (
 )
 from wisselweer.storage.errors import InvalidOperation, NotFoundError
 from wisselweer.storage.orm import ApiToken, AppSetting, Location, Vehicle
+from wisselweer.tires import catalog as tire_catalog
 from wisselweer.tires import service as tire_svc
-from wisselweer.tires.schemas import TireSetIn, TireSetPatch, TreadMeasurementIn
+from wisselweer.tires.schemas import (
+    TireGroupIn,
+    TireGroupPatch,
+    TireReplaceIn,
+    TireSetIn,
+    TireSetPatch,
+    TreadMeasurementIn,
+)
 from wisselweer.vehicles import service as vehicle_svc
 from wisselweer.vehicles.schemas import LocationIn, VehicleIn, VehicleOut, VehiclePatch
 from wisselweer.weather.base import ProviderError
 from wisselweer.weather.compare import compare_forecasts
-from wisselweer.web import views
+from wisselweer.web import tire_forms, views
 from wisselweer.web.forms import (
     Field,
     Form,
@@ -140,6 +148,7 @@ def form_page(
     intro: str | None = None,
     nav: str = "vehicles",
     status: int = 200,
+    ctx: dict[str, Any] | None = None,
 ) -> Response:
     # Locatieformulieren krijgen de zoekhulp; "enabled" = geocoderen staat aan (anders alleen
     # de knop "Gebruik mijn locatie", die geen externe dienst gebruikt).
@@ -157,6 +166,7 @@ def form_page(
             "submit": submit,
             "form_errors": errors or [],
             "intro": intro,
+            **(ctx or {}),
         },
         nav=nav,
         status=status,
@@ -169,6 +179,24 @@ def local_today(tz_name: str) -> date:
 
 def to_utc(local_naive: datetime, tz_name: str) -> datetime:
     return local_naive.replace(tzinfo=views.tz_of(tz_name)).astimezone(UTC)
+
+
+def _catalog_ctx(season: str | None, set_brand: str | None = None) -> dict[str, Any]:
+    """Merk- en typesuggesties voor de formulieren (datalists + gegevens voor app.js)."""
+    return {
+        "tire_catalog": {
+            "brands": tire_catalog.brand_names(),
+            # Zonder JavaScript: alle typen van het seizoen van de set.
+            "models": tire_catalog.models_for(season),
+            "data": tire_catalog.client_data(),
+            "season": season or "",
+            "set_brand": set_brand or "",
+        }
+    }
+
+
+def _warn_years(request: Request) -> float:
+    return float(request.app.state.settings.tire_age_warn_years)
 
 
 def service_error(exc: Exception) -> str:
@@ -371,7 +399,7 @@ def vehicle_detail(
         sets = tire_svc.list_tire_sets(s, vehicle_id)
         garages = garage_svc.list_garages(s)
         garage_by_id = {g.id: g for g in garages}
-        set_rows = views.tire_set_rows(s, vehicle_id, locale)
+        set_rows = views.tire_set_rows(s, vehicle_id, locale, _warn_years(request))
         changes = views.change_rows(s, vehicle_id, sets, garage_by_id, locale)
         readings = [
             {
@@ -745,7 +773,7 @@ def profile_update(request: Request, vehicle_id: int, form: FormDep, factory: Fa
 # --------------------------------------------------------------------------- bandensets
 
 
-def set_fields(tr: Any, *, status_options: tuple) -> list[Field]:
+def set_fields(tr: Any, *, status_options: tuple, with_groups: bool = False) -> list[Field]:
     positions = [
         Field(
             f"tread_{pos.value}",
@@ -763,17 +791,16 @@ def set_fields(tr: Any, *, status_options: tuple) -> list[Field]:
             required=True,
             options=opts(TireType, "tire.type", tr),
         ),
-        Field("brand", "tire.brand", attrs={"maxlength": "80"}),
-        Field("model", "tire.model", attrs={"maxlength": "80"}),
+        Field("brand", "tire.brand", attrs={"maxlength": "80", "list": "dl-brands"}),
+        Field("model", "tire.model", attrs={"maxlength": "80", "list": "dl-models"}),
         Field(
             "size",
             "tire.size",
             help="tire.size_help",
-            attrs={"maxlength": "40", "placeholder": "205/55 R16"},
+            attrs={"maxlength": "40", "placeholder": "205/55 R16 91H"},
         ),
-        Field("purchase_date", "tire.purchase_date", kind="date"),
+        *([Field("tire_groups", "tire.groups", kind="groups")] if with_groups else []),
         Field("price", "tire.price", attrs={"inputmode": "decimal"}),
-        Field("dot_code", "tire.dot", help="tire.dot_help", attrs={"maxlength": "20"}),
         Field("status", "tire.status", kind="select", required=True, options=status_options),
         Field("notes", "tire.notes", kind="textarea"),
         Field("measured_at", "tread.measured_at", kind="date", help="tread.help"),
@@ -794,9 +821,7 @@ def _parse_set(p: Parser) -> dict[str, Any]:
         "brand": p.text("brand", max_len=80),
         "model": p.text("model", max_len=80),
         "size": p.text("size", max_len=40),
-        "purchase_date": p.date("purchase_date"),
         "purchase_price_cents": p.cents("price"),
-        "dot_code": p.text("dot_code", max_len=20),
         "notes": p.text("notes", max_len=2000),
         "status": p.choice("status", TireStatus),
     }
@@ -840,10 +865,11 @@ def set_new(request: Request, vehicle_id: int, factory: Factory) -> Response:
     return form_page(
         request,
         title=tr("tire.new"),
-        fields=bind(set_fields(tr, status_options=options), values, {}),
+        fields=bind(set_fields(tr, status_options=options, with_groups=True), values, {}),
         action=f"/vehicles/{vehicle_id}/sets/new",
         cancel=f"/vehicles/{vehicle_id}",
         submit="tire.create",
+        ctx={"groups": tire_forms.group_rows(values, {}), **_catalog_ctx("summer")},
     )
 
 
@@ -853,10 +879,11 @@ def set_create(request: Request, vehicle_id: int, form: FormDep, factory: Factor
     p = Parser(form, tr)
     raw = _parse_set(p)
     treads = _parse_tread(p)
+    groups = tire_forms.parse_new_groups(p, form, raw["type"])
     rest: list[str] = []
     if not p.errors:
         try:
-            data = TireSetIn(**raw)
+            data = TireSetIn(**raw, tire_groups=groups)
             with session_scope(factory) as s:
                 created = tire_svc.create_tire_set(s, vehicle_id, data)
                 for m in treads:
@@ -871,12 +898,18 @@ def set_create(request: Request, vehicle_id: int, form: FormDep, factory: Factor
     return form_page(
         request,
         title=tr("tire.new"),
-        fields=bind(set_fields(tr, status_options=options), form.values(), p.errors),
+        fields=bind(
+            set_fields(tr, status_options=options, with_groups=True), form.values(), p.errors
+        ),
         action=f"/vehicles/{vehicle_id}/sets/new",
         cancel=f"/vehicles/{vehicle_id}",
         submit="tire.create",
         errors=rest,
         status=422,
+        ctx={
+            "groups": tire_forms.group_rows(form.values(), p.errors),
+            **_catalog_ctx(form.get("type")),
+        },
     )
 
 
@@ -896,9 +929,7 @@ def set_edit(request: Request, vehicle_id: int, set_id: int, factory: Factory) -
         "brand": ts.brand or "",
         "model": ts.model or "",
         "size": ts.size or "",
-        "purchase_date": ts.purchase_date.isoformat() if ts.purchase_date else "",
         "price": price,
-        "dot_code": ts.dot_code or "",
         "status": ts.status.value,
         "notes": ts.notes or "",
         "measured_at": local_today(v.timezone).isoformat(),
@@ -909,6 +940,7 @@ def set_edit(request: Request, vehicle_id: int, set_id: int, factory: Factory) -
         fields=bind(set_fields(tr, status_options=_status_options(tr, ts.status)), values, {}),
         action=f"/vehicles/{vehicle_id}/sets/{set_id}/edit",
         cancel=f"/vehicles/{vehicle_id}",
+        ctx=_catalog_ctx(ts.type.value),
     )
 
 
@@ -948,6 +980,7 @@ def set_update(
         cancel=f"/vehicles/{vehicle_id}",
         errors=rest,
         status=422,
+        ctx=_catalog_ctx(form.get("type") or current.type.value),
     )
 
 
@@ -964,6 +997,267 @@ def set_delete(
     except InvalidOperation as exc:
         flash(request, service_error(exc), "error")
     return redirect(f"/vehicles/{vehicle_id}#sets")
+
+
+# --- setpagina en bandengroepen
+
+
+@router.get("/vehicles/{vehicle_id}/sets/{set_id}")
+def set_detail(request: Request, vehicle_id: int, set_id: int, factory: Factory) -> Response:
+    locale = current_locale(request)
+    with session_scope(factory) as s:
+        v = get_vehicle_or_404(s, vehicle_id)
+        detail = views.set_detail(s, vehicle_id, set_id, locale, _warn_years(request))
+    return render(
+        request,
+        "set_detail.html",
+        {"v": v, "d": detail, "warn_years": f"{_warn_years(request):g}"},
+        nav="vehicles",
+    )
+
+
+def _group_page(
+    request: Request,
+    factory: Factory,
+    vehicle_id: int,
+    set_id: int,
+    *,
+    mode: str,
+    group_id: int | None = None,
+    values: dict[str, str] | None = None,
+    errors: dict[str, str] | None = None,
+    rest: list[str] | None = None,
+    status: int = 200,
+) -> Response:
+    """Formulier om groepen toe te voegen, te wijzigen of te vervangen."""
+    tr = views.make_tr(current_locale(request))
+    with session_scope(factory) as s:
+        v = get_vehicle_or_404(s, vehicle_id)
+        ts = tire_svc.get_tire_set(s, set_id)
+        if ts.vehicle_id != vehicle_id:
+            raise NotFoundError("bandenset niet gevonden")
+        group = tire_svc.get_tire_group(s, group_id) if group_id is not None else None
+        if group is not None and (group.tire_set_id != set_id or group.removed_on is not None):
+            raise NotFoundError("bandengroep niet gevonden")
+    pmsf = tire_forms.pmsf_relevant(ts.type)
+    fields = tire_forms.group_fields(
+        pmsf=pmsf,
+        quantity_label="tire.replace_quantity" if mode == "replace" else "tire.quantity",
+        quantity_help="tire.replace_quantity_help" if mode == "replace" else None,
+    )
+    if mode == "replace":
+        fields += [
+            Field("replaced_on", "tire.replaced_on", kind="date"),
+            Field("note", "tire.replace_note", attrs={"maxlength": "500"}),
+        ]
+    initial: dict[str, str] = {}
+    if group is not None:
+        initial = {
+            "quantity": str(group.quantity),
+            "dot_code": group.dot_code or "",
+            "purchase_date": group.purchase_date.isoformat() if group.purchase_date else "",
+            "brand": group.brand or "",
+            "model": group.model or "",
+            "positions": group.positions or "",
+            "has_3pmsf": "1" if group.has_3pmsf else "",
+        }
+    if mode == "replace":
+        # Nieuwe banden: vaak hetzelfde merk en model; DOT-code, datum en posities zijn nieuw.
+        initial.update({"dot_code": "", "purchase_date": "", "positions": ""})
+        initial["replaced_on"] = local_today(v.timezone).isoformat()
+    elif mode == "add":
+        initial = {"quantity": str(max(1, 4 - ts.tire_count))}
+    titles = {
+        "add": ("tire.group_add", "tire.group_add"),
+        "edit": ("tire.group_edit", "action.save"),
+        "replace": ("tire.group_replace", "tire.group_replace"),
+    }
+    suffix = {
+        "add": "/groups/new",
+        "edit": f"/groups/{group_id}/edit",
+        "replace": f"/groups/{group_id}/replace",
+    }[mode]
+    title, submit = titles[mode]
+    return form_page(
+        request,
+        title=tr(title),
+        intro=tr("tire.replace_intro") if mode == "replace" else None,
+        fields=bind(fields, {**initial, **(values or {})}, errors or {}),
+        action=f"/vehicles/{vehicle_id}/sets/{set_id}{suffix}",
+        cancel=f"/vehicles/{vehicle_id}/sets/{set_id}",
+        submit=submit,
+        errors=rest,
+        status=status,
+        ctx=_catalog_ctx(ts.type.value, ts.brand),
+    )
+
+
+@router.get("/vehicles/{vehicle_id}/sets/{set_id}/groups/new")
+def group_new(request: Request, vehicle_id: int, set_id: int, factory: Factory) -> Response:
+    return _group_page(request, factory, vehicle_id, set_id, mode="add")
+
+
+@router.post("/vehicles/{vehicle_id}/sets/{set_id}/groups/new")
+def group_create(
+    request: Request, vehicle_id: int, set_id: int, form: FormDep, factory: Factory
+) -> Response:
+    tr = views.make_tr(current_locale(request))
+    p = Parser(form, tr)
+    with session_scope(factory) as s:
+        ts = _vehicle_set(s, vehicle_id, set_id)
+    data = tire_forms.parse_group(
+        p, relevant_3pmsf=tire_forms.pmsf_relevant(ts.type), default_quantity=1
+    )
+    group = tire_forms.build_model(p, "", TireGroupIn, data)
+    rest: list[str] = []
+    if not p.errors and group is not None:
+        try:
+            with session_scope(factory) as s:
+                tire_svc.add_tire_group(s, set_id, group)
+            flash(request, tr("flash.group_added"))
+            return redirect(f"/vehicles/{vehicle_id}/sets/{set_id}")
+        except InvalidOperation as exc:
+            rest = [service_error(exc)]
+    return _group_page(
+        request,
+        factory,
+        vehicle_id,
+        set_id,
+        mode="add",
+        values=form.values(),
+        errors=p.errors,
+        rest=rest,
+        status=422,
+    )
+
+
+@router.get("/vehicles/{vehicle_id}/sets/{set_id}/groups/{group_id}/edit")
+def group_edit(
+    request: Request, vehicle_id: int, set_id: int, group_id: int, factory: Factory
+) -> Response:
+    return _group_page(request, factory, vehicle_id, set_id, mode="edit", group_id=group_id)
+
+
+@router.post("/vehicles/{vehicle_id}/sets/{set_id}/groups/{group_id}/edit")
+def group_update(
+    request: Request,
+    vehicle_id: int,
+    set_id: int,
+    group_id: int,
+    form: FormDep,
+    factory: Factory,
+) -> Response:
+    tr = views.make_tr(current_locale(request))
+    p = Parser(form, tr)
+    with session_scope(factory) as s:
+        ts = _vehicle_set(s, vehicle_id, set_id)
+        group = tire_svc.get_tire_group(s, group_id)
+    if group.tire_set_id != set_id:
+        raise NotFoundError("bandengroep niet gevonden")
+    relevant = tire_forms.pmsf_relevant(ts.type)
+    data = tire_forms.parse_group(p, relevant_3pmsf=relevant, default_quantity=group.quantity)
+    if not relevant:
+        data.pop("has_3pmsf")  # niet relevant voor dit seizoen: waarde laten staan
+    patch = tire_forms.build_model(p, "", TireGroupPatch, data)
+    rest: list[str] = []
+    if not p.errors and patch is not None:
+        try:
+            with session_scope(factory) as s:
+                tire_svc.update_tire_group(s, group_id, patch)
+            flash(request, tr("flash.saved"))
+            return redirect(f"/vehicles/{vehicle_id}/sets/{set_id}")
+        except InvalidOperation as exc:
+            rest = [service_error(exc)]
+    return _group_page(
+        request,
+        factory,
+        vehicle_id,
+        set_id,
+        mode="edit",
+        group_id=group_id,
+        values=form.values(),
+        errors=p.errors,
+        rest=rest,
+        status=422,
+    )
+
+
+@router.post("/vehicles/{vehicle_id}/sets/{set_id}/groups/{group_id}/delete")
+def group_delete(
+    request: Request,
+    vehicle_id: int,
+    set_id: int,
+    group_id: int,
+    form: FormDep,
+    factory: Factory,
+) -> Response:
+    tr = views.make_tr(current_locale(request))
+    try:
+        with session_scope(factory) as s:
+            _vehicle_set(s, vehicle_id, set_id)
+            if tire_svc.get_tire_group(s, group_id).tire_set_id != set_id:
+                raise NotFoundError("bandengroep niet gevonden")
+            tire_svc.delete_tire_group(s, group_id)
+        flash(request, tr("flash.group_deleted"))
+    except InvalidOperation as exc:
+        flash(request, service_error(exc), "error")
+    return redirect(f"/vehicles/{vehicle_id}/sets/{set_id}")
+
+
+@router.get("/vehicles/{vehicle_id}/sets/{set_id}/groups/{group_id}/replace")
+def group_replace_form(
+    request: Request, vehicle_id: int, set_id: int, group_id: int, factory: Factory
+) -> Response:
+    return _group_page(request, factory, vehicle_id, set_id, mode="replace", group_id=group_id)
+
+
+@router.post("/vehicles/{vehicle_id}/sets/{set_id}/groups/{group_id}/replace")
+def group_replace(
+    request: Request,
+    vehicle_id: int,
+    set_id: int,
+    group_id: int,
+    form: FormDep,
+    factory: Factory,
+) -> Response:
+    tr = views.make_tr(current_locale(request))
+    p = Parser(form, tr)
+    with session_scope(factory) as s:
+        ts = _vehicle_set(s, vehicle_id, set_id)
+        group = tire_svc.get_tire_group(s, group_id)
+        today = local_today(get_vehicle_or_404(s, vehicle_id).timezone)
+    if group.tire_set_id != set_id:
+        raise NotFoundError("bandengroep niet gevonden")
+    data = tire_forms.parse_group(
+        p, relevant_3pmsf=tire_forms.pmsf_relevant(ts.type), default_quantity=group.quantity
+    )
+    data.update(
+        group_id=group_id,
+        replaced_on=p.date("replaced_on"),
+        note=p.text("note", max_len=500),
+    )
+    replacement = tire_forms.build_model(p, "", TireReplaceIn, data)
+    rest: list[str] = []
+    if not p.errors and replacement is not None:
+        try:
+            with session_scope(factory) as s:
+                tire_svc.replace_tires(s, set_id, replacement, today=today)
+            flash(request, tr("flash.tires_replaced"))
+            return redirect(f"/vehicles/{vehicle_id}/sets/{set_id}")
+        except InvalidOperation as exc:
+            rest = [service_error(exc)]
+    return _group_page(
+        request,
+        factory,
+        vehicle_id,
+        set_id,
+        mode="replace",
+        group_id=group_id,
+        values=form.values(),
+        errors=p.errors,
+        rest=rest,
+        status=422,
+    )
 
 
 # --- bandenwissel

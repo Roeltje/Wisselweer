@@ -20,7 +20,7 @@
   {% if adv %}
     {{ warnings(adv) }}
     <p class="mounted">
-      {% if card.mounted %}{{ tire_icon(card.mounted.type.value, 22) }}<span>{{ t('dashboard.mounted') }}: <strong>{{ t('tire.type.' ~ card.mounted.type.value) }}</strong></span>
+      {% if card.mounted %}{{ tire_icon(card.mounted.type.value, 22) }}<span>{{ t('dashboard.mounted') }}: <strong>{{ t('tire.type.' ~ card.mounted.type.value) }}</strong></span>{% if card.mounted.all_3pmsf %} <span class="pmsf-flag" title="{{ t('tire.pmsf_all') }}">{{ icon('3pmsf', 22) }}<span class="sr-only">{{ t('tire.pmsf_all') }}</span></span>{% endif %}
       {% else %}{{ icon('question', 22) }}<span>{{ t('dashboard.no_set') }}</span>{% endif %}
     </p>
     <h3 class="question">{{ adv.question }}</h3>
@@ -80,8 +80,13 @@
     {% for r in sets %}
     <li class="row">
       <div class="row-main">
-        <strong>{{ tire_icon(r.set.type.value, 18) }} {{ r.label }}</strong>
+        <strong>{{ tire_icon(r.set.type.value, 18) }} <a href="/vehicles/{{ v.id }}/sets/{{ r.set.id }}">{{ r.label }}</a></strong>
         <span class="chip chip-{{ r.set.status.value }}">{{ r.status_text }}</span>
+        {% if r.summary.all_3pmsf %}<span class="pmsf-flag" title="{{ t('tire.pmsf_all') }}">{{ icon('3pmsf', 22) }}<span class="sr-only">{{ t('tire.pmsf_all') }}</span></span>{% endif %}
+        <p class="small{% if r.summary.oldest_warn or r.summary.count_warn %} warn-text{% endif %}">
+          {% if r.summary.oldest_text %}{{ t('tire.oldest') }}: {{ r.summary.oldest_text }}{% if r.summary.oldest_warn %} {{ icon('warning', 14) }} {{ t('tire.age_warn_chip') }}{% endif %}{% else %}<span class="muted">{{ t('tire.oldest') }}: {{ t('tire.age_unknown_short') }}</span>{% endif %}
+          {% if r.summary.count_warn %} · {{ icon('warning', 14) }} {{ t('tire.count_warn_short', count=r.summary.count) }}{% endif %}
+        </p>
         <p class="muted small">
           {{ t('tire.km') }}:
           {% if r.km.known_km is not none %}{{ r.km.known_km|km }} km{% if not r.km.complete %} ({{ t('tire.km_incomplete') }}){% endif %}
@@ -93,6 +98,7 @@
         </p>
       </div>
       <div class="row-actions">
+        <a class="btn btn-small" href="/vehicles/{{ v.id }}/sets/{{ r.set.id }}">{{ t('tire.open_set') }}</a>
         <a class="btn btn-small" href="/vehicles/{{ v.id }}/sets/{{ r.set.id }}/edit">{{ t('action.edit') }}</a>
         {% if r.set.status.value != 'mounted' %}
         <form method="post" action="/vehicles/{{ v.id }}/sets/{{ r.set.id }}/delete" data-confirm="{{ t('tire.delete_confirm') }}">

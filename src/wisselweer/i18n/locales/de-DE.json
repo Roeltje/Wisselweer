@@ -91,5 +91,21 @@
  "geo.located": "Dein Standort wurde eingetragen, gerundet auf etwa 100 Meter.",
  "geo.denied": "Der Zugriff auf deinen Standort wurde verweigert. Suche eine Adresse oder gib die Koordinaten selbst ein.",
  "geo.unavailable": "Dein Standort konnte nicht ermittelt werden. Suche eine Adresse oder gib die Koordinaten selbst ein.",
- "geo.insecure": "Die Standortabfrage funktioniert nur über eine sichere Verbindung (https)."
+ "geo.insecure": "Die Standortabfrage funktioniert nur über eine sichere Verbindung (https).",
+ "tire.groups": "Reifen",
+ "tire.group_extra": "+ Abweichende Reifen hinzufügen",
+ "tire.group_add": "Abweichende Reifen hinzufügen",
+ "tire.group_edit": "Reifen ändern",
+ "tire.group_replace": "Reifen ersetzen",
+ "tire.quantity": "Anzahl Reifen",
+ "tire.dot_help": "Die letzten vier Ziffern des DOT-Codes sind Woche und Jahr der Herstellung: 2319 ist Woche 23 von 2019.",
+ "tire.oldest": "Ältester Reifen",
+ "tire.age_value": "{years} Jahre",
+ "tire.pmsf": "3PMSF-Symbol (Berg mit Schneeflocke) auf dem Reifen",
+ "tire.pmsf_help": "Reifen mit diesem Symbol erfüllen die strengere Winternorm; die alte M+S-Kennzeichnung allein reicht u. a. in Deutschland und Frankreich nicht mehr aus.",
+ "tire.pmsf_short": "3PMSF",
+ "tire.pmsf_all": "Alle Reifen tragen das 3PMSF-Symbol",
+ "tire.open_set": "Reifen",
+ "tire.col.quantity": "Anzahl",
+ "tire.col.age": "Alter"
 }

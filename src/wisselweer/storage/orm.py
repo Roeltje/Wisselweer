@@ -7,7 +7,7 @@ from enum import StrEnum
 from typing import Any
 
 import sqlalchemy as sa
-from sqlalchemy import ForeignKey, Index, UniqueConstraint, text
+from sqlalchemy import CheckConstraint, ForeignKey, Index, UniqueConstraint, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from wisselweer.core.models import Direction, TireType
@@ -125,14 +125,39 @@ class TireSet(Base):
     brand: Mapped[str | None] = mapped_column(sa.String(80))
     model: Mapped[str | None] = mapped_column(sa.String(80))
     size: Mapped[str | None] = mapped_column(sa.String(40))
-    purchase_date: Mapped[date | None]
     purchase_price_cents: Mapped[int | None]
-    dot_code: Mapped[str | None] = mapped_column(sa.String(20))
     notes: Mapped[str | None] = mapped_column(sa.Text)
     status: Mapped[TireStatus] = mapped_column(
         _enum(TireStatus, "tire_status"), default=TireStatus.STORED
     )
     created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=_now)
+
+
+class TireGroup(Base):
+    """Eén groep banden binnen een set (1-4 stuks met dezelfde DOT-code en aankoopdatum).
+
+    Een set heeft standaard één groep van 4; afwijkende banden (bv. een vervangen band) krijgen
+    een eigen groep. Actief = `removed_on IS NULL`; vervangen groepen blijven als geschiedenis staan.
+    """
+
+    __tablename__ = "tire_group"
+    __table_args__ = (CheckConstraint("quantity BETWEEN 1 AND 4", name="ck_tire_group_quantity"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tire_set_id: Mapped[int] = mapped_column(ForeignKey("tire_set.id"), index=True)
+    quantity: Mapped[int]
+    dot_code: Mapped[str | None] = mapped_column(sa.String(20))
+    purchase_date: Mapped[date | None]
+    # Leeg = merk/model van de set.
+    brand: Mapped[str | None] = mapped_column(sa.String(80))
+    model: Mapped[str | None] = mapped_column(sa.String(80))
+    # Alleen relevant bij winter- en vierseizoenenbanden; None = onbekend of niet van toepassing.
+    has_3pmsf: Mapped[bool | None]
+    # Optioneel, bv. "FL,FR".
+    positions: Mapped[str | None] = mapped_column(sa.String(20))
+    created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=_now)
+    removed_on: Mapped[date | None]
+    removed_note: Mapped[str | None] = mapped_column(sa.String(500))
 
 
 class TreadMeasurement(Base):

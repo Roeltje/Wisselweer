@@ -109,7 +109,7 @@ tests/                    # unit/ integration/ security/ fixtures/
 
 ## 6. Data (SQLite)
 
-`vehicle`, `tire_set`, `tread_measurement`, `odometer_reading`, `tire_change`, `garage`, `appointment`, `location`, `forecast_cache`, `forecast_snapshot` (één per provider/locatie/fetch, voor backtests), `advice_snapshot` (voor stabiliteit + backtest; `invalidated_at` wordt gezet bij een bandenwissel zodat de hysterese reset maar de rij bewaard blijft), `app_setting`, `admin_user`, `api_token` (alleen SHA-256-hash).
+`vehicle`, `tire_set`, `tire_group` (1-4 banden per groep binnen een set met eigen DOT-code, aankoopdatum, optioneel merk/model en 3PMSF; actief = `removed_on IS NULL`, vervangen groepen blijven als geschiedenis), `tread_measurement`, `odometer_reading`, `tire_change`, `garage`, `appointment`, `location`, `forecast_cache`, `forecast_snapshot` (één per provider/locatie/fetch, voor backtests), `advice_snapshot` (voor stabiliteit + backtest; `invalidated_at` wordt gezet bij een bandenwissel zodat de hysterese reset maar de rij bewaard blijft), `app_setting`, `admin_user`, `api_token` (alleen SHA-256-hash).
 - Max. één `tire_set.status='mounted'` per voertuig (partial unique index).
 - Bandenwissel = één transactie (historie, statussen, km, advies-snapshot ongeldig).
 - Km per set = som van verschillen tussen opeenvolgende **geldige** meetpunten tijdens montage; correcties via `superseded_by`, nooit verwijderen.

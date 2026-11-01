@@ -25,9 +25,11 @@ from wisselweer.garages.schemas import AppointmentOut, GarageOut
 from wisselweer.garages.service import list_appointments, list_garages
 from wisselweer.i18n import format_date, format_datetime, t
 from wisselweer.storage.enums import APPOINTMENT_TRANSITIONS, AppointmentStatus, TireStatus
+from wisselweer.storage.errors import NotFoundError
 from wisselweer.storage.orm import AdviceSnapshot, ForecastSnapshot
-from wisselweer.tires.schemas import OdometerOut, TireSetOut
+from wisselweer.tires.schemas import MAX_TIRES, OdometerOut, TireGroupOut, TireSetOut
 from wisselweer.tires.service import (
+    get_tire_set,
     km_per_set,
     list_odometer_readings,
     list_tire_changes,
@@ -293,7 +295,53 @@ def profile_summary(profile: DrivingProfile, locale: str) -> str:
     return tr("profile.custom") + ": " + "; ".join(days)
 
 
-def tire_set_rows(session: Session, vehicle_id: int, locale: str) -> list[dict]:
+def _decimal_nl(value: float) -> str:
+    return f"{value:.1f}".replace(".", ",")
+
+
+def age_text(years: float | None, tr: Tr) -> str:
+    return tr("tire.age_value", years=_decimal_nl(years)) if years is not None else ""
+
+
+def positions_text(positions: str | None, tr: Tr) -> str:
+    if not positions:
+        return ""
+    return ", ".join(tr(f"tread.short.{p}") for p in positions.split(","))
+
+
+def group_view(g: TireGroupOut, tr: Tr, warn_years: float) -> dict:
+    """Een groep voor in de tabel; merk/model alleen als ze van de set afwijken."""
+    return {
+        "id": g.id,
+        "quantity": g.quantity,
+        "dot_code": g.dot_code,
+        "age_text": age_text(g.age_years, tr),
+        "age_warn": g.age_years is not None and g.age_years >= warn_years,
+        "purchase_date": g.purchase_date,
+        "own_label": " ".join(p for p in (g.brand, g.model) if p),
+        "positions": positions_text(g.positions, tr),
+        "has_3pmsf": g.has_3pmsf is True,
+        "removed_on": g.removed_on,
+        "removed_note": g.removed_note,
+    }
+
+
+def set_summary(s: TireSetOut, tr: Tr, warn_years: float) -> dict:
+    """Leeftijd van de oudste band, aantalwaarschuwing en 3PMSF voor een set."""
+    oldest = s.oldest_tire_age_years
+    return {
+        "oldest_text": age_text(oldest, tr),
+        "oldest_warn": oldest is not None and oldest >= warn_years,
+        "count": s.tire_count,
+        "count_warn": s.tire_count != MAX_TIRES,
+        "all_3pmsf": s.all_3pmsf,
+        "pmsf_relevant": s.type in (TireType.WINTER, TireType.ALL_SEASON),
+    }
+
+
+def tire_set_rows(
+    session: Session, vehicle_id: int, locale: str, warn_years: float = 8.0
+) -> list[dict]:
     tr = make_tr(locale)
     rows = []
     for s in list_tire_sets(session, vehicle_id):
@@ -311,9 +359,40 @@ def tire_set_rows(session: Session, vehicle_id: int, locale: str) -> list[dict]:
                 "km": km,
                 "tread": {p: f"{v:.1f}".replace(".", ",") for p, (_, v) in latest.items()},
                 "tread_date": max(dates) if dates else None,
+                "summary": set_summary(s, tr, warn_years),
             }
         )
     return rows
+
+
+def set_detail(
+    session: Session, vehicle_id: int, set_id: int, locale: str, warn_years: float
+) -> dict:
+    """Gegevens voor de setpagina: actieve groepen, geschiedenis, kilometers en profiel."""
+    tr = make_tr(locale)
+    s = get_tire_set(session, set_id, include_removed=True)
+    if s.vehicle_id != vehicle_id:
+        raise NotFoundError("bandenset niet gevonden")
+    km = km_per_set(session, set_id)
+    latest: dict[str, tuple] = {}
+    for m in list_tread_measurements(session, set_id):
+        latest[m.position.value] = (m.measured_at, m.depth_mm)
+    dates = {d for d, _ in latest.values()}
+    active = [g for g in s.tire_groups if g.removed_on is None]
+    history = [g for g in s.tire_groups if g.removed_on is not None]
+    return {
+        "set": s,
+        "label": set_label(s, tr),
+        "type_text": tr(f"tire.type.{s.type.value}"),
+        "status_text": tr(f"tire.status.{s.status.value}"),
+        "km": km,
+        "tread": {p: _decimal_nl(v) for p, (_, v) in latest.items()},
+        "tread_date": max(dates) if dates else None,
+        "summary": set_summary(s, tr, warn_years),
+        "groups": [group_view(g, tr, warn_years) for g in active],
+        "history": [group_view(g, tr, warn_years) for g in reversed(history)],
+        "can_add_group": s.tire_count < MAX_TIRES,
+    }
 
 
 def _final_km(readings: dict[int, OdometerOut], reading_id: int | None) -> int | None:

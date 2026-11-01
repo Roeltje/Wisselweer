@@ -31,6 +31,9 @@ class Field:
     attrs: dict[str, str] = field(default_factory=dict)
     value: str = ""
     error: str | None = None
+    # Extra CSS-klasse(n) op de omhullende `.field` en (bij een checkbox) de naam van een icoon.
+    wrapper_class: str = ""
+    icon: str = ""
 
 
 def bind(fields: Iterable[Field], values: dict[str, str], errors: dict[str, str]) -> list[Field]:

@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
-from pydantic import SecretStr, field_validator, model_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from wisselweer.publisher.national import ReferenceLocation
@@ -80,6 +80,8 @@ class Settings(BaseSettings):
     secret_key: SecretStr | None = None
     cookie_secure: bool = False
     log_level: str = "INFO"
+    # Vanaf deze leeftijd (jaren, uit de DOT-code) tonen we een waarschuwing bij een band.
+    tire_age_warn_years: float = Field(default=8, gt=0, le=30)
     # /docs (Swagger UI, laadt van een CDN) en /openapi.json; uit = beide routes bestaan niet.
     enable_docs: bool = True
 
