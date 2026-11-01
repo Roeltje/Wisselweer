@@ -1,6 +1,6 @@
 # Roadmap
 
-Plannen kunnen wijzigen. Vinkjes volgen [docs/STATUS.md](docs/STATUS.md); het enige bekende open punt is dat de Docker-installatie in de praktijk nog niet is getest.
+Plannen kunnen wijzigen. Vinkjes volgen [docs/STATUS.md](docs/STATUS.md); de Docker-installatie wordt in CI gebouwd en gestart (zie [docs/install-docker.md](docs/install-docker.md)).
 
 ## MVP
 
