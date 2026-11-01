@@ -1,6 +1,6 @@
 # Landelijk advies publiceren
 
-`wisselweer publish` berekent één anoniem, landelijk wisseladvies en schrijft dat als `advice.json`. Dat bestand is de enige koppeling met een publieke site (de site van wisselweer.nl wordt apart onderhouden; je kunt ook een eigen site of Home Assistant gebruiken); het formaat staat in [`public-advice-contract.md`](public-advice-contract.md) (schema: `src/wisselweer/publisher/public_schema.py`, `extra="forbid"`). Er gaan nooit voertuigen, kentekens, garages, contactgegevens of eigen locaties in: het bestand wordt uitsluitend gebouwd uit berekende waarden, niet uit de database.
+`wisselweer publish` berekent één anoniem, landelijk wisseladvies en schrijft dat als `advice.json`. Dat bestand is de enige koppeling naar buiten (bijvoorbeeld Home Assistant of een dashboard); het formaat staat in [`public-advice-contract.md`](public-advice-contract.md) (schema: `src/wisselweer/publisher/public_schema.py`, `extra="forbid"`). Er gaan nooit voertuigen, kentekens, garages, contactgegevens of eigen locaties in: het bestand wordt uitsluitend gebouwd uit berekende waarden, niet uit de database.
 
 ## Methode
 
@@ -16,6 +16,8 @@
 
 **Alle drempels (75%, minimaal 4 regio's, de seizoensvensters en de engine-drempels) zijn ongevalideerde heuristieken**: niet gekalibreerd aan bandenprestaties, ongevallen of klimatologie. Het landelijk advies is indicatief en vervangt geen lokale waarschuwing.
 
+6. Optioneel (`WISSELWEER_PUBLISH_COUNTRIES=true`): winterbandenregels per land als veld `countries`, zie [regulations.md](regulations.md). Dat kost per publicatie ca. 18 extra (gecachte) verwachtingsverzoeken; uit = geen extra verzoeken en geen veld.
+
 ## Lokaal publiceren
 
 ```sh
@@ -28,7 +30,7 @@ Schrijft naar `WISSELWEER_PUBLISH_DIR` (standaard `<DATA_DIR>/public/advice.json
 
 Zet `WISSELWEER_PUBLISH_SFTP_HOST` (en `_USER`, `_KEY`, `_PATH`, `_PORT`, `_KNOWN_HOSTS`, zie `.env.example`). Wisselweer gebruikt het systeemcommando `sftp` (zonder shell, argumenten als lijst; host, gebruiker en paden worden gevalideerd) met `BatchMode=yes` en `StrictHostKeyChecking=yes`: de hostsleutel moet dus al in `known_hosts` staan. Het bestand gaat naar `advice.json.tmp` en wordt daarna met `rename` hernoemd; OpenSSH `sftp` gebruikt daarvoor `posix-rename` als de server dat ondersteunt (OpenSSH-servers doen dat), waardoor het vervangen atomisch is. Er geldt een time-out van 60 seconden en foutmeldingen bevatten geen sleutelpaden.
 
-Richt op de webserver een beperkte deploy-gebruiker in:
+Richt op de doelserver een beperkte deploy-gebruiker in:
 
 - eigen gebruiker zonder shell (`/usr/sbin/nologin`) en alleen sleutel-authenticatie;
 - in `sshd_config`: `Match User deploy` met `ChrootDirectory <publicatiemap-ouder>`, `ForceCommand internal-sftp`, `AllowTcpForwarding no`, `X11Forwarding no`;
@@ -39,12 +41,12 @@ Richt op de webserver een beperkte deploy-gebruiker in:
 
 ```sh
 runuser -u wisselweer -- sftp -v -i /var/lib/wisselweer/.ssh/deploy_wisselweer_web -o BatchMode=yes \
-  -o UserKnownHostsFile=/var/lib/wisselweer/.ssh/known_hosts deploy@<webserver-ip>
+  -o UserKnownHostsFile=/var/lib/wisselweer/.ssh/known_hosts deploy@<server-ip>
 ```
 
 | Melding | Oorzaak en oplossing |
 |---|---|
-| `Connection refused` | sshd draait niet op de webserver: `systemctl restart ssh` (de installatie gebruikt een restart, geen reload) |
+| `Connection refused` | sshd draait niet op de doelserver: `systemctl restart ssh` (de installatie gebruikt een restart, geen reload) |
 | `Host key verification failed` | hostsleutel ontbreekt in known_hosts: `ssh-keyscan` en vingerafdruk controleren, zie [install-lxc.md](install-lxc.md) |
 | `Permission denied (publickey)` | publieke sleutel in `/etc/ssh/authorized_keys/deploy` komt niet overeen met `deploy_wisselweer_web.pub` (volledige regel, geen vingerafdruk) |
 

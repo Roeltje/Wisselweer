@@ -12,7 +12,7 @@ Wisselweer adviseert wanneer je van zomer- naar winterbanden wisselt (en terug),
 
 - **Engine** (`wisselweer.core`): pure, uitlegbare adviesberekening. Geen percentages of gladheidskansen; elke uitkomst heeft redenen en onzekerheden.
 - **Self-hosted app** (`wisselweer.api` + `wisselweer.web`): beheer van voertuigen, bandensets, garages en advies, met lokale SQLite-database en privé webinterface.
-- **Landelijk `advice.json`**: een anoniem landelijk advies volgens [docs/public-advice-contract.md](docs/public-advice-contract.md). De privé-app duwt dat bestand naar een map of via SFTP naar een webserver. De publieke site van wisselweer.nl wordt apart onderhouden; iedereen kan het bestand gebruiken (eigen site, Home Assistant). De app heeft geen verbinding met zo'n site.
+- **Landelijk `advice.json`**: een anoniem landelijk advies volgens [docs/public-advice-contract.md](docs/public-advice-contract.md). De privé-app duwt dat bestand naar een map of via SFTP naar een server. De publieke site van wisselweer.nl wordt apart onderhouden; iedereen kan het bestand gebruiken (eigen site, Home Assistant). De app heeft geen verbinding met zo'n site.
 
 ## Functies
 
@@ -20,7 +20,7 @@ Wisselweer adviseert wanneer je van zomer- naar winterbanden wisselt (en terug),
 - Meerdere voertuigen en bandensets, profieldiepte- en kilometerregistratie, wisselhistorie.
 - Garages en afspraken; een `mailto:`-link voor de garage (de app verstuurt zelf niets).
 - REST API (`/api/v1`) met sessie of Bearer-token, bijvoorbeeld voor Home Assistant: [docs/api.md](docs/api.md).
-- Landelijk advies en publicatie naar een statische site: [docs/publishing.md](docs/publishing.md).
+- Landelijk advies en publicatie van `advice.json`: [docs/publishing.md](docs/publishing.md).
 - Vergelijking van weerbronnen (diagnostisch, er wordt niets gecombineerd) en een backtest-commando: [docs/backtesting.md](docs/backtesting.md).
 - Nederlandse interface via i18n-bestanden; er zijn ook `nl-BE`, `en` en `de-DE`-bestanden aanwezig, maar de interface is nog niet volledig meertalig.
 

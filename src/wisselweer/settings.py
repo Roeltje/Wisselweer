@@ -57,6 +57,8 @@ class Settings(BaseSettings):
     public_stale_hours: float = 18
     # Interne publicatieplanner: 0 = uit, anders elke N uur (eerste run na 1 minuut).
     publish_interval_hours: int = 0
+    # Landenregels (winterbanden) meepubliceren in advice.json; kost extra verwachtingen per run.
+    publish_countries: bool = False
     # Optionele JSON-lijst [{"name": ..., "latitude": ..., "longitude": ...}] i.p.v. de standaard.
     national_locations: list[ReferenceLocation] | None = None
 

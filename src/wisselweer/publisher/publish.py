@@ -152,6 +152,13 @@ def run_publish(
 ) -> PublicAdvice:
     service = forecast_service or build_default_forecast_service(settings)
     advice = NationalAdviceService(service, settings.national_config()).compute()
+    if settings.publish_countries:
+        from wisselweer.publisher.countries import build_public_countries
+
+        countries, disclaimer = build_public_countries(service, advice.generated_at)
+        advice = advice.model_copy(
+            update={"countries": countries, "countries_disclaimer": disclaimer}
+        )
     directory = settings.publish_dir
     directory.mkdir(parents=True, exist_ok=True)
     target = write_local(advice, directory)

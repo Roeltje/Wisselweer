@@ -8,4 +8,4 @@
 | 3 | Database, voertuigen, banden, garages, REST-API (154 tests) | klaar — auth volgt in fase 4 |
 | 4 | Privé-webinterface + auth (incl. i18n-basis, providerkeuze, modelvergelijking) | klaar |
 | 5 | Landelijk advies, publisher (lokaal + SFTP), publicatie van `advice.json` | klaar |
-| 6 | Docker, Debian/Ubuntu-LXC (app + website), backtest, docs | klaar — native LXC-installatie (Debian 13) en SFTP-publicatie naar een aparte webserver in de praktijk getest; Docker nog niet getest |
+| 6 | Docker, Debian/Ubuntu-LXC (app), backtest, docs | klaar — native LXC-installatie (Debian 13) en SFTP-publicatie naar een aparte server in de praktijk getest; Docker nog niet getest |

@@ -9,7 +9,15 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, field_serializer, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    SerializerFunctionWrapHandler,
+    field_serializer,
+    field_validator,
+    model_serializer,
+    model_validator,
+)
 
 PublicStatus = Literal[
     "KEEP_CURRENT",
@@ -73,6 +81,57 @@ class PublicSource(BaseModel):
     license_url: str
 
 
+class PublicCountryLink(BaseModel):
+    model_config = _STRICT
+
+    title: str
+    url: str
+
+
+class PublicCountryLocation(BaseModel):
+    """Referentieplaats met verwachte winterse kenmerken (komende 72 uur)."""
+
+    model_config = _STRICT
+
+    name: str
+    mountain: bool
+    frost: bool
+    snow: bool
+    icy: bool
+
+
+class PublicCountryWeather(BaseModel):
+    """Verwachte omstandigheden; zegt nooit dat een plicht geldt."""
+
+    model_config = _STRICT
+
+    status: Literal["winter_conditions_expected", "frost_possible", "none_expected", "unknown"]
+    partial: bool
+    locations: list[PublicCountryLocation]
+    window_hours: int
+
+
+class PublicCountry(BaseModel):
+    """Landspecifieke winterbandenregel (informatief, geen juridisch advies)."""
+
+    model_config = _STRICT
+
+    code: str
+    name: str
+    rule_types: list[Literal["situational", "period", "area_or_signage", "none"]]
+    period_label: str | None = None
+    in_period: bool | None = None
+    conditions_text: str | None = None
+    tires_text: str
+    min_tread_mm: float | None = None
+    alternatives_text: str | None = None
+    notes_text: str | None = None
+    sources: list[PublicCountryLink]
+    checked_on: date
+    confidence: Literal["high", "medium", "low"]
+    weather: PublicCountryWeather | None = None
+
+
 def _utc(v: datetime) -> datetime:
     if v.tzinfo is None or v.utcoffset() is None:
         raise ValueError("datetime moet tijdzone-bewust zijn")
@@ -105,6 +164,18 @@ class PublicAdvice(BaseModel):
     stale_after: datetime
     source: PublicSource
     rules_version: str
+    # Optioneel en additief: alleen aanwezig als landenregels zijn ingeschakeld
+    # (`WISSELWEER_PUBLISH_COUNTRIES`); anders ontbreken beide velden in de JSON.
+    countries: list[PublicCountry] | None = None
+    countries_disclaimer: str | None = None
+
+    @model_serializer(mode="wrap")
+    def _omit_absent_countries(self, handler: SerializerFunctionWrapHandler) -> dict:
+        data = handler(self)
+        for key in ("countries", "countries_disclaimer"):
+            if data.get(key) is None:
+                data.pop(key, None)
+        return data
 
     @field_validator("generated_at", "stale_after")
     @classmethod

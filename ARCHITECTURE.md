@@ -12,7 +12,7 @@ Dit document is het bindende contract voor alle code in deze repository. Afwijke
 | **Self-hosted app** (`wisselweer.api` + `wisselweer.web`) | Beheer van voertuigen, banden, garages, advies | Lokale SQLite, privé |
 | **Publieke site (apart, niet in deze repo)** | Statische site van wisselweer.nl die alleen `advice.json` leest | Uitsluitend allowlisted publieke velden |
 
-De publieke site wordt apart onderhouden. Deze repo publiceert `advice.json` volgens [docs/public-advice-contract.md](docs/public-advice-contract.md); iedereen kan dat bestand gebruiken (eigen site, Home Assistant). Een publieke site heeft **nooit** een netwerkpad naar de privé-app: de privé-app *duwt* `advice.json` naar een map of via SFTP naar de webserver.
+De publieke site wordt apart onderhouden. Deze repo publiceert `advice.json` volgens [docs/public-advice-contract.md](docs/public-advice-contract.md); het bestand is ook bruikbaar voor bijvoorbeeld Home Assistant of een dashboard. Een publieke site heeft **nooit** een netwerkpad naar de privé-app: de privé-app *duwt* `advice.json` naar een map of via SFTP naar de webserver.
 
 ## 2. Stack
 
@@ -52,9 +52,11 @@ src/wisselweer/
     national.py           # NationalAdviceService (referentielocaties)
     public_schema.py      # PublicAdvice (allowlist, extra='forbid')
     publish.py            # temp -> valideren -> os.replace; optioneel SFTP
+    countries.py          # optioneel blok `countries` (landenregels + weercheck)
+  regulations/            # landenregels: modellen, loader, periode, weercheck
   i18n/
     locales/{nl-NL,nl-BE,en,de-DE}.json
-    regulations/          # (leeg) toekomstige landenregels met bron/geldigheid
+    regulations/          # winter_tires.json: winterbandenregels per land (bron, checked_on)
   settings.py             # pydantic-settings uit env (.env)
   cli.py                  # `wisselweer serve|publish|migrate|create-admin|reset-password|create-api-token|revoke-api-token|backtest`
   backtest.py             # replay van forecast-snapshots (zie docs/backtesting.md)
@@ -114,7 +116,7 @@ tests/                    # unit/ integration/ security/ fixtures/
 
 ## 9. i18n
 
-Alle UI-teksten en reden-sleutels via `i18n/locales/*.json`. Onderscheid taal / land / tijdzone / locatie / gebruikslanden / regelgeving. Regelgeving staat los van het meteorologische advies; MVP bevat **geen** juridische regels.
+Alle UI-teksten en reden-sleutels via `i18n/locales/*.json`. Onderscheid taal / land / tijdzone / locatie / gebruikslanden / regelgeving. Regelgeving staat los van het meteorologische advies: de engine kent geen landenregels. `wisselweer.regulations` bevat informatieve winterbandenregels per land (data in `i18n/regulations/winter_tires.json`, met bron, `checked_on` en betrouwbaarheid; bewust zonder boetebedragen) en een pure weercheck voor situationele plichten die dezelfde gladheidsdetectie hergebruikt als de engine. Optioneel (`WISSELWEER_PUBLISH_COUNTRIES`) gaat dit als additief veld `countries` mee in `advice.json`. Het is geen juridisch advies; zie [docs/regulations.md](docs/regulations.md).
 
 ## 10. Branding
 
