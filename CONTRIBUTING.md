@@ -19,7 +19,7 @@ Zie [docs/testing.md](docs/testing.md) voor de details van de tests.
 
 1. Maak een branch vanaf `main`, bijvoorbeeld `fix/...` of `feat/...`.
 2. Maak je wijziging, met tests waar het kan.
-3. Draai `uv run pytest` en `uv run ruff check .` en `uv run ruff format --check .`.
+3. Draai `uv run pytest`, `uv run ruff check .` en `uv run ruff format --check .` (dezelfde controles als de CI).
 4. Open een pull request. Vul de checklist in de PR-template in.
 
 ## Ontwerpuitgangspunten

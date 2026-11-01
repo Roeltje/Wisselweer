@@ -29,41 +29,53 @@ src/wisselweer/
     engine.py             # evaluate(input) -> Advice
     stability.py          # hysterese tussen opeenvolgende adviezen
     rules_version.py
+    messages.py           # Nederlandse standaardteksten per i18n-sleutel
   weather/
     base.py               # ForecastProvider-protocol + ProviderInfo (variabelen, horizon, licentie)
-    metno.py  openmeteo.py  brightsky.py  knmi.py
+    metno.py  openmeteo.py  brightsky.py
+    knmi.py               # KnmiObservationProvider + KnmiForecastProvider (configured=False)
+    service.py _util.py   # ForecastService (providerkeuze + cache), gedeelde HTTP-hulpen
     cache.py              # per (provider, afgeronde locatie); Expires/Last-Modified/304; stale-markering
     registry.py           # providerkeuze + 'niet geconfigureerd'-status
     compare.py            # diagnostische modelvergelijking (NIET combineren)
   observations/
     base.py               # ObservationProvider-protocol + Observation-model
-    wunderground.py  knmi.py
+    wunderground.py       # (KNMI-waarnemingen: weather/knmi.py)
   storage/
     db.py  orm.py         # SQLAlchemy-modellen
+    cache_backend.py      # SqliteCacheBackend voor de weercache (InMemoryBackend: alleen tests)
+    enums.py errors.py    # waardelijsten, servicefouten
     migrations/           # Alembic
   vehicles/ tires/ garages/   # services (business-logica op ORM, transacties)
   api/
     app.py                # create_app(); routers onder /api/v1
     auth.py               # sessie + CSRF + optionele API-token
+    deps.py schemas.py    # dependencies, request-/response-schema's
     routers/*.py
   web/
-    routes.py templates/ static/
+    routes.py views.py forms.py templating.py   # routes, weergave, formulieren, Jinja2
+    templates/ static/
   publisher/
     national.py           # NationalAdviceService (referentielocaties)
     public_schema.py      # PublicAdvice (allowlist, extra='forbid')
     publish.py            # temp -> valideren -> os.replace; optioneel SFTP
+    outlook.py            # optioneel veld `outlook`: 14-daagse vooruitblik (eerste referentielocatie)
+    scheduler.py          # optionele interne publicatieplanner (WISSELWEER_PUBLISH_INTERVAL_HOURS)
     countries.py          # optioneel blok `countries` (landenregels + weercheck)
   regulations/            # landenregels: modellen, loader, periode, weercheck
   i18n/
     locales/{nl-NL,nl-BE,en,de-DE}.json
     regulations/          # winter_tires.json: winterbandenregels per land (bron, checked_on)
   settings.py             # pydantic-settings uit env (.env)
-  cli.py                  # `wisselweer serve|publish|migrate|create-admin|reset-password|create-api-token|revoke-api-token|backtest`
+  cli.py                  # `wisselweer serve|version|publish|migrate|create-admin|reset-password|create-api-token|revoke-api-token|backtest`
   backtest.py             # replay van forecast-snapshots (zie docs/backtesting.md)
 branding/                 # logo.svg, favicon.svg/.ico, icon-app.svg, og-image.svg, PNG's
 deploy/                   # systemd-units, installatiescripts
+scripts/generate_examples.py   # genereert de API-voorbeelden in docs/examples/
 Dockerfile  compose.yaml  .env.example
-docs/                     # api.md, providers.md, advice-rules.md, install-*.md, testing.md
+docs/                     # api, providers, advice-rules, publishing, public-advice-contract,
+                          # regulations, backtesting, testing, install-*, STATUS
+docs/examples/            # voorbeeld-JSON (advies, voertuig, bandenwissel, public-advice)
 tests/                    # unit/ integration/ security/ fixtures/
 ```
 
@@ -77,7 +89,7 @@ tests/                    # unit/ integration/ security/ fixtures/
 - Richting volgt de **gemonteerde set**, niet de kalender. Vierseizoenen ⇒ `direction=NONE`, alleen waarschuwingen.
 - **Asymmetrie**: naar winter reageert sneller (veiligheid); naar zomer vereist langere warme bevestiging + seizoensvenster (bijv. niet vóór 1 maart) + geen vorst in de horizon.
 - 7 °C is **context**, geen grens. Alle drempels in `EngineConfig`, gedocumenteerd als ongevalideerde heuristieken.
-- Horizonnen: 0–72 u waarschuwingen; dag 4–7 concrete advies; 8–14 trend (alleen als de provider het levert); daarbuiten geen datum.
+- Horizonnen: 0–72 u waarschuwingen; dag 1–7 concreet advies (`concrete_until_day`); 8–14 trend (alleen als de provider het levert); daarbuiten geen datum.
 - Exacte datum alleen als de omslag binnen dag 1–7 valt en minimaal `confirm_days` aaneengesloten bevestigd wordt; anders periode of `None` ("Nog geen betrouwbare wisseldatum beschikbaar.").
 - Rijmomenten: temperatuur/neerslag gewogen naar uren waarin het voertuig volgens profiel rijdt (tijdzone-correct, DST-veilig via `zoneinfo`).
 - **Stabiliteit**: hysterese t.o.v. `previous` — status mag pas verlagen na `n` bevestigingen; waarschuwingen zijn nooit gedempt.
@@ -112,7 +124,7 @@ tests/                    # unit/ integration/ security/ fixtures/
 
 ## 8. Publicatie
 
-`wisselweer publish` (cron/systemd-timer, of de interne planner via `WISSELWEER_PUBLISH_INTERVAL_HOURS`): referentielocaties (De Bilt, Groningen, Vlissingen, Maastricht, Den Helder, Twente, Arnhem — configureerbaar) → per locatie engine met `mounted=SUMMER` resp. `WINTER` afhankelijk van seizoensrichting → samenvoegen (bij onenigheid tussen regio's status `REGIONAL_DIFFERENCES`) → `PublicAdvice` → temp-bestand → valideren → `os.replace`. Optioneel SFTP met beperkte deploy-user (alleen `advice.json`).
+`wisselweer publish` (cron/systemd-timer, of de interne planner via `WISSELWEER_PUBLISH_INTERVAL_HOURS`): referentielocaties (De Bilt, Groningen, Vlissingen, Maastricht, Den Helder, Twente, Arnhem — configureerbaar) → per locatie engine met `mounted=SUMMER` resp. `WINTER` afhankelijk van seizoensrichting → samenvoegen (bij onenigheid tussen regio's status `REGIONAL_DIFFERENCES`) → `PublicAdvice` → temp-bestand → valideren → `os.replace`. Optioneel SFTP met beperkte deploy-user (alleen `advice.json`). Optioneel veld `outlook`: een 14-daagse vooruitblik van de eerste referentielocatie (`publisher/outlook.py`; alleen dagen die de weerbron echt dekt, geen extra verzoeken); optioneel veld `countries` (zie §9).
 
 ## 9. i18n
 
