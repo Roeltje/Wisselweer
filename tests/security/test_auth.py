@@ -52,10 +52,45 @@ def test_docs_not_reachable_without_login(client):
 def test_docs_after_login(session_client):
     r = session_client.get("/docs")
     assert r.status_code == 200 and "swagger" in r.text.lower()
-    assert "cdn.jsdelivr.net" in r.headers["content-security-policy"]
+    csp = r.headers["content-security-policy"]
+    # Vaste versie, en de CSP beperkt de CDN tot precies dat pad-prefix.
+    prefix = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14/"
+    assert f"script-src 'self' 'unsafe-inline' {prefix};" in csp
+    assert f"style-src 'self' 'unsafe-inline' {prefix};" in csp
+    assert "https://cdn.jsdelivr.net;" not in csp and "tiangolo" not in csp
+    assert f"{prefix}swagger-ui-bundle.js" in r.text and f"{prefix}swagger-ui.css" in r.text
+    assert "swagger-ui-dist@5/" not in r.text
     assert "paths" in session_client.get("/openapi.json").json()
     # De CSP-uitbreiding geldt alleen voor /docs.
     assert "jsdelivr" not in session_client.get("/api/v1/health").headers["content-security-policy"]
+
+
+@pytest.fixture
+def geen_docs_client(tmp_path):
+    from fastapi.testclient import TestClient
+
+    from tests.fixtures.auth import make_admin
+    from wisselweer.api.app import create_app
+
+    app = create_app(Settings(_env_file=None, data_dir=tmp_path / "data", enable_docs=False))
+    make_admin(app)
+    with TestClient(app, raise_server_exceptions=False) as c:
+        yield c
+
+
+def test_docs_uitgezet(geen_docs_client):
+    c = geen_docs_client
+    for pad in ("/docs", "/openapi.json", "/redoc"):
+        assert c.get(pad, follow_redirects=False).status_code == 404
+    assert login(c).status_code == 303  # inloggen blijft werken
+    for pad in ("/docs", "/openapi.json"):
+        assert c.get(pad, follow_redirects=False).status_code == 404
+    assert c.get("/api/v1/health").status_code == 200
+
+
+def test_docs_staat_standaard_aan():
+    assert Settings(_env_file=None).enable_docs is True
+    assert Settings(_env_file=None, enable_docs="false").enable_docs is False
 
 
 def test_login_ok_and_wrong(client):
@@ -217,11 +252,51 @@ def test_password_change_invalidates_session(app, session_client):
 def test_password_hash_has_no_plaintext(app):
     with ensure_db(app)() as s:
         h = s.scalar(select(AdminUser)).password_hash
-    assert ADMIN_PASSWORD not in h and h.startswith("scrypt$16384$8$1$")
+    assert ADMIN_PASSWORD not in h and h.startswith("scrypt$65536$8$2$")
     assert auth.verify_password(ADMIN_PASSWORD, h)
     assert not auth.verify_password("anders-wachtwoord", h)
     assert auth.hash_password(ADMIN_PASSWORD) != h  # willekeurige salt
     assert not auth.verify_password("x", "kapot")
+    assert not auth.needs_rehash(h)
+
+
+def _oude_hash(password: str) -> str:
+    """Hash zoals vóór de verhoging: scrypt N=2**14, r=8, p=1."""
+    salt = b"s" * 16
+    digest = hashlib.scrypt(password.encode(), salt=salt, n=2**14, r=8, p=1, dklen=32)
+    b64 = auth._b64
+    return f"scrypt$16384$8$1${b64(salt)}${b64(digest)}"
+
+
+def test_old_hash_still_verifies_and_needs_rehash():
+    old = _oude_hash(ADMIN_PASSWORD)
+    assert auth.verify_password(ADMIN_PASSWORD, old)
+    assert not auth.verify_password("anders-wachtwoord", old)
+    assert auth.needs_rehash(old)
+    assert auth.needs_rehash("kapot")
+
+
+def test_login_upgrades_old_hash(app, client):
+    old = _oude_hash(ADMIN_PASSWORD)
+    with ensure_db(app)() as s:
+        s.scalar(select(AdminUser)).password_hash = old
+        s.commit()
+    assert login(client, "verkeerd-wachtwoord").status_code == 401
+    with ensure_db(app)() as s:
+        assert s.scalar(select(AdminUser)).password_hash == old  # mislukte login: niets gewijzigd
+    ok = login(client)
+    assert ok.status_code == 303
+    with ensure_db(app)() as s:
+        new = s.scalar(select(AdminUser)).password_hash
+    assert new != old and new.startswith("scrypt$65536$8$2$")
+    assert auth.verify_password(ADMIN_PASSWORD, new)
+    # De nieuwe sessie blijft geldig (vingerafdruk is van de nieuwe hash).
+    assert client.get(V).status_code == 200
+    # Tweede login herhaalt de upgrade niet.
+    client.cookies.clear()
+    assert login(client).status_code == 303
+    with ensure_db(app)() as s:
+        assert s.scalar(select(AdminUser)).password_hash == new
 
 
 def test_password_min_length():

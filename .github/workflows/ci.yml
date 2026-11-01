@@ -11,6 +11,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
 
@@ -29,3 +30,10 @@ jobs:
 
       - name: Tests
         run: uv run pytest -q
+
+      - name: Afhankelijkheden controleren op bekende kwetsbaarheden
+        # Exporteert de vastgepinde productie-afhankelijkheden uit uv.lock (zonder het lockbestand
+        # te wijzigen) en laat pip-audit falen bij bevindingen of niet-controleerbare pakketten.
+        run: |
+          uv export --frozen --no-dev --no-emit-project --format requirements-txt > /tmp/req.txt
+          uvx pip-audit -r /tmp/req.txt --strict

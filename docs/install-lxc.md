@@ -17,7 +17,7 @@ Het script is idempotent en doet het volgende:
 - maakt systeemgebruiker `wisselweer` (nologin, home `/var/lib/wisselweer`);
 - `/opt/wisselweer` (root-eigendom, leesbaar), `/var/lib/wisselweer` (0750 wisselweer), `/etc/wisselweer` (0750 root:wisselweer);
 - maakt `/var/lib/wisselweer/.ssh` (0700, eigendom wisselweer) voor de SFTP-sleutel en known_hosts;
-- installeert uv via de officiële standalone installer in `/usr/local/bin` (vaste versie, overschrijfbaar met `UV_VERSION`; het script roept uv aan via dat vaste pad, ook als `/usr/local/bin` niet in je PATH staat) en haalt Python 3.12 naar `/opt/wisselweer/python`;
+- installeert uv (`uv` en `uvx`) in `/usr/local/bin` uit de release-tarball van GitHub (`uv-<arch>-unknown-linux-gnu.tar.gz` voor x86_64 of aarch64), gecontroleerd met het `.sha256`-bestand van dezelfde release; de versie staat vast in het script en is niet via de omgeving te overschrijven. Het script roept uv aan via dat vaste pad, ook als `/usr/local/bin` niet in je PATH staat en haalt Python 3.12 naar `/opt/wisselweer/python`;
 - `uv sync --frozen --no-dev --no-editable` in `/opt/wisselweer/.venv`;
 - maakt `/etc/wisselweer/wisselweer.env` (0640) alleen als het nog niet bestaat, met `DATA_DIR=/var/lib/wisselweer`, `HOST=127.0.0.1` en een gegenereerde `SECRET_KEY`;
 - installeert de systemd-units en start `wisselweer`.
@@ -67,10 +67,11 @@ Volgorde voor publicatie via SFTP naar een server (met een gechroote SFTP-gebrui
    systemctl start wisselweer-publish.service
    journalctl -u wisselweer-publish -n 30
    ```
-6. **Plannen**: kies **of** de timer **of** de interne planner (`WISSELWEER_PUBLISH_INTERVAL_HOURS`), niet allebei.
+6. **Plannen met de timer** (verplicht voor SFTP):
    ```sh
    systemctl enable --now wisselweer-publish.timer   # elke 6 uur, 5 min over, met willekeurige vertraging
    ```
+   Laat `WISSELWEER_PUBLISH_INTERVAL_HOURS=0` staan. `wisselweer.service` (de internetgerichte webapp) heeft `InaccessiblePaths=-/var/lib/wisselweer/.ssh`: alleen `wisselweer-publish.service` mag de SFTP-sleutel lezen. Publiceren via SFTP vanuit de webapp (de interne planner) werkt daarom niet en de app waarschuwt daarover bij het opstarten (`journalctl -u wisselweer`). Zonder SFTP (alleen lokaal `advice.json` schrijven) mag de interne planner wel.
 
 Zie [publishing.md](publishing.md) voor de beperkte deploy-gebruiker op de doelserver en het oplossen van SFTP-fouten.
 

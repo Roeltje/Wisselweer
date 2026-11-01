@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -20,7 +21,7 @@ from wisselweer.api.routers.v1 import health_router
 from wisselweer.api.routers.v1 import router as v1_router
 from wisselweer.api.routers.vehicles import router as vehicles_router
 from wisselweer.publisher.scheduler import start_scheduler, stop_scheduler
-from wisselweer.settings import Settings, get_settings
+from wisselweer.settings import Settings, get_settings, is_loopback_host
 from wisselweer.storage.errors import InvalidOperation, NotFoundError
 from wisselweer.weather.base import ProviderNotConfigured, ProviderUnavailable, UnknownProvider
 from wisselweer.web import routes as web_routes
@@ -31,8 +32,48 @@ SECURITY_HEADERS = {
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
     "Referrer-Policy": "no-referrer",
-    "Content-Security-Policy": "default-src 'self'; frame-ancestors 'none'; base-uri 'none'",
+    "Content-Security-Policy": (
+        "default-src 'self'; frame-ancestors 'none'; base-uri 'none'; "
+        "form-action 'self'; object-src 'none'"
+    ),
+    "Permissions-Policy": "geolocation=(), camera=(), microphone=()",
 }
+# Alles behalve statische bestanden en de healthcheck mag niet in een (tussen)cache terechtkomen.
+CACHEABLE_PATHS = ("/api/v1/health",)
+CACHEABLE_PREFIXES = ("/static/",)
+
+
+def _key_readable(path: Path | None) -> bool:
+    if path is None:
+        return False
+    try:
+        with open(path, "rb"):
+            return True
+    except OSError:
+        return False
+
+
+def startup_warnings(settings: Settings) -> list[str]:
+    """Configuratie die waarschijnlijk niet werkt of onveilig is; alleen waarschuwen, nooit crashen."""
+    out: list[str] = []
+    if not is_loopback_host(settings.host) and not settings.cookie_secure:
+        out.append(
+            "Server luistert op een niet-loopback adres terwijl WISSELWEER_COOKIE_SECURE=false: "
+            "de sessiecookie gaat dan ook over plain http. Achter een https-proxy hoort "
+            "WISSELWEER_COOKIE_SECURE=true te staan."
+        )
+    if (
+        settings.publish_interval_hours > 0
+        and settings.publish_sftp_host
+        and not _key_readable(settings.publish_sftp_key)
+    ):
+        out.append(
+            "WISSELWEER_PUBLISH_INTERVAL_HOURS staat aan met een SFTP-host, maar de SFTP-sleutel is "
+            "niet leesbaar voor de webapp (bij systemd is .ssh bewust afgeschermd): SFTP-publicatie "
+            "vanuit de webapp zal mislukken. Gebruik de timer wisselweer-publish.timer en zet "
+            "WISSELWEER_PUBLISH_INTERVAL_HOURS=0."
+        )
+    return out
 
 
 def _error(status: int, code: str) -> JSONResponse:
@@ -42,6 +83,8 @@ def _error(status: int, code: str) -> JSONResponse:
 def create_app(settings: Settings | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        for warning in startup_warnings(app.state.settings):
+            log.warning(warning)
         ensure_db(app)  # data_dir aanmaken + migraties bij opstarten
         task = start_scheduler(app.state.settings)
         try:
@@ -113,6 +156,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             response = _error(500, "internal_error")
         for k, v in SECURITY_HEADERS.items():
             response.headers.setdefault(k, v)  # een route mag een eigen CSP zetten (/docs)
+        path = request.url.path
+        if path not in CACHEABLE_PATHS and not path.startswith(CACHEABLE_PREFIXES):
+            response.headers.setdefault("Cache-Control", "no-store")
         return response
 
     install_auth(app, app.state.settings)

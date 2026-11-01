@@ -4,22 +4,13 @@ from __future__ import annotations
 
 import argparse
 import getpass
-import ipaddress
 import logging
 import sys
 
 from wisselweer import __version__
+from wisselweer.logsetup import configure_logging
 
 log = logging.getLogger("wisselweer.cli")
-
-
-def _is_loopback(host: str) -> bool:
-    if host == "localhost":
-        return True
-    try:
-        return ipaddress.ip_address(host).is_loopback
-    except ValueError:
-        return False
 
 
 def _serve() -> int:
@@ -29,15 +20,7 @@ def _serve() -> int:
     from wisselweer.settings import get_settings
 
     settings = get_settings()
-    logging.basicConfig(
-        level=settings.log_level.upper(), format="%(asctime)s %(levelname)s %(name)s %(message)s"
-    )
-    if not _is_loopback(settings.host):
-        log.warning(
-            "Server luistert op %s (niet loopback): gebruik HTTPS (reverse proxy of VPN) en "
-            "zet WISSELWEER_COOKIE_SECURE=true.",
-            settings.host,
-        )
+    configure_logging(settings.log_level)
     uvicorn.run(
         create_app(settings),
         host=settings.host,
@@ -90,9 +73,7 @@ def _publish() -> int:
     from wisselweer.settings import get_settings
 
     settings = get_settings()
-    logging.basicConfig(
-        level=settings.log_level.upper(), format="%(asctime)s %(levelname)s %(name)s %(message)s"
-    )
+    configure_logging(settings.log_level)
     try:
         advice = run_publish(settings)
     except PublishError as exc:

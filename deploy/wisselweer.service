@@ -20,6 +20,9 @@ SyslogIdentifier=wisselweer
 NoNewPrivileges=true
 ProtectSystem=strict
 ReadWritePaths=/var/lib/wisselweer
+# De SFTP-sleutel is alleen voor wisselweer-publish.service; de webapp (internetgericht) mag hem niet lezen.
+# Gevolg: publiceren via SFTP vanuit de webapp (WISSELWEER_PUBLISH_INTERVAL_HOURS) werkt niet; gebruik de timer.
+InaccessiblePaths=-/var/lib/wisselweer/.ssh
 ProtectHome=true
 PrivateTmp=true
 PrivateDevices=true
@@ -29,6 +32,10 @@ ProtectKernelLogs=true
 ProtectControlGroups=true
 ProtectClock=true
 ProtectHostname=true
+# Andere processen en /proc-onderdelen onzichtbaar; geen IPC-objecten laten staan.
+ProtectProc=invisible
+ProcSubset=pid
+RemoveIPC=true
 LockPersonality=true
 RestrictRealtime=true
 RestrictSUIDSGID=true
@@ -36,8 +43,14 @@ RestrictNamespaces=true
 RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
 CapabilityBoundingSet=
 SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+# Een geweigerde syscall geeft EPERM in plaats van het proces te doden (leesbare fout in de journal).
+SystemCallErrorNumber=EPERM
 SystemCallArchitectures=native
 UMask=0027
+# Ruime grenzen voor één beheerder; vangen een op hol geslagen proces af.
+TasksMax=128
+MemoryMax=512M
 
 [Install]
 WantedBy=multi-user.target

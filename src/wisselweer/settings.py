@@ -2,18 +2,31 @@
 
 from __future__ import annotations
 
+import ipaddress
 from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING
+from urllib.parse import urlparse
 
-from pydantic import SecretStr, model_validator
+from pydantic import SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from wisselweer.publisher.national import ReferenceLocation
 
+MIN_SECRET_KEY_LENGTH = 32
+
 if TYPE_CHECKING:
     from wisselweer.publisher.national import NationalConfig
     from wisselweer.weather.registry import ProvidersConfig
+
+
+def is_loopback_host(host: str) -> bool:
+    if host == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
 
 
 class Settings(BaseSettings):
@@ -23,6 +36,8 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
         env_ignore_empty=True,
+        # Foutmeldingen mogen de ingevoerde waarde (secret key, API-keys) niet herhalen.
+        hide_input_in_errors=True,
     )
 
     host: str = "127.0.0.1"
@@ -45,6 +60,8 @@ class Settings(BaseSettings):
     secret_key: SecretStr | None = None
     cookie_secure: bool = False
     log_level: str = "INFO"
+    # /docs (Swagger UI, laadt van een CDN) en /openapi.json; uit = beide routes bestaan niet.
+    enable_docs: bool = True
 
     # --- Publicatie van het landelijke advies (`wisselweer publish`) ---
     publish_dir: Path | None = None  # standaard <data_dir>/public
@@ -61,6 +78,34 @@ class Settings(BaseSettings):
     publish_countries: bool = False
     # Optionele JSON-lijst [{"name": ..., "latitude": ..., "longitude": ...}] i.p.v. de standaard.
     national_locations: list[ReferenceLocation] | None = None
+
+    @field_validator("secret_key")
+    @classmethod
+    def _secret_key_length(cls, value: SecretStr | None) -> SecretStr | None:
+        """Leeg = automatisch genereren (None); anders minimaal 32 tekens. De waarde zelf staat nooit in de fout."""
+        if value is None or value.get_secret_value() == "":
+            return None
+        if len(value.get_secret_value()) < MIN_SECRET_KEY_LENGTH:
+            raise ValueError(
+                f"WISSELWEER_SECRET_KEY moet minimaal {MIN_SECRET_KEY_LENGTH} tekens bevatten "
+                "(of leeg zijn: dan wordt een sleutel gegenereerd)"
+            )
+        return value
+
+    @field_validator("openmeteo_base_url")
+    @classmethod
+    def _https_base_url(cls, value: str) -> str:
+        """De Open-Meteo-URL kan een API-key in de query-string dragen: alleen https (of loopback)."""
+        parts = urlparse(value.strip())
+        host = parts.hostname or ""
+        if parts.scheme == "https" and host:
+            return value.strip()
+        if parts.scheme == "http" and is_loopback_host(host):
+            return value.strip()
+        raise ValueError(
+            "WISSELWEER_OPENMETEO_BASE_URL moet een https://-URL zijn "
+            "(http:// is alleen toegestaan voor localhost of een loopback-adres)"
+        )
 
     @model_validator(mode="after")
     def _default_publish_dir(self) -> Settings:

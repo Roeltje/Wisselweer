@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Update een bestaande native installatie: maakt eerst een back-up, installeert daarna de nieuwe
 # code (zelfde parameters als install.sh) en herstart. Migraties draaien bij het opstarten.
-#   sudo ./deploy/update.sh [pad-of-git-URL [ref]]
+#   ./deploy/update.sh [pad-of-git-URL [ref]]   (uitvoeren als root)
 set -euo pipefail
 
 if [[ $EUID -ne 0 ]]; then
-  echo "Voer dit script uit als root (sudo)." >&2
+  echo "Voer dit script uit als root." >&2
   exit 1
 fi
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

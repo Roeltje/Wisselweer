@@ -43,7 +43,10 @@ LOGIN_WINDOW_SECONDS = 300
 MUTATING_METHODS = {"POST", "PATCH", "PUT", "DELETE"}
 LOGIN_ERROR = "Onjuiste gebruikersnaam of wachtwoord"
 
-_SCRYPT_N, _SCRYPT_R, _SCRYPT_P, _SALT_BYTES, _DKLEN = 2**14, 8, 1, 16, 32
+# Parameters staan in de hash, dus oudere hashes (N=2**14, p=1) blijven verifieerbaar.
+# Geheugen is ~128*N*r = 64 MiB; `maxmem` staat ruim daarboven (ook voor oude hashes).
+_SCRYPT_N, _SCRYPT_R, _SCRYPT_P, _SALT_BYTES, _DKLEN = 2**16, 8, 2, 16, 32
+_SCRYPT_MAXMEM = 256 * 1024 * 1024
 
 
 class AuthError(ValueError):
@@ -59,7 +62,7 @@ def _b64(data: bytes) -> str:
 
 def _scrypt(password: str, salt: bytes, n: int, r: int, p: int, dklen: int) -> bytes:
     return hashlib.scrypt(
-        password.encode("utf-8"), salt=salt, n=n, r=r, p=p, dklen=dklen, maxmem=128 * 1024 * 1024
+        password.encode("utf-8"), salt=salt, n=n, r=r, p=p, dklen=dklen, maxmem=_SCRYPT_MAXMEM
     )
 
 
@@ -90,6 +93,19 @@ def verify_password(password: str, encoded: str) -> bool:
     except (ValueError, TypeError):
         return False
     return hmac.compare_digest(actual, expected)
+
+
+def needs_rehash(encoded: str) -> bool:
+    """True als de hash met andere (oudere) scrypt-parameters is gemaakt dan de huidige."""
+    try:
+        scheme, n, r, p, _salt, _hash = encoded.split("$")
+        return scheme != "scrypt" or (int(n), int(r), int(p)) != (
+            _SCRYPT_N,
+            _SCRYPT_R,
+            _SCRYPT_P,
+        )
+    except ValueError:
+        return True
 
 
 _DUMMY_HASH = hash_password("dummy-password-for-timing")
@@ -364,10 +380,14 @@ def _client_ip(request: Request) -> str:
 
 router = APIRouter(include_in_schema=False)
 
+# Swagger UI komt van de CDN met een vaste versie; de CSP staat alleen dit pad-prefix toe.
+SWAGGER_VERSION = "5.17.14"
+SWAGGER_CDN = f"https://cdn.jsdelivr.net/npm/swagger-ui-dist@{SWAGGER_VERSION}/"
 DOCS_CSP = (
-    "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
-    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
-    "img-src 'self' data: https://fastapi.tiangolo.com; frame-ancestors 'none'; base-uri 'none'"
+    f"default-src 'self'; script-src 'self' 'unsafe-inline' {SWAGGER_CDN}; "
+    f"style-src 'self' 'unsafe-inline' {SWAGGER_CDN}; "
+    "img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; "
+    "form-action 'self'; object-src 'none'"
 )
 
 
@@ -422,6 +442,12 @@ async def login_submit(
             ok = verify_password(password, user.password_hash if user else _DUMMY_HASH)
             if not ok or user is None:
                 user = None
+            elif needs_rehash(user.password_hash):
+                # Geslaagde login met oude parameters: opnieuw hashen (vóór start_session, want
+                # de sessie bevat een vingerafdruk van de hash).
+                user.password_hash = hash_password(password)
+                db.commit()
+                log.info("password_rehashed")
     if user is None:
         limiter.fail(ip)
         log.warning("login_failed")
@@ -439,14 +465,24 @@ async def logout(request: Request) -> Response:
     return RedirectResponse("/login", status_code=303)
 
 
-@router.get("/openapi.json", dependencies=[Depends(require_user)])
+# Alleen aangehangen als `enable_docs` aan staat (WISSELWEER_ENABLE_DOCS).
+docs_router = APIRouter(include_in_schema=False)
+
+
+@docs_router.get("/openapi.json", dependencies=[Depends(require_user)])
 async def openapi_json(request: Request) -> JSONResponse:
     return JSONResponse(request.app.openapi())
 
 
-@router.get("/docs", dependencies=[Depends(require_user_html)])
+@docs_router.get("/docs", dependencies=[Depends(require_user_html)])
 async def swagger_docs() -> HTMLResponse:
-    html = get_swagger_ui_html(openapi_url="/openapi.json", title="Wisselweer API")
+    html = get_swagger_ui_html(
+        openapi_url="/openapi.json",
+        title="Wisselweer API",
+        swagger_js_url=f"{SWAGGER_CDN}swagger-ui-bundle.js",
+        swagger_css_url=f"{SWAGGER_CDN}swagger-ui.css",
+        swagger_favicon_url="/static/favicon.ico",
+    )
     html.headers["Content-Security-Policy"] = DOCS_CSP
     return html
 
@@ -473,3 +509,5 @@ def install_auth(app: FastAPI, settings: Settings) -> None:
         https_only=settings.cookie_secure,
     )
     app.include_router(router)
+    if settings.enable_docs:
+        app.include_router(docs_router)

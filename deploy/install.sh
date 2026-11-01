@@ -1,17 +1,20 @@
 #!/usr/bin/env bash
 # Wisselweer: native installatie op Debian 13 (trixie) en Ubuntu 24.04/26.04 LTS (ook in een LXC).
-# Idempotent; uitvoeren als root:
-#   sudo ./deploy/install.sh                      # broncode uit deze repository
-#   sudo ./deploy/install.sh /pad/naar/wisselweer # of een andere map
-#   sudo ./deploy/install.sh https://host/repo.git [ref]
+# Idempotent; uitvoeren als root (in een LXC is er vaak geen sudo):
+#   ./deploy/install.sh                      # broncode uit deze repository
+#   ./deploy/install.sh /pad/naar/wisselweer # of een andere map
+#   ./deploy/install.sh https://host/repo.git [ref]
 #
 # Keuzes:
-# - uv komt via de officiële standalone installer (vaste versie, naar /usr/local/bin); de
-#   systeem-Python doet er niet toe, uv haalt Python 3.12 naar /opt/wisselweer/python.
+# - uv komt uit de release-tarball van GitHub (vaste versie, gecontroleerd met het .sha256-bestand
+#   van dezelfde release, naar /usr/local/bin); de systeem-Python doet er niet toe, uv haalt
+#   Python 3.12 naar /opt/wisselweer/python.
 # - Opent geen poorten en wijzigt geen firewall. De service luistert op 127.0.0.1.
 set -euo pipefail
 
-UV_VERSION="${UV_VERSION:-0.13.6}"
+# Vast: bewust niet overschrijfbaar via de omgeving. Bij een nieuwe versie hoort ook de uv-versie in
+# .github/workflows/ci.yml mee te gaan.
+readonly UV_VERSION="0.13.6"
 APP_DIR=/opt/wisselweer
 DATA_DIR=/var/lib/wisselweer
 ETC_DIR=/etc/wisselweer
@@ -19,7 +22,7 @@ ENV_FILE="$ETC_DIR/wisselweer.env"
 SVC_USER=wisselweer
 
 if [[ $EUID -ne 0 ]]; then
-  echo "Voer dit script uit als root (sudo)." >&2
+  echo "Voer dit script uit als root." >&2
   exit 1
 fi
 
@@ -54,8 +57,24 @@ UV=/usr/local/bin/uv
 export PATH="/usr/local/bin:$PATH"
 if [[ ! -x "$UV" ]] || [[ "$("$UV" --version | awk '{print $2}')" != "$UV_VERSION" ]]; then
   echo "==> uv $UV_VERSION installeren naar /usr/local/bin"
-  curl -LsSf "https://astral.sh/uv/$UV_VERSION/install.sh" \
-    | env UV_INSTALL_DIR=/usr/local/bin UV_NO_MODIFY_PATH=1 sh
+  case "$(uname -m)" in
+    x86_64) UV_ARCH=x86_64 ;;
+    aarch64 | arm64) UV_ARCH=aarch64 ;;
+    *) echo "Niet-ondersteunde architectuur voor uv: $(uname -m)" >&2; exit 1 ;;
+  esac
+  UV_NAME="uv-$UV_ARCH-unknown-linux-gnu"
+  UV_BASE="https://github.com/astral-sh/uv/releases/download/$UV_VERSION"
+  UV_TMP="$(mktemp -d)"
+  (
+    cd "$UV_TMP"
+    curl --proto '=https' --tlsv1.2 -fsSL -o "$UV_NAME.tar.gz" "$UV_BASE/$UV_NAME.tar.gz"
+    curl --proto '=https' --tlsv1.2 -fsSL -o "$UV_NAME.tar.gz.sha256" "$UV_BASE/$UV_NAME.tar.gz.sha256"
+    # Het .sha256-bestand verwijst naar de bestandsnaam van de tarball (in deze map).
+    sha256sum -c "$UV_NAME.tar.gz.sha256"
+    tar -xzf "$UV_NAME.tar.gz"
+    install -m 0755 -o root -g root "$UV_NAME/uv" "$UV_NAME/uvx" /usr/local/bin/
+  )
+  rm -rf "$UV_TMP"
 fi
 
 echo "==> Broncode naar $APP_DIR"
@@ -121,14 +140,18 @@ $( [[ $NEW_ENV -eq 1 ]] && echo "Nieuw env-bestand met gegenereerde geheime sleu
 
 Volgende stappen:
   1. Pas $ENV_FILE aan (minstens WISSELWEER_CONTACT) en herstart: systemctl restart wisselweer
+     Draait de app achter een https-proxy (bv. Nginx Proxy Manager)? Zet dan ook
+       WISSELWEER_COOKIE_SECURE=true
+     en WISSELWEER_HOST=0.0.0.0 (met poort 8000 beperkt tot het proxy-IP; zie docs/install-lxc.md).
+     Zonder die cookie-instelling gaat de sessiecookie ook over plain http.
   2. Maak de beheerder aan (wachtwoord minimaal 10 tekens; laadt het env-bestand):
        systemd-run --pty --wait --collect -p User=$SVC_USER -p EnvironmentFile=$ENV_FILE \\
          $APP_DIR/.venv/bin/wisselweer create-admin --username <naam>
-     (Commando's als servicegebruiker: runuser -u $SVC_USER -- ... ; sudo is in een LXC vaak niet aanwezig.)
+     (Commando's als servicegebruiker: runuser -u $SVC_USER -- ...)
   3. Publiceren via SFTP: zie docs/install-lxc.md (sleutel maken in $DATA_DIR/.ssh, hostsleutel
      in known_hosts, WISSELWEER_PUBLISH_SFTP_* instellen). Testen:
        systemctl start wisselweer-publish.service; journalctl -u wisselweer-publish -n 30
-     Plannen: OF systemctl enable --now wisselweer-publish.timer
-     OF WISSELWEER_PUBLISH_INTERVAL_HOURS, niet allebei.
+     Plannen (SFTP): systemctl enable --now wisselweer-publish.timer. Gebruik hiervoor niet
+     WISSELWEER_PUBLISH_INTERVAL_HOURS: de webapp heeft geen toegang tot $DATA_DIR/.ssh.
   4. Logs: journalctl -u wisselweer -f
 MSG
