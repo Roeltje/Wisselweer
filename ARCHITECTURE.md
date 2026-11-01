@@ -60,7 +60,7 @@ src/wisselweer/
   settings.py             # pydantic-settings uit env (.env)
   cli.py                  # `wisselweer serve|publish|migrate|create-admin|reset-password|create-api-token|revoke-api-token|backtest`
   backtest.py             # replay van forecast-snapshots (zie docs/backtesting.md)
-branding/                 # logo.svg, logo-mono.svg, favicon.svg, PNG's
+branding/                 # logo.svg, favicon.svg/.ico, icon-app.svg, og-image.svg, PNG's
 deploy/                   # systemd-units, installatiescripts
 Dockerfile  compose.yaml  .env.example
 docs/                     # api.md, providers.md, advice-rules.md, install-*.md, testing.md
@@ -120,4 +120,4 @@ Alle UI-teksten en reden-sleutels via `i18n/locales/*.json`. Onderscheid taal / 
 
 ## 10. Branding
 
-Petrol `#0F4C5C`, donker petrol `#0A3540`, winterblauw `#5BA4CF`, warm oranje `#F28C28`, gebroken wit `#F7F5F0`. Logo: band met profiel, velg en twee wisselpijlen (`branding/logo.svg`). Systeemfonts, `prefers-color-scheme`.
+Petrol `#0F4C5C`, donker petrol `#0A3540`, winterblauw `#5BA4CF`, warm oranje `#F28C28`, gebroken wit `#F7F5F0`. Logo: band met twee kwartpijlen, oranje (12 naar 3 uur) en blauw (6 naar 9 uur) (`branding/logo.svg`); de band wordt licht in donkere modus. Systeemfonts, `prefers-color-scheme`.
