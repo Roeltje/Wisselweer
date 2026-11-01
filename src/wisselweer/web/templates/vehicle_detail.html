@@ -2,6 +2,7 @@
 {% from "_macros.html" import icon, tire_icon, badge, warnings, field, csrf with context %}
 {% set adv = card.advice %}
 {% block title %}{{ v.name }} · Wisselweer{% endblock %}
+{% block head %}<script src="/static/photo.js?v={{ static_v }}" defer></script>{% endblock %}
 {% block content %}
 <nav class="crumbs" aria-label="{{ t('nav.breadcrumb') }}"><a href="/">{{ t('nav.dashboard') }}</a> <span aria-hidden="true">/</span> <span>{{ v.name }}</span></nav>
 <div class="page-head">
@@ -14,6 +15,12 @@
     <a class="btn btn-danger-quiet" href="/vehicles/{{ v.id }}/delete">{{ t('action.delete') }}</a>
   </div>
 </div>
+
+{% if v.has_photo %}
+<figure class="vehicle-photo">
+  <img src="/vehicles/{{ v.id }}/photo?v={{ v.photo_version }}" width="1200" height="675" alt="{{ v.name }}" decoding="async">
+</figure>
+{% endif %}
 
 <section class="card" aria-labelledby="sec-advice">
   <h2 id="sec-advice">{{ t('vehicle.advice') }}</h2>
@@ -65,6 +72,28 @@
     <div><dt>{{ t('method.label') }}</dt><dd>{{ method_text }}{% if preferred %} · {{ preferred.name }}{% endif %} · {{ t('method.prep_days_value', days=v.prep_days) }} <a href="/vehicles/{{ v.id }}/method">{{ t('action.edit') }}</a></dd></div>
     {% if v.notes %}<div><dt>{{ t('vehicle.notes') }}</dt><dd>{{ v.notes }}</dd></div>{% endif %}
   </dl>
+</section>
+
+<section class="card" id="photo" aria-labelledby="sec-photo">
+  <h2 id="sec-photo">{{ t('photo.title') }}</h2>
+  <form method="post" action="/vehicles/{{ v.id }}/photo" enctype="multipart/form-data" class="stack" data-photo-form
+    data-msg-working="{{ t('photo.working') }}" data-msg-ready="{{ t('photo.ready') }}" data-msg-failed="{{ t('photo.failed') }}">
+    {{ csrf() }}
+    <div class="field">
+      <label for="f-photo">{{ t('photo.replace' if v.has_photo else 'photo.add') }}</label>
+      <p class="hint" id="h-photo">{{ t('photo.help') }}</p>
+      <input id="f-photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required aria-describedby="h-photo" data-photo-input>
+    </div>
+    <div class="photo-preview" data-photo-preview hidden></div>
+    <p class="hint" role="status" aria-live="polite" data-photo-status></p>
+    <div class="actions"><button class="btn btn-primary" type="submit" data-photo-submit>{{ t('photo.upload') }}</button></div>
+  </form>
+  {% if v.has_photo %}
+  <form method="post" action="/vehicles/{{ v.id }}/photo/delete" data-confirm="{{ t('photo.delete_confirm') }}" class="actions photo-delete">
+    {{ csrf() }}
+    <button class="btn btn-danger-quiet" type="submit">{{ t('photo.delete') }}</button>
+  </form>
+  {% endif %}
 </section>
 
 <section class="card" id="sets" aria-labelledby="sec-sets">

@@ -6,6 +6,7 @@ import json
 
 import pytest
 
+from tests.fixtures.images import make_jpeg_with_exif
 from tests.integration.conftest import vehicle_in
 from tests.unit.publisher.helpers import COLD, uniform
 from wisselweer.garages.schemas import GarageIn
@@ -66,6 +67,36 @@ def test_public_json_contains_no_private_data(tmp_path):
     ):
         assert secret not in raw
     assert "latitude" not in raw and "longitude" not in raw and "52.0907" not in raw
+    assert PublicAdvice.model_validate_json(raw) == advice
+
+
+def test_vehicle_photo_is_never_published(tmp_path):
+    from wisselweer.storage.db import make_engine, make_session_factory, migrate, session_scope
+    from wisselweer.vehicles.service import get_photo_name, set_photo
+
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    url = f"sqlite:///{data_dir / 'wisselweer.db'}"
+    migrate(url)
+    factory = make_session_factory(make_engine(url))
+    with session_scope(factory) as s:
+        v = create_vehicle(s, vehicle_in(name="Geheime Testauto"))
+        set_photo(s, v.id, make_jpeg_with_exif(), data_dir / "photos")
+    with session_scope(factory) as s:
+        name = get_photo_name(s, v.id)
+    assert name and (data_dir / "photos" / name).is_file()
+
+    settings = Settings(_env_file=None, data_dir=data_dir, publish_dir=tmp_path / "pub")
+    advice = run_publish(settings, forecast_service=uniform(COLD))
+    raw = (tmp_path / "pub" / "advice.json").read_text(encoding="utf-8")
+
+    # Alleen advice.json in de publicatiemap; de foto's staan ernaast en worden niet gekopieerd.
+    assert sorted(p.name for p in (tmp_path / "pub").iterdir()) == ["advice.json"]
+    assert not settings.photos_dir.is_relative_to(settings.publish_dir)
+    assert set(json.loads(raw)) == CONTRACT_KEYS
+    assert not [f for f in PublicAdvice.model_fields if "photo" in f]
+    for secret in (name, name[:8], "photo", ".jpg", "Geheime Testauto"):
+        assert secret not in raw, secret
     assert PublicAdvice.model_validate_json(raw) == advice
 
 

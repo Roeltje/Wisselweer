@@ -103,6 +103,8 @@ class Vehicle(Base):
     countries_of_use: Mapped[list[str]] = mapped_column(sa.JSON, default=lambda: ["NL"])
     # Gereserveerd voor een toekomstige kentekenlookup; nu ongebruikt.
     plate_lookup_data: Mapped[dict[str, Any] | None] = mapped_column(sa.JSON)
+    # Alleen de bestandsnaam (`<32 hex>.<webp|jpg|png>`) in `<data_dir>/photos/`, nooit een pad.
+    photo: Mapped[str | None] = mapped_column(sa.String(64))
     created_at: Mapped[datetime] = mapped_column(UtcDateTime, default=_now)
     updated_at: Mapped[datetime] = mapped_column(UtcDateTime, default=_now)
 

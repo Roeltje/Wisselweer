@@ -40,7 +40,15 @@ docker compose cp wisselweer:/data/backup.db ./wisselweer-$(date +%F).db
 docker compose exec wisselweer rm /data/backup.db
 ```
 
-Bewaar de back-up en je `.env` buiten de host en versleuteld: ze bevatten persoonsgegevens en geheimen. Herstellen: stop de container, kopieer het bestand terug naar `/data/wisselweer.db` (bijv. met een tijdelijke container die het volume mount) en start opnieuw.
+Voertuigfoto's staan als bestanden in `/data/photos/` (dus in hetzelfde volume) en horen ook in de back-up:
+
+```sh
+docker compose exec wisselweer tar -C /data -czf /tmp/photos.tar.gz photos
+docker compose cp wisselweer:/tmp/photos.tar.gz ./wisselweer-$(date +%F)-photos.tar.gz
+docker compose exec wisselweer rm /tmp/photos.tar.gz
+```
+
+Bewaar de back-up en je `.env` buiten de host en versleuteld: ze bevatten persoonsgegevens en geheimen. Herstellen: stop de container, kopieer het databasebestand terug naar `/data/wisselweer.db` en pak de fotomap uit in `/data` (bijv. met een tijdelijke container die het volume mount; de bestanden horen UID 10001 te zijn) en start opnieuw.
 
 ## Toegang op afstand
 

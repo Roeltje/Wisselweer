@@ -218,10 +218,12 @@ Response (profiel ingekort):
   "timezone": "Europe/Amsterdam",
   "driving_profile": {"kind": "commute", "slots": ["..."]},
   "change_method": "self", "preferred_garage_id": null, "prep_days": 7,
-  "notes": null, "countries_of_use": ["NL"], "plate_lookup_data": null,
+  "notes": null, "countries_of_use": ["NL"], "plate_lookup_data": null, "has_photo": false,
   "created_at": "2026-10-31T16:53:35Z", "updated_at": "2026-10-31T16:53:35Z"
 }
 ```
+
+`has_photo` zegt of het voertuig een foto heeft. Foto's worden alleen in de webinterface beheerd (uploaden, vervangen, verwijderen); de API heeft er geen eindpunten voor en laat de bestandsnaam niet zien. Verwijderen van het voertuig (`DELETE`) verwijdert ook de foto.
 
 Voertuigen met (afgerond op 4 decimalen) dezelfde coördinaten delen één locatie en dus één forecast-fetch.
 

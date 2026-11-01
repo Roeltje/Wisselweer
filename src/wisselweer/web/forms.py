@@ -12,7 +12,7 @@ from typing import Any, TypeVar
 
 from fastapi import Request
 from pydantic import ValidationError
-from starlette.datastructures import FormData
+from starlette.datastructures import FormData, UploadFile
 
 E = TypeVar("E", bound=Enum)
 Translate = Callable[..., str]
@@ -63,6 +63,18 @@ class Form:
 
 async def read_form(request: Request) -> Form:
     return Form(await request.form())
+
+
+async def read_upload(request: Request, name: str, limit: int) -> bytes | None:
+    """Inhoud van het bestandsveld `name`, hooguit `limit + 1` bytes (zodat te groot te zien is).
+
+    None als er geen bestand is gekozen. De bestandsnaam en het Content-Type van de browser worden
+    bewust niet gebruikt.
+    """
+    item = (await request.form()).get(name)
+    if not isinstance(item, UploadFile):
+        return None
+    return await item.read(limit + 1) or None
 
 
 class Parser:

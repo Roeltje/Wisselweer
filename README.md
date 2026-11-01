@@ -18,6 +18,7 @@ Wisselweer adviseert wanneer je van zomer- naar winterbanden wisselt (en terug),
 
 - Wisseladvies per voertuig: richting volgt de gemonteerde set, met waarschuwingen (vorst, sneeuw, gladheid), datum of periode, stabiliteit (hysterese) en "plan een afspraak uiterlijk"-datum.
 - Meerdere voertuigen en bandensets, profieldiepte- en kilometerregistratie, wisselhistorie. Een set kan uit groepen banden bestaan (eigen DOT-code, aankoopdatum, merk en 3PMSF-symbool per groep; leeftijdswaarschuwing uit de DOT-code, banden per groep vervangen), met merk- en typesuggesties.
+- Eén foto per voertuig (alleen in de privé-webinterface): wordt in de browser verkleind, EXIF/GPS wordt verwijderd en de foto komt nooit in `advice.json` of op een publieke site.
 - Garages en afspraken; een `mailto:`-link voor de garage (de app verstuurt zelf niets).
 - REST API (`/api/v1`) met sessie of Bearer-token, bijvoorbeeld voor Home Assistant: [docs/api.md](docs/api.md).
 - Kilometerstand automatisch uit Home Assistant (elk merk met een odometer-sensor): [docs/home-assistant.md](docs/home-assistant.md).

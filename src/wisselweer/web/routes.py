@@ -52,6 +52,7 @@ from wisselweer.tires.schemas import (
     TireSetPatch,
     TreadMeasurementIn,
 )
+from wisselweer.vehicles import photos
 from wisselweer.vehicles import service as vehicle_svc
 from wisselweer.vehicles.schemas import LocationIn, VehicleIn, VehicleOut, VehiclePatch
 from wisselweer.weather.base import ProviderError
@@ -65,6 +66,7 @@ from wisselweer.web.forms import (
     parse_local_datetime,
     parse_time,
     read_form,
+    read_upload,
 )
 from wisselweer.web.templating import templates
 
@@ -77,6 +79,13 @@ router = APIRouter(dependencies=[Depends(require_user_html)], include_in_schema=
 
 Factory = Annotated[sessionmaker[Session], Depends(get_session_factory)]
 FormDep = Annotated[Form, Depends(read_form)]
+
+
+async def read_photo_upload(request: Request) -> bytes | None:
+    return await read_upload(request, "photo", photos.MAX_BYTES)
+
+
+PhotoDep = Annotated[bytes | None, Depends(read_photo_upload)]
 Forecasts = Annotated[Any, Depends(get_forecast_service)]
 Advisor = Annotated[Any, Depends(get_advice_service)]
 
@@ -537,9 +546,64 @@ def vehicle_delete_confirm(request: Request, vehicle_id: int, factory: Factory) 
 def vehicle_delete(request: Request, vehicle_id: int, form: FormDep, factory: Factory) -> Response:
     tr = views.make_tr(current_locale(request))
     with session_scope(factory) as s:
-        vehicle_svc.delete_vehicle(s, vehicle_id)
+        vehicle_svc.delete_vehicle(s, vehicle_id, request.app.state.settings.photos_dir)
     flash(request, tr("flash.vehicle_deleted"))
     return redirect("/")
+
+
+@router.get("/vehicles/{vehicle_id}/photo")
+def vehicle_photo(request: Request, vehicle_id: int, factory: Factory) -> Response:
+    """Serveert de foto alleen aan ingelogde gebruikers; de opgeslagen naam wordt gevalideerd."""
+    with session_scope(factory) as s:
+        name = vehicle_svc.get_photo_name(s, vehicle_id)
+    path = photos.photo_path(request.app.state.settings.photos_dir, name)
+    try:
+        data = path.read_bytes() if path is not None else None
+    except OSError:
+        data = None
+    if path is None or data is None:
+        raise NotFoundError("foto niet gevonden")
+    return Response(
+        data,
+        media_type=photos.CONTENT_TYPES[path.suffix],
+        headers={
+            "Content-Disposition": "inline",
+            "X-Content-Type-Options": "nosniff",
+            "Content-Security-Policy": "default-src 'none'; sandbox",
+            # De URL bevat `?v=` met het begin van de bestandsnaam: een nieuwe foto is een nieuwe URL.
+            "Cache-Control": "private, max-age=31536000, immutable",
+        },
+    )
+
+
+@router.post("/vehicles/{vehicle_id}/photo")
+def vehicle_photo_upload(
+    request: Request, vehicle_id: int, upload: PhotoDep, factory: Factory
+) -> Response:
+    tr = views.make_tr(current_locale(request))
+    try:
+        if upload is None:
+            raise photos.PhotoError("missing")
+        with session_scope(factory) as s:
+            vehicle_svc.set_photo(s, vehicle_id, upload, request.app.state.settings.photos_dir)
+        flash(request, tr("flash.photo_saved"))
+    except photos.PhotoError as exc:
+        flash(request, tr(f"photo.error.{exc.code}"), "error")
+    except OSError as exc:
+        log.warning("photo_store_failed type=%s", type(exc).__name__)
+        flash(request, tr("photo.error.store"), "error")
+    return redirect(f"/vehicles/{vehicle_id}#photo")
+
+
+@router.post("/vehicles/{vehicle_id}/photo/delete")
+def vehicle_photo_delete(
+    request: Request, vehicle_id: int, form: FormDep, factory: Factory
+) -> Response:
+    tr = views.make_tr(current_locale(request))
+    with session_scope(factory) as s:
+        vehicle_svc.clear_photo(s, vehicle_id, request.app.state.settings.photos_dir)
+    flash(request, tr("flash.photo_deleted"))
+    return redirect(f"/vehicles/{vehicle_id}#photo")
 
 
 @router.get("/vehicles/{vehicle_id}/location")

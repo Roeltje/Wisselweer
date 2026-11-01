@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.orm import Session
 
 from wisselweer.api.deps import get_advice_service, get_forecast_service, get_session
@@ -44,8 +44,8 @@ def update_vehicle(vehicle_id: int, body: VehiclePatch, session: SessionDep) -> 
 
 
 @router.delete("/vehicles/{vehicle_id}", status_code=204)
-def delete_vehicle(vehicle_id: int, session: SessionDep) -> Response:
-    service.delete_vehicle(session, vehicle_id)
+def delete_vehicle(vehicle_id: int, session: SessionDep, request: Request) -> Response:
+    service.delete_vehicle(session, vehicle_id, request.app.state.settings.photos_dir)
     return Response(status_code=204)
 
 

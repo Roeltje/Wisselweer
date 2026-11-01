@@ -20,6 +20,12 @@ if [[ -f "$DATA_DIR/wisselweer.db" ]]; then
   chmod 0600 "$BACKUP_DIR/wisselweer-$STAMP.db"
   echo "Database-back-up: $BACKUP_DIR/wisselweer-$STAMP.db"
 fi
+if [[ -d "$DATA_DIR/photos" ]]; then
+  # Voertuigfoto's staan als bestanden naast de database en horen bij de back-up.
+  tar -C "$DATA_DIR" -czf "$BACKUP_DIR/wisselweer-$STAMP-photos.tar.gz" photos
+  chmod 0600 "$BACKUP_DIR/wisselweer-$STAMP-photos.tar.gz"
+  echo "Foto-back-up: $BACKUP_DIR/wisselweer-$STAMP-photos.tar.gz"
+fi
 if [[ -f /etc/wisselweer/wisselweer.env ]]; then
   install -m 0600 /etc/wisselweer/wisselweer.env "$BACKUP_DIR/wisselweer-$STAMP.env"
 fi
