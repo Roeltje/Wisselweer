@@ -162,5 +162,381 @@
     "attribution": "Weerdata: MET Norway (CC BY 4.0)",
     "license_url": "https://api.met.no/doc/License"
   },
-  "rules_version": "0.1.0"
+  "rules_version": "0.1.0",
+  "countries": [
+    {
+      "code": "DE",
+      "name": "Duitsland",
+      "rule_types": [
+        "situational"
+      ],
+      "period_label": null,
+      "in_period": null,
+      "conditions_text": "Bij ijzel, sneeuwgladheid, sneeuwmodder, ijsgladheid of rijpgladheid. Er is geen vaste periode.",
+      "tires_text": "Winterbanden met het 3PMSF-symbool (alpine-symbool) op alle wielen. Banden met alleen M+S tellen niet meer mee; de overgangsregeling liep af op 30 september 2024. All-season banden met 3PMSF zijn toegestaan.",
+      "min_tread_mm": 1.6,
+      "alternatives_text": "Sneeuwkettingen alleen waar een rond blauw bord ze verplicht stelt, op (bijna) met sneeuw of ijs bedekte weg, maximaal 50 km/u. Sneeuwsokken (EN 16662-1) zijn toegestaan waar kettingen verplicht zijn.",
+      "notes_text": "De ANWB-pagina is op het punt van M+S-banden niet consistent; hier is de strengste lezing aangehouden. Het wettelijke minimum is 1,6 mm, 4 mm wordt aangeraden. Spijkerbanden zijn verboden. Bij een ongeval kan een verzekeraar uitkering korten of kan medeschuld worden aangevoerd. De wettekst (StVO) en de ADAC zijn niet rechtstreeks geraadpleegd.",
+      "sources": [
+        {
+          "title": "ANWB: winterbanden in Duitsland",
+          "url": "https://www.anwb.nl/auto/banden/winterbanden/winterbanden-in-duitsland"
+        },
+        {
+          "title": "auto motor und sport: situatieve winterbandenplicht in Duitsland",
+          "url": "https://www.auto-motor-und-sport.de/verkehr/situative-winterreifenpflicht-in-deutschland-alle-infos-v3/"
+        }
+      ],
+      "checked_on": "2026-11-01",
+      "confidence": "high",
+      "weather": {
+        "status": "frost_possible",
+        "partial": false,
+        "locations": [
+          {
+            "name": "Hamburg",
+            "mountain": false,
+            "frost": true,
+            "snow": false,
+            "icy": false
+          },
+          {
+            "name": "Essen (Ruhrgebied)",
+            "mountain": false,
+            "frost": true,
+            "snow": false,
+            "icy": false
+          },
+          {
+            "name": "München",
+            "mountain": false,
+            "frost": true,
+            "snow": false,
+            "icy": false
+          },
+          {
+            "name": "Winterberg (Sauerland)",
+            "mountain": true,
+            "frost": true,
+            "snow": false,
+            "icy": false
+          },
+          {
+            "name": "Garmisch-Partenkirchen",
+            "mountain": true,
+            "frost": true,
+            "snow": false,
+            "icy": false
+          },
+          {
+            "name": "Feldberg (Zwarte Woud)",
+            "mountain": true,
+            "frost": true,
+            "snow": false,
+            "icy": false
+          }
+        ],
+        "window_hours": 72
+      }
+    },
+    {
+      "code": "AT",
+      "name": "Oostenrijk",
+      "rule_types": [
+        "period",
+        "situational",
+        "area_or_signage"
+      ],
+      "period_label": "1 november – 15 april",
+      "in_period": true,
+      "conditions_text": "Tussen 1 november en 15 april bij sneeuw, sneeuwmodder of ijs (volgens de ÖAMTC ook bij nat wegdek dat kan bevriezen). Buiten die periode kunnen borden of verordeningen in berggebied winteruitrusting vereisen.",
+      "tires_text": "Winterbanden op alle wielen: M+S of 3PMSF. Het minimale profiel is 4 mm (radiaalbanden) of 5 mm (diagonaalbanden); met minder profiel geldt de band als zomerband. All-season banden zijn toegestaan.",
+      "min_tread_mm": 4.0,
+      "alternatives_text": "Sneeuwkettingen op de aangedreven wielen, verplicht waar een rond blauw bord dat aangeeft en op (bijna) volledig bedekte weg; maximaal 50 km/u. Sneeuwsokken gelden als aanrijhulp en zijn geen volwaardig alternatief voor winterbanden.",
+      "notes_text": "Spijkerbanden zijn toegestaan van 1 oktober tot 31 mei. Bij een ongeval kan medeschuld worden aangevoerd en kan de verzekeraar korten of regres nemen.",
+      "sources": [
+        {
+          "title": "ÖAMTC: winteruitrustingsplicht, welke bepalingen gelden",
+          "url": "https://www.oeamtc.at/thema/vorschriften-strafen/winterausruestungspflicht-welche-bestimmungen-gelten-16186948"
+        },
+        {
+          "title": "ANWB: winterbanden in Oostenrijk",
+          "url": "https://www.anwb.nl/auto/banden/winterbanden/winterbanden-in-oostenrijk"
+        }
+      ],
+      "checked_on": "2026-11-01",
+      "confidence": "high",
+      "weather": {
+        "status": "frost_possible",
+        "partial": false,
+        "locations": [
+          {
+            "name": "Wenen",
+            "mountain": false,
+            "frost": true,
+            "snow": false,
+            "icy": false
+          },
+          {
+            "name": "Salzburg",
+            "mountain": false,
+            "frost": true,
+            "snow": false,
+            "icy": false
+          },
+          {
+            "name": "Innsbruck",
+            "mountain": false,
+            "frost": true,
+            "snow": false,
+            "icy": false
+          },
+          {
+            "name": "Zell am See",
+            "mountain": true,
+            "frost": true,
+            "snow": false,
+            "icy": false
+          },
+          {
+            "name": "Ischgl",
+            "mountain": true,
+            "frost": true,
+            "snow": false,
+            "icy": false
+          },
+          {
+            "name": "Brennerpas",
+            "mountain": true,
+            "frost": true,
+            "snow": false,
+            "icy": false
+          }
+        ],
+        "window_hours": 72
+      }
+    },
+    {
+      "code": "FR",
+      "name": "Frankrijk",
+      "rule_types": [
+        "period",
+        "area_or_signage"
+      ],
+      "period_label": "1 november – 31 maart",
+      "in_period": true,
+      "conditions_text": "Tussen 1 november en 31 maart op wegen in aangewezen gemeenten in bergdepartementen (Loi Montagne, ongeveer 34 departementen), herkenbaar aan borden bij het begin en einde van de zone. In die zones geldt de uitrustingsplicht ongeacht het weer.",
+      "tires_text": "Winterbanden met het 3PMSF-symbool op alle wielen. Banden met alleen M+S zijn alleen nog toegestaan tot en met 1 november 2024.",
+      "min_tread_mm": null,
+      "alternatives_text": "Metalen kettingen voor minimaal twee aangedreven wielen aan boord. Sneeuwsokken tellen volgens het ministerie niet altijd als uitrusting aan boord; de ANWB noemt ze wel toegestaan als kettingen gemonteerd moeten worden (rond blauw bord). Kettingen alleen op sneeuw of ijs, maximaal 50 km/u.",
+      "notes_text": "Onzeker: of de plicht in 2026-27 daadwerkelijk wordt gehandhaafd; bronnen lopen uiteen en de wetgeving is vertraagd. Politie kan wel preventief terugsturen. De officiële pagina van Sécurité routière was niet te raadplegen; de datums komen uit zoekresultaten en de ANWB. Een claim over 3,5 mm profiel is niet bevestigd en niet overgenomen.",
+      "sources": [
+        {
+          "title": "ANWB: winterbanden in Frankrijk",
+          "url": "https://www.anwb.nl/auto/banden/winterbanden/winterbanden-in-frankrijk"
+        },
+        {
+          "title": "Sécurité routière: nieuwe regels voor winteruitrusting",
+          "url": "https://www.securite-routiere.gouv.fr/chacun-son-mode-de-deplacement/dangers-de-la-route-en-voiture/equipement-de-la-voiture/nouveaux"
+        }
+      ],
+      "checked_on": "2026-11-01",
+      "confidence": "medium",
+      "weather": null
+    },
+    {
+      "code": "CH",
+      "name": "Zwitserland",
+      "rule_types": [
+        "none",
+        "area_or_signage"
+      ],
+      "period_label": null,
+      "in_period": null,
+      "conditions_text": "Er is geen wettelijke winterbandenplicht. Waar een rond blauw bord (wit wiel met ketting) staat, zijn sneeuwkettingen verplicht op sneeuw of ijs.",
+      "tires_text": "Geen winterbanden verplicht, maar zomerbanden op een winterse weg kunnen betekenen dat de auto niet als verkeersveilig geldt. Bij een ongeval kan dat gevolgen hebben voor aansprakelijkheid en verzekering.",
+      "min_tread_mm": 1.6,
+      "alternatives_text": "Kettingen waar het bord dat verplicht. Textielkettingen of sneeuwsokken alleen met EN 16662-1:2020 of een erkend Zwitsers certificaat.",
+      "notes_text": "Bronnen verschillen over het precieze wetsartikel, dat daarom niet wordt genoemd. 4 mm profiel wordt aangeraden. Spijkerbanden zijn toegestaan van 1 november tot 30 april (maximaal 80 km/u). De TCS-site en de wettekst zijn niet geraadpleegd.",
+      "sources": [
+        {
+          "title": "ANWB: winterbanden in Zwitserland",
+          "url": "https://www.anwb.nl/auto/banden/winterbanden/winterbanden-in-zwitserland"
+        },
+        {
+          "title": "Le News: winter tyre rules in Switzerland and its neighbours",
+          "url": "https://lenews.ch/2024/11/09/winter-tyre-rules-in-switzerland-and-its-neighbours/"
+        }
+      ],
+      "checked_on": "2026-11-01",
+      "confidence": "medium",
+      "weather": null
+    },
+    {
+      "code": "IT",
+      "name": "Italië",
+      "rule_types": [
+        "area_or_signage",
+        "period"
+      ],
+      "period_label": "15 november – 15 april",
+      "in_period": false,
+      "conditions_text": "Geen landelijke plicht. Wegbeheerders en regio's stellen de plicht in via een verordening op aangewezen wegen met borden; richtlijn is het venster 15 november tot 15 april, lokaal te verschuiven. Op die wegen geldt uitrusting aan boord ook zonder sneeuw.",
+      "tires_text": "Winterbanden (M+S of 3PMSF) op alle vier de wielen. Er gelden snelheidsindexregels voor winterbanden.",
+      "min_tread_mm": null,
+      "alternatives_text": "Sneeuwkettingen of sneeuwsokken (UNI EN 16662-1) voor de aangedreven wielen aan boord.",
+      "notes_text": "Het venster is een richtlijn en per weg of regio anders. Valle d'Aosta: 15 oktober tot 15 april. Zuid-Tirol en de A22 (Brennero, tot Affi en Bolzano): 15 november tot 15 april. Sardinië zou 1 december tot 15 maart hebben (niet geverifieerd); Trentino niet bevestigd. Een profielminimum van 4 mm is niet bevestigd. Controleer de borden en de verordening van de wegbeheerder.",
+      "sources": [
+        {
+          "title": "ANWB: winterbanden in Italië",
+          "url": "https://www.anwb.nl/auto/banden/winterbanden/winterbanden-in-italie"
+        },
+        {
+          "title": "Sicurauto: cambio gomme invernali 2026-2027",
+          "url": "https://www.sicurauto.it/news/codice-della-strada/cambio-gomme-invernali-2026-2027-quando-e-come-farlo/"
+        }
+      ],
+      "checked_on": "2026-11-01",
+      "confidence": "medium",
+      "weather": null
+    },
+    {
+      "code": "BE",
+      "name": "België",
+      "rule_types": [
+        "none"
+      ],
+      "period_label": null,
+      "in_period": null,
+      "conditions_text": null,
+      "tires_text": "Winterbanden zijn in België nooit verplicht, maar wel aanbevolen bij winterweer, vooral in de Ardennen.",
+      "min_tread_mm": 1.6,
+      "alternatives_text": "Kettingen alleen op sneeuw of ijs.",
+      "notes_text": "4 mm profiel wordt aangeraden. Winterbanden met een lagere snelheidsindex dan de originele band mogen alleen van 1 oktober tot 30 april, met een sticker in zicht. Spijkerbanden zijn verboden. In landen waar winterbanden wel verplicht zijn kan dat bij een ongeval gevolgen hebben voor de verzekering.",
+      "sources": [
+        {
+          "title": "Touring: winterbanden zijn nooit verplicht",
+          "url": "https://www.touring.be/nl/node/5354"
+        },
+        {
+          "title": "ANWB: winterbanden in België",
+          "url": "https://www.anwb.nl/auto/banden/winterbanden/winterbanden-in-belgie"
+        }
+      ],
+      "checked_on": "2026-11-01",
+      "confidence": "high",
+      "weather": null
+    },
+    {
+      "code": "LU",
+      "name": "Luxemburg",
+      "rule_types": [
+        "situational"
+      ],
+      "period_label": null,
+      "in_period": null,
+      "conditions_text": "Bij zwartijs, aangereden of smeltende sneeuw, ijs of rijp. Er is geen vaste periode. De plicht geldt ongeacht het land van kentekening.",
+      "tires_text": "Winterbanden op alle wielen. De officiële bron noemt M+S en het alpine-symbool; de ANWB noemt M+S en/of 3PMSF. Een gemengde set (twee zomer- en twee winterbanden) is niet toegestaan.",
+      "min_tread_mm": 1.6,
+      "alternatives_text": null,
+      "notes_text": "Het profielminimum staat niet op de officiële pagina; 1,6 mm komt van de ANWB (4 mm wordt aangeraden). De officiële pagina (guichet.lu) is voor het laatst gewijzigd in 2021. Spijkerbanden zijn onder voorwaarden toegestaan van 1 december tot 31 maart.",
+      "sources": [
+        {
+          "title": "Guichet.lu: winterbanden (pneus hiver)",
+          "url": "https://guichet.public.lu/fr/citoyens/transport/transports-individuels/vehicule-motorise/controle-technique-pneumatiques/pneus-hiver.html"
+        },
+        {
+          "title": "ANWB: winterbanden in Luxemburg",
+          "url": "https://www.anwb.nl/auto/banden/winterbanden/winterbanden-in-luxemburg"
+        }
+      ],
+      "checked_on": "2026-11-01",
+      "confidence": "high",
+      "weather": {
+        "status": "frost_possible",
+        "partial": false,
+        "locations": [
+          {
+            "name": "Luxemburg-stad",
+            "mountain": false,
+            "frost": true,
+            "snow": false,
+            "icy": false
+          },
+          {
+            "name": "Clervaux (Ösling)",
+            "mountain": false,
+            "frost": true,
+            "snow": false,
+            "icy": false
+          }
+        ],
+        "window_hours": 72
+      }
+    },
+    {
+      "code": "CZ",
+      "name": "Tsjechië",
+      "rule_types": [
+        "period",
+        "situational",
+        "area_or_signage"
+      ],
+      "period_label": "1 november – 31 maart",
+      "in_period": true,
+      "conditions_text": "Tussen 1 november en 31 maart bij sneeuw, ijs of rijp, of als die redelijkerwijs te verwachten zijn. Op wegen met bord C15a (zimní výbava, auto met sneeuwvlok) geldt de plicht ongeacht het weer, ook buiten die periode.",
+      "tires_text": "Winterbanden op alle wielen: M+S of 3PMSF. Het minimale profiel is 4 mm.",
+      "min_tread_mm": 4.0,
+      "alternatives_text": "Sneeuwkettingen waar een rond blauw bord ze verplicht stelt, op (bijna) bedekte weg, maximaal 50 km/u. Sneeuwsokken zijn toegestaan.",
+      "notes_text": "De ANWB noemt aanvullend een temperatuurgrens van 4 graden en kettingen aan boord; de politiebron noemt dat niet, daarom is het niet als regel overgenomen. Spijkerbanden zijn verboden. De politiepagina is niet zelf opgehaald (alleen via zoekresultaat).",
+      "sources": [
+        {
+          "title": "ANWB: winterbanden in Tsjechië",
+          "url": "https://www.anwb.nl/auto/banden/winterbanden/winterbanden-in-tsjechie"
+        },
+        {
+          "title": "Politie Tsjechië: verplichting winterbanden",
+          "url": "https://policie.gov.cz/clanek/pripominame-povinnost-pouzit-zimni-pneumatiky.aspx"
+        }
+      ],
+      "checked_on": "2026-11-01",
+      "confidence": "medium",
+      "weather": {
+        "status": "frost_possible",
+        "partial": false,
+        "locations": [
+          {
+            "name": "Praag",
+            "mountain": false,
+            "frost": true,
+            "snow": false,
+            "icy": false
+          },
+          {
+            "name": "Brno",
+            "mountain": false,
+            "frost": true,
+            "snow": false,
+            "icy": false
+          },
+          {
+            "name": "Špindlerův Mlýn",
+            "mountain": true,
+            "frost": true,
+            "snow": false,
+            "icy": false
+          },
+          {
+            "name": "Železná Ruda (Šumava)",
+            "mountain": true,
+            "frost": true,
+            "snow": false,
+            "icy": false
+          }
+        ],
+        "window_hours": 72
+      }
+    }
+  ],
+  "countries_disclaimer": "Indicatie op basis van openbare bronnen en een weersvoorspelling; dit is geen juridisch advies. Of een winterbandenplicht geldt hangt af van de werkelijke weg- en weersomstandigheden ter plaatse, niet van een voorspelling. Regels kunnen wijzigen: controleer vóór vertrek de officiële bron of de ANWB. Sancties en bedragen zijn bewust niet opgenomen. Laatst gecontroleerd: 1 november 2026."
 }

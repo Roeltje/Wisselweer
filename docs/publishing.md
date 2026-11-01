@@ -16,6 +16,8 @@
 
 **Alle drempels (75%, minimaal 4 regio's, de seizoensvensters en de engine-drempels) zijn ongevalideerde heuristieken**: niet gekalibreerd aan bandenprestaties, ongevallen of klimatologie. Het landelijk advies is indicatief en vervangt geen lokale waarschuwing.
 
+6. Optioneel (`WISSELWEER_PUBLISH_COUNTRIES=true`): winterbandenregels per land als veld `countries`, zie [regulations.md](regulations.md). Dat kost per publicatie ca. 18 extra (gecachte) verwachtingsverzoeken; uit = geen extra verzoeken en geen veld.
+
 ## Lokaal publiceren
 
 ```sh
