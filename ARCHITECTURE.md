@@ -52,9 +52,11 @@ src/wisselweer/
     national.py           # NationalAdviceService (referentielocaties)
     public_schema.py      # PublicAdvice (allowlist, extra='forbid')
     publish.py            # temp -> valideren -> os.replace; optioneel SFTP
+    countries.py          # optioneel blok `countries` (landenregels + weercheck)
+  regulations/            # landenregels: modellen, loader, periode, weercheck
   i18n/
     locales/{nl-NL,nl-BE,en,de-DE}.json
-    regulations/          # (leeg) toekomstige landenregels met bron/geldigheid
+    regulations/          # winter_tires.json: winterbandenregels per land (bron, checked_on)
   settings.py             # pydantic-settings uit env (.env)
   cli.py                  # `wisselweer serve|publish|migrate|create-admin|reset-password|create-api-token|revoke-api-token|backtest`
   backtest.py             # replay van forecast-snapshots (zie docs/backtesting.md)
