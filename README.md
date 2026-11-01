@@ -20,6 +20,7 @@ Wisselweer adviseert wanneer je van zomer- naar winterbanden wisselt (en terug),
 - Meerdere voertuigen en bandensets, profieldiepte- en kilometerregistratie, wisselhistorie.
 - Garages en afspraken; een `mailto:`-link voor de garage (de app verstuurt zelf niets).
 - REST API (`/api/v1`) met sessie of Bearer-token, bijvoorbeeld voor Home Assistant: [docs/api.md](docs/api.md).
+- Locatie invullen zonder coördinaten op te zoeken: zoeken op adres, postcode of plaats (Nominatim, instelbaar of uit te zetten) en "Gebruik mijn locatie": [docs/providers.md](docs/providers.md#geocoderen).
 - Landelijk advies en publicatie van `advice.json`: [docs/publishing.md](docs/publishing.md).
 - Optioneel in `advice.json`: winterbandenregels per land (`WISSELWEER_PUBLISH_COUNTRIES`, informatief, geen juridisch advies) en een 14-daagse vooruitblik (`outlook`): [docs/regulations.md](docs/regulations.md), [docs/public-advice-contract.md](docs/public-advice-contract.md).
 - Vergelijking van weerbronnen (diagnostisch, er wordt niets gecombineerd) en een backtest-commando: [docs/backtesting.md](docs/backtesting.md).
@@ -58,7 +59,7 @@ Details, variabelen en beperkingen: [docs/providers.md](docs/providers.md). Gebr
 
 ## Privacy
 
-Voertuig-, band-, garage- en locatiegegevens blijven in je eigen database. Naar weerbronnen gaan alleen afgeronde coördinaten (4 decimalen) en, bij MET Norway, je contactgegeven in de User-Agent. Het gepubliceerde `advice.json` bevat uitsluitend een anoniem landelijk advies, gebouwd uit een allowlist; er gaan geen kentekens, namen of e-mailadressen in en geen eigen locaties.
+Voertuig-, band-, garage- en locatiegegevens blijven in je eigen database. Naar weerbronnen gaan alleen afgeronde coördinaten (4 decimalen) en, bij MET Norway, je contactgegeven in de User-Agent. Alleen als je op "Zoek coördinaten" klikt, gaat de ingetypte zoektekst via de server naar de geocoder (standaard OpenStreetMap Nominatim); die tekst wordt niet opgeslagen, alleen de afgeronde coördinaten. Het gepubliceerde `advice.json` bevat uitsluitend een anoniem landelijk advies, gebouwd uit een allowlist; er gaan geen kentekens, namen of e-mailadressen in en geen eigen locaties.
 
 ## Documentatie
 
