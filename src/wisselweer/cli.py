@@ -9,6 +9,7 @@ import logging
 import sys
 
 from wisselweer import __version__
+from wisselweer.logsetup import configure_logging
 
 log = logging.getLogger("wisselweer.cli")
 
@@ -29,9 +30,7 @@ def _serve() -> int:
     from wisselweer.settings import get_settings
 
     settings = get_settings()
-    logging.basicConfig(
-        level=settings.log_level.upper(), format="%(asctime)s %(levelname)s %(name)s %(message)s"
-    )
+    configure_logging(settings.log_level)
     if not _is_loopback(settings.host):
         log.warning(
             "Server luistert op %s (niet loopback): gebruik HTTPS (reverse proxy of VPN) en "
@@ -90,9 +89,7 @@ def _publish() -> int:
     from wisselweer.settings import get_settings
 
     settings = get_settings()
-    logging.basicConfig(
-        level=settings.log_level.upper(), format="%(asctime)s %(levelname)s %(name)s %(message)s"
-    )
+    configure_logging(settings.log_level)
     try:
         advice = run_publish(settings)
     except PublishError as exc:
