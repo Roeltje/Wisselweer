@@ -18,6 +18,7 @@ from wisselweer.storage.orm import (
     Location,
     OdometerReading,
     TireChange,
+    TireGroup,
     TireSet,
     TreadMeasurement,
     Vehicle,
@@ -190,6 +191,7 @@ def delete_vehicle(session: Session, vehicle_id: int) -> None:
     session.execute(delete(OdometerReading).where(OdometerReading.vehicle_id == vehicle_id))
     if set_ids:
         session.execute(delete(TreadMeasurement).where(TreadMeasurement.tire_set_id.in_(set_ids)))
+        session.execute(delete(TireGroup).where(TireGroup.tire_set_id.in_(set_ids)))
     session.execute(delete(TireSet).where(TireSet.vehicle_id == vehicle_id))
     session.execute(delete(Appointment).where(Appointment.vehicle_id == vehicle_id))
     session.execute(delete(AdviceSnapshot).where(AdviceSnapshot.vehicle_id == vehicle_id))

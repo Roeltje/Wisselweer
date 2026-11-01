@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import field, csrf, geocode_widget with context %}
+{% from "_macros.html" import field, csrf, geocode_widget, tire_groups with context %}
 {% block title %}{{ title }} · Wisselweer{% endblock %}
 {% block content %}
 <section class="card form-card">
@@ -14,7 +14,7 @@
     {{ csrf() }}
     {% for f in fields %}
     {%- if geo and f.name == 'location_name' %}{{ geocode_widget(geo) }}{% endif %}
-    {{ field(f) }}
+    {%- if f.kind == 'groups' %}{{ tire_groups(groups) }}{% else %}{{ field(f) }}{% endif %}
     {%- endfor %}
     <p class="muted small">{{ t('form.required_legend') }}</p>
     <div class="actions">

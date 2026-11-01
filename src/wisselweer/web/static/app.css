@@ -337,3 +337,24 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { border-color
 @media print {
   .site-header, .site-footer, .actions { display: none; }
 }
+
+/* Banden per groep */
+.tire-groups { display: grid; gap: .75rem; }
+.tire-groups legend { font-weight: 700; padding: 0; margin-bottom: .25rem; }
+.group-fields { display: grid; gap: .9rem; padding: .9rem; border: 1px solid var(--border); border-radius: 12px; }
+.group-extra > summary { list-style: none; cursor: pointer; margin-bottom: .5rem; }
+.group-extra > summary::-webkit-details-marker { display: none; }
+.group-extra[open] > summary { margin-bottom: .5rem; }
+.field-check { gap: .2rem; }
+.field-check .choice { cursor: pointer; }
+.field-check .hint { padding-left: 1.9rem; }
+/* 3PMSF alleen bij winter- en vierseizoenenbanden: de checkbox verdwijnt zolang zomerbanden gekozen zijn
+   (puur CSS, dus ook zonder JavaScript; browsers zonder :has() tonen hem gewoon altijd). */
+form:has(select[name="type"] option[value="summer"]:checked) .only-winter { display: none; }
+.pmsf-flag { display: inline-flex; align-items: center; gap: .3rem; vertical-align: middle; color: var(--primary); }
+.chip-warn { background: var(--badge-prepare-bg); color: var(--badge-prepare-ink); border-color: var(--orange); display: inline-flex; align-items: center; gap: .25rem; }
+.notice-warn { background: var(--warn-bg); color: var(--warn-ink); border: 2px solid var(--orange); }
+.warn-text { color: var(--warn-ink); }
+.warn-text .icon { vertical-align: -2px; }
+.size-hint { color: var(--muted); font-size: .88rem; margin: 0; }
+.table-wrap td .row-actions { flex-wrap: nowrap; }

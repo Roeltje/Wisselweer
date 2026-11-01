@@ -91,5 +91,21 @@
  "geo.located": "Your location has been filled in, rounded to about 100 metres.",
  "geo.denied": "Access to your location was denied. Search for an address or enter the coordinates yourself.",
  "geo.unavailable": "Your location could not be determined. Search for an address or enter the coordinates yourself.",
- "geo.insecure": "Getting your location only works over a secure connection (https)."
+ "geo.insecure": "Getting your location only works over a secure connection (https).",
+ "tire.groups": "Tires",
+ "tire.group_extra": "+ Add different tires",
+ "tire.group_add": "Add different tires",
+ "tire.group_edit": "Edit tires",
+ "tire.group_replace": "Replace tires",
+ "tire.quantity": "Number of tires",
+ "tire.dot_help": "The last four digits of the DOT code are the week and year of manufacture: 2319 is week 23 of 2019.",
+ "tire.oldest": "Oldest tire",
+ "tire.age_value": "{years} years",
+ "tire.pmsf": "3PMSF symbol (mountain with snowflake) on the tire",
+ "tire.pmsf_help": "Tires with this symbol meet the stricter winter standard; the old M+S marking alone is no longer enough in Germany and Austria, among others.",
+ "tire.pmsf_short": "3PMSF",
+ "tire.pmsf_all": "All tires carry the 3PMSF symbol",
+ "tire.open_set": "Tires",
+ "tire.col.quantity": "Qty",
+ "tire.col.age": "Age"
 }

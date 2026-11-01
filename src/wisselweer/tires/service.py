@@ -11,6 +11,7 @@ from datetime import UTC, date, datetime, time
 from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
+from wisselweer.core.models import TireType
 from wisselweer.storage.enums import ChangeMethod, OdometerSource, TireStatus
 from wisselweer.storage.errors import InvalidOperation, NotFoundError
 from wisselweer.storage.orm import (
@@ -18,15 +19,22 @@ from wisselweer.storage.orm import (
     Garage,
     OdometerReading,
     TireChange,
+    TireGroup,
     TireSet,
     TreadMeasurement,
     Vehicle,
 )
+from wisselweer.tires.dot import age_years, production_date
 from wisselweer.tires.schemas import (
+    MAX_TIRES,
     KmInterval,
     KmSummary,
     OdometerOut,
     TireChangeOut,
+    TireGroupIn,
+    TireGroupOut,
+    TireGroupPatch,
+    TireReplaceIn,
     TireSetIn,
     TireSetOut,
     TireSetPatch,
@@ -49,7 +57,58 @@ def _set(session: Session, set_id: int) -> TireSet:
     return s
 
 
-def _set_out(s: TireSet) -> TireSetOut:
+def _today() -> date:
+    return datetime.now(UTC).date()
+
+
+def _group(session: Session, group_id: int) -> TireGroup:
+    g = session.get(TireGroup, group_id)
+    if g is None:
+        raise NotFoundError("bandengroep niet gevonden")
+    return g
+
+
+def _groups(session: Session, set_id: int, include_removed: bool = False) -> list[TireGroup]:
+    q = select(TireGroup).where(TireGroup.tire_set_id == set_id)
+    if not include_removed:
+        q = q.where(TireGroup.removed_on.is_(None))
+    return list(session.scalars(q.order_by(TireGroup.id)))
+
+
+def _active_total(session: Session, set_id: int, *, exclude_id: int | None = None) -> int:
+    return sum(g.quantity for g in _groups(session, set_id) if g.id != exclude_id)
+
+
+def _group_out(g: TireGroup, today: date) -> TireGroupOut:
+    on = g.removed_on or today
+    produced = production_date(g.dot_code, on)
+    return TireGroupOut(
+        id=g.id,
+        tire_set_id=g.tire_set_id,
+        quantity=g.quantity,
+        dot_code=g.dot_code,
+        purchase_date=g.purchase_date,
+        brand=g.brand,
+        model=g.model,
+        has_3pmsf=g.has_3pmsf,
+        positions=g.positions,
+        created_at=g.created_at,
+        removed_on=g.removed_on,
+        removed_note=g.removed_note,
+        produced_on=produced,
+        age_years=age_years(produced, on),
+    )
+
+
+def _set_out(
+    session: Session, s: TireSet, *, include_removed: bool = False, today: date | None = None
+) -> TireSetOut:
+    today = today or _today()
+    all_groups = _groups(session, s.id, include_removed=True)
+    active = [g for g in all_groups if g.removed_on is None]
+    shown = all_groups if include_removed else active
+    out_active = [_group_out(g, today) for g in active]
+    ages = [g.age_years for g in out_active if g.age_years is not None]
     return TireSetOut(
         id=s.id,
         vehicle_id=s.vehicle_id,
@@ -57,12 +116,18 @@ def _set_out(s: TireSet) -> TireSetOut:
         brand=s.brand,
         model=s.model,
         size=s.size,
-        purchase_date=s.purchase_date,
         purchase_price_cents=s.purchase_price_cents,
-        dot_code=s.dot_code,
         notes=s.notes,
         status=s.status,
         created_at=s.created_at,
+        tire_groups=[_group_out(g, today) for g in shown],
+        tire_count=sum(g.quantity for g in active),
+        oldest_tire_age_years=max(ages) if ages else None,
+        all_3pmsf=(
+            s.type in (TireType.WINTER, TireType.ALL_SEASON)
+            and bool(active)
+            and all(g.has_3pmsf is True for g in active)
+        ),
     )
 
 
@@ -81,21 +146,35 @@ def create_tire_set(session: Session, vehicle_id: int, data: TireSetIn) -> TireS
     _vehicle(session, vehicle_id)
     if data.status == TireStatus.MOUNTED and _mounted_set(session, vehicle_id) is not None:
         raise InvalidOperation("er is al een gemonteerde set; gebruik een bandenwissel")
-    s = TireSet(vehicle_id=vehicle_id, **data.model_dump())
+    groups = data.tire_groups if data.tire_groups is not None else [TireGroupIn()]
+    _check_total(sum(g.quantity for g in groups))
+    s = TireSet(vehicle_id=vehicle_id, **data.model_dump(exclude={"tire_groups"}))
     session.add(s)
     session.flush()
-    return _set_out(s)
+    for g in groups:
+        session.add(TireGroup(tire_set_id=s.id, **g.model_dump()))
+    session.flush()
+    return _set_out(session, s)
 
 
-def get_tire_set(session: Session, set_id: int) -> TireSetOut:
-    return _set_out(_set(session, set_id))
+def _check_total(total: int) -> None:
+    if total < 1:
+        raise InvalidOperation("een set heeft minimaal één band")
+    if total > MAX_TIRES:
+        raise InvalidOperation(f"een set heeft hooguit {MAX_TIRES} banden")
 
 
-def list_tire_sets(session: Session, vehicle_id: int) -> list[TireSetOut]:
+def get_tire_set(session: Session, set_id: int, *, include_removed: bool = False) -> TireSetOut:
+    return _set_out(session, _set(session, set_id), include_removed=include_removed)
+
+
+def list_tire_sets(
+    session: Session, vehicle_id: int, *, include_removed: bool = False
+) -> list[TireSetOut]:
     rows = session.scalars(
         select(TireSet).where(TireSet.vehicle_id == vehicle_id).order_by(TireSet.id)
     )
-    return [_set_out(s) for s in rows]
+    return [_set_out(session, s, include_removed=include_removed) for s in rows]
 
 
 def update_tire_set(session: Session, set_id: int, patch: TireSetPatch) -> TireSetOut:
@@ -110,7 +189,7 @@ def update_tire_set(session: Session, set_id: int, patch: TireSetPatch) -> TireS
     for k, val in changes.items():
         setattr(s, k, val)
     session.flush()
-    return _set_out(s)
+    return _set_out(session, s)
 
 
 def delete_tire_set(session: Session, set_id: int) -> None:
@@ -126,8 +205,123 @@ def delete_tire_set(session: Session, set_id: int) -> None:
     if in_history is not None:
         raise InvalidOperation("set staat in de wisselhistorie; zet de status op 'retired'")
     session.execute(delete(TreadMeasurement).where(TreadMeasurement.tire_set_id == set_id))
+    session.execute(delete(TireGroup).where(TireGroup.tire_set_id == set_id))
     session.delete(s)
     session.flush()
+
+
+# --- Banden per groep -------------------------------------------------------------------
+
+
+def list_tire_groups(
+    session: Session, set_id: int, *, include_removed: bool = False
+) -> list[TireGroupOut]:
+    _set(session, set_id)
+    today = _today()
+    return [_group_out(g, today) for g in _groups(session, set_id, include_removed)]
+
+
+def get_tire_group(session: Session, group_id: int) -> TireGroupOut:
+    return _group_out(_group(session, group_id), _today())
+
+
+def add_tire_group(session: Session, set_id: int, data: TireGroupIn) -> TireGroupOut:
+    """Voegt afwijkende banden toe; het totaal van de actieve groepen blijft 1-4."""
+    _set(session, set_id)
+    _check_total(_active_total(session, set_id) + data.quantity)
+    g = TireGroup(tire_set_id=set_id, **data.model_dump())
+    session.add(g)
+    session.flush()
+    return _group_out(g, _today())
+
+
+def update_tire_group(session: Session, group_id: int, patch: TireGroupPatch) -> TireGroupOut:
+    g = _group(session, group_id)
+    if g.removed_on is not None:
+        raise InvalidOperation("een vervangen groep kan niet meer gewijzigd worden")
+    changes = patch.model_dump(exclude_unset=True)
+    if "quantity" in changes:
+        if changes["quantity"] is None:
+            raise InvalidOperation("quantity mag niet leeg zijn")
+        _check_total(_active_total(session, g.tire_set_id, exclude_id=g.id) + changes["quantity"])
+    for k, val in changes.items():
+        setattr(g, k, val)
+    session.flush()
+    return _group_out(g, _today())
+
+
+def delete_tire_group(session: Session, group_id: int) -> None:
+    """Verwijdert een groep; een set houdt altijd minimaal één actieve groep."""
+    g = _group(session, group_id)
+    if g.removed_on is None and _active_total(session, g.tire_set_id, exclude_id=g.id) < 1:
+        raise InvalidOperation("een set houdt minimaal één actieve groep")
+    session.delete(g)
+    session.flush()
+
+
+def replace_tires(
+    session: Session, set_id: int, data: TireReplaceIn, *, today: date | None = None
+) -> TireSetOut:
+    """Banden vervangen, atomair (SAVEPOINT).
+
+    Vervangt `quantity` banden (standaard de hele groep) door een nieuwe actieve groep met de
+    nieuwe gegevens. Bij de hele groep krijgt de oude groep `removed_on`; anders wordt hij
+    gesplitst: de oude groep houdt de resterende banden (zonder posities, die kloppen niet meer) en
+    een afgesloten kopie met de vervangen banden blijft als geschiedenis staan.
+    """
+    today = today or _today()
+    with session.begin_nested():
+        s = _set(session, set_id)
+        g = _group(session, data.group_id)
+        if g.tire_set_id != set_id:
+            raise NotFoundError("bandengroep niet gevonden")
+        if g.removed_on is not None:
+            raise InvalidOperation("deze groep is al vervangen")
+        n = data.quantity if data.quantity is not None else g.quantity
+        if n > g.quantity:
+            raise InvalidOperation("je kunt niet meer banden vervangen dan de groep telt")
+        when = data.replaced_on or today
+        if when > today:
+            raise InvalidOperation("de datum van vervangen ligt in de toekomst")
+        if n == g.quantity:
+            g.removed_on = when
+            g.removed_note = data.note
+        else:
+            session.add(
+                TireGroup(
+                    tire_set_id=set_id,
+                    quantity=n,
+                    dot_code=g.dot_code,
+                    purchase_date=g.purchase_date,
+                    brand=g.brand,
+                    model=g.model,
+                    has_3pmsf=g.has_3pmsf,
+                    positions=g.positions,
+                    created_at=g.created_at,
+                    removed_on=when,
+                    removed_note=data.note,
+                )
+            )
+            g.quantity -= n
+            g.positions = None
+        session.add(
+            TireGroup(
+                tire_set_id=set_id,
+                quantity=n,
+                **data.model_dump(
+                    include={
+                        "dot_code",
+                        "purchase_date",
+                        "brand",
+                        "model",
+                        "has_3pmsf",
+                        "positions",
+                    }
+                ),
+            )
+        )
+        session.flush()
+    return _set_out(session, s, today=today)
 
 
 def add_tread_measurement(

@@ -15,6 +15,10 @@ from wisselweer.tires.schemas import (
     KmSummary,
     OdometerOut,
     TireChangeOut,
+    TireGroupIn,
+    TireGroupOut,
+    TireGroupPatch,
+    TireReplaceIn,
     TireSetIn,
     TireSetOut,
     TireSetPatch,
@@ -29,9 +33,11 @@ SessionDep = Annotated[Session, Depends(get_session)]
 
 
 @router.get("/vehicles/{vehicle_id}/tire-sets", response_model=list[TireSetOut])
-def list_tire_sets(vehicle_id: int, session: SessionDep) -> list[TireSetOut]:
+def list_tire_sets(
+    vehicle_id: int, session: SessionDep, include_removed: bool = False
+) -> list[TireSetOut]:
     vehicle_service.get_vehicle(session, vehicle_id)  # 404 bij onbekend voertuig
-    return service.list_tire_sets(session, vehicle_id)
+    return service.list_tire_sets(session, vehicle_id, include_removed=include_removed)
 
 
 @router.post("/vehicles/{vehicle_id}/tire-sets", response_model=TireSetOut, status_code=201)
@@ -40,8 +46,8 @@ def create_tire_set(vehicle_id: int, body: TireSetIn, session: SessionDep) -> Ti
 
 
 @router.get("/tire-sets/{set_id}", response_model=TireSetOut)
-def get_tire_set(set_id: int, session: SessionDep) -> TireSetOut:
-    return service.get_tire_set(session, set_id)
+def get_tire_set(set_id: int, session: SessionDep, include_removed: bool = False) -> TireSetOut:
+    return service.get_tire_set(session, set_id, include_removed=include_removed)
 
 
 @router.patch("/tire-sets/{set_id}", response_model=TireSetOut)
@@ -53,6 +59,27 @@ def update_tire_set(set_id: int, body: TireSetPatch, session: SessionDep) -> Tir
 def delete_tire_set(set_id: int, session: SessionDep) -> Response:
     service.delete_tire_set(session, set_id)
     return Response(status_code=204)
+
+
+@router.post("/tire-sets/{set_id}/tire-groups", response_model=TireGroupOut, status_code=201)
+def add_tire_group(set_id: int, body: TireGroupIn, session: SessionDep) -> TireGroupOut:
+    return service.add_tire_group(session, set_id, body)
+
+
+@router.patch("/tire-groups/{group_id}", response_model=TireGroupOut)
+def update_tire_group(group_id: int, body: TireGroupPatch, session: SessionDep) -> TireGroupOut:
+    return service.update_tire_group(session, group_id, body)
+
+
+@router.delete("/tire-groups/{group_id}", status_code=204)
+def delete_tire_group(group_id: int, session: SessionDep) -> Response:
+    service.delete_tire_group(session, group_id)
+    return Response(status_code=204)
+
+
+@router.post("/tire-sets/{set_id}/replace", response_model=TireSetOut)
+def replace_tires(set_id: int, body: TireReplaceIn, session: SessionDep) -> TireSetOut:
+    return service.replace_tires(session, set_id, body)
 
 
 @router.post(

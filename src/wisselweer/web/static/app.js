@@ -12,6 +12,20 @@
     }
   });
 
+  // Banden per groep: zonder JavaScript staan alle extra regels als ingeklapte <details> onder elkaar;
+  // met JavaScript tonen we de volgende pas als de vorige is opengeklapt (of zelf al open staat).
+  var groupBox = document.querySelector("[data-tire-groups]");
+  if (groupBox) {
+    var extras = Array.prototype.slice.call(groupBox.querySelectorAll("[data-group-extra]"));
+    var syncExtras = function () {
+      extras.forEach(function (details, i) {
+        details.hidden = !(i === 0 || details.open || extras[i - 1].open);
+      });
+    };
+    extras.forEach(function (details) { details.addEventListener("toggle", syncExtras); });
+    syncExtras();
+  }
+
   // Tijdblokken van het eigen weekschema toevoegen/verwijderen.
   var schedule = document.querySelector("[data-schedule]");
   if (schedule) {
