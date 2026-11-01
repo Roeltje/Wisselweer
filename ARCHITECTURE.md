@@ -114,7 +114,7 @@ tests/                    # unit/ integration/ security/ fixtures/
 
 ## 9. i18n
 
-Alle UI-teksten en reden-sleutels via `i18n/locales/*.json`. Onderscheid taal / land / tijdzone / locatie / gebruikslanden / regelgeving. Regelgeving staat los van het meteorologische advies; MVP bevat **geen** juridische regels.
+Alle UI-teksten en reden-sleutels via `i18n/locales/*.json`. Onderscheid taal / land / tijdzone / locatie / gebruikslanden / regelgeving. Regelgeving staat los van het meteorologische advies: de engine kent geen landenregels. `wisselweer.regulations` bevat informatieve winterbandenregels per land (data in `i18n/regulations/winter_tires.json`, met bron, `checked_on` en betrouwbaarheid; bewust zonder boetebedragen) en een pure weercheck voor situationele plichten die dezelfde gladheidsdetectie hergebruikt als de engine. Optioneel (`WISSELWEER_PUBLISH_COUNTRIES`) gaat dit als additief veld `countries` mee in `advice.json`. Het is geen juridisch advies; zie [docs/regulations.md](docs/regulations.md).
 
 ## 10. Branding
 

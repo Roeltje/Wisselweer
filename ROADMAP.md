@@ -40,7 +40,8 @@ Plannen kunnen wijzigen. Vinkjes volgen [docs/STATUS.md](docs/STATUS.md); open p
 
 - [ ] Meertalige interface volledig
 - [ ] België en Duitsland
-- [ ] Landspecifieke bandenregels met bron en geldigheidsdatum
+- [x] Landspecifieke bandenregels met bron en geldigheidsdatum (eerste 8 landen: DE, AT, FR, CH, IT, BE, LU, CZ)
+- [ ] Overige 8 landen: SI, HR, DK, SE, NO, FI, ES, PL
 - [ ] Meerdere landen per voertuig
 
 ## 2.0
