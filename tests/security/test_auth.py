@@ -217,11 +217,51 @@ def test_password_change_invalidates_session(app, session_client):
 def test_password_hash_has_no_plaintext(app):
     with ensure_db(app)() as s:
         h = s.scalar(select(AdminUser)).password_hash
-    assert ADMIN_PASSWORD not in h and h.startswith("scrypt$16384$8$1$")
+    assert ADMIN_PASSWORD not in h and h.startswith("scrypt$65536$8$2$")
     assert auth.verify_password(ADMIN_PASSWORD, h)
     assert not auth.verify_password("anders-wachtwoord", h)
     assert auth.hash_password(ADMIN_PASSWORD) != h  # willekeurige salt
     assert not auth.verify_password("x", "kapot")
+    assert not auth.needs_rehash(h)
+
+
+def _oude_hash(password: str) -> str:
+    """Hash zoals vóór de verhoging: scrypt N=2**14, r=8, p=1."""
+    salt = b"s" * 16
+    digest = hashlib.scrypt(password.encode(), salt=salt, n=2**14, r=8, p=1, dklen=32)
+    b64 = auth._b64
+    return f"scrypt$16384$8$1${b64(salt)}${b64(digest)}"
+
+
+def test_old_hash_still_verifies_and_needs_rehash():
+    old = _oude_hash(ADMIN_PASSWORD)
+    assert auth.verify_password(ADMIN_PASSWORD, old)
+    assert not auth.verify_password("anders-wachtwoord", old)
+    assert auth.needs_rehash(old)
+    assert auth.needs_rehash("kapot")
+
+
+def test_login_upgrades_old_hash(app, client):
+    old = _oude_hash(ADMIN_PASSWORD)
+    with ensure_db(app)() as s:
+        s.scalar(select(AdminUser)).password_hash = old
+        s.commit()
+    assert login(client, "verkeerd-wachtwoord").status_code == 401
+    with ensure_db(app)() as s:
+        assert s.scalar(select(AdminUser)).password_hash == old  # mislukte login: niets gewijzigd
+    ok = login(client)
+    assert ok.status_code == 303
+    with ensure_db(app)() as s:
+        new = s.scalar(select(AdminUser)).password_hash
+    assert new != old and new.startswith("scrypt$65536$8$2$")
+    assert auth.verify_password(ADMIN_PASSWORD, new)
+    # De nieuwe sessie blijft geldig (vingerafdruk is van de nieuwe hash).
+    assert client.get(V).status_code == 200
+    # Tweede login herhaalt de upgrade niet.
+    client.cookies.clear()
+    assert login(client).status_code == 303
+    with ensure_db(app)() as s:
+        assert s.scalar(select(AdminUser)).password_hash == new
 
 
 def test_password_min_length():
