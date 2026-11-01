@@ -9,9 +9,9 @@ Alle `/api/v1/*`-routes vereisen authenticatie, behalve `GET /health`. Zonder ge
 **Beheerder aanmaken (CLI, op de server):**
 
 ```
-wisselweer create-admin --username roel      # wachtwoord via prompt (min. 10 tekens)
-wisselweer reset-password --username roel    # sessies worden daarmee ongeldig
-echo "$WACHTWOORD" | wisselweer create-admin --username roel --password-stdin
+wisselweer create-admin --username beheerder   # wachtwoord via prompt (min. 10 tekens)
+wisselweer reset-password --username beheerder # sessies worden daarmee ongeldig
+echo "$WACHTWOORD" | wisselweer create-admin --username beheerder --password-stdin
 ```
 
 Wachtwoorden gaan nooit als argument mee. Er is één beheerder; registratie via het web bestaat niet.
@@ -41,6 +41,7 @@ De database (SQLite) staat in `WISSELWEER_DATA_DIR` (standaard `./data`); de map
 |---|---|---|---|
 | GET | `/health` | Status, versie, regelversie | 200 |
 | GET | `/providers` | Weerproviders en bronvermelding | 200 |
+| GET | `/public-preview` | Landelijk publiek advies berekenen zonder te publiceren (zie [publishing.md](publishing.md)) | 200 |
 | GET | `/advice` | Advies voor een locatie (`mounted`, `latitude`, `longitude`, `provider`) | 200 |
 | POST | `/advice/calculate` | Advies uit een meegegeven forecast of locatie | 200 |
 | GET | `/vehicles` | Alle voertuigen | 200 |
@@ -70,8 +71,6 @@ De database (SQLite) staat in `WISSELWEER_DATA_DIR` (standaard `./data`); de map
 | POST | `/vehicles/{id}/appointments` | Afspraak aanmaken (status `not_planned`) | 201 |
 | PATCH | `/appointments/{id}` | Statusovergang (`status`, optioneel `appointment_at`) | 200 |
 | GET | `/appointments/{id}/mailto` | `mailto:`-link voor de garage (er wordt niets verzonden) | 200 |
-
-`GET /public-preview` volgt in fase 5.
 
 ## Foutresponses
 

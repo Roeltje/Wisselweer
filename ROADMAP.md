@@ -1,6 +1,6 @@
 # Roadmap
 
-Plannen kunnen wijzigen. Vinkjes volgen [docs/STATUS.md](docs/STATUS.md); open punten (zoals Docker/Ubuntu-documentatie) zijn nog in bewerking.
+Plannen kunnen wijzigen. Vinkjes volgen [docs/STATUS.md](docs/STATUS.md); het enige bekende open punt is dat de Docker-installatie in de praktijk nog niet is getest.
 
 ## MVP
 

@@ -3,7 +3,8 @@
 ```
 uv sync --extra dev
 uv run pytest -q            # alles
-uv run ruff check src tests scripts
+uv run ruff check .
+uv run ruff format --check .
 ```
 
 Per map:

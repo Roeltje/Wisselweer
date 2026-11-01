@@ -38,5 +38,5 @@ ontbrekende credentials → `info().configured=False` en `ProviderNotConfigured`
 - Configuratie: `wu_station_id` en `wu_api_key`; zonder: `configured=False`. Aanvullend, nooit automatisch een forecastcorrectie. Voorwaarden van Weather Underground beperken commercieel gebruik (`commercial_use_ok=False`).
 
 ## Cache, service en vergelijking
-- `ForecastCache`: vers tot `Expires` (zonder: 30 min), daarna conditioneel ophalen (304 verlengt). Bij fouten wordt cache tot `max_stale_hours` (24) teruggegeven met `is_stale=True`; `retry_after` wordt gerespecteerd. Per sleutel (provider, lat4, lon4) één lock: meerdere voertuigen delen één request. Nu in-memory; SQLite-backend volgt in fase 3.
+- `ForecastCache`: vers tot `Expires` (zonder: 30 min), daarna conditioneel ophalen (304 verlengt). Bij fouten wordt cache tot `max_stale_hours` (24) teruggegeven met `is_stale=True`; `retry_after` wordt gerespecteerd. Per sleutel (provider, lat4, lon4) één lock: meerdere voertuigen delen één request. De cache staat in SQLite (tabel `forecast_cache`, `storage/cache_backend.py`), zodat die een herstart overleeft; `InMemoryBackend` (in `weather/cache.py`) wordt alleen in tests gebruikt.
 - `compare_forecasts` toont per dag min/max/neerslag per provider en de spreiding. Alleen diagnostisch; combineert niets.

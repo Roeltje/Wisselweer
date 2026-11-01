@@ -21,6 +21,7 @@ Wisselweer adviseert wanneer je van zomer- naar winterbanden wisselt (en terug),
 - Garages en afspraken; een `mailto:`-link voor de garage (de app verstuurt zelf niets).
 - REST API (`/api/v1`) met sessie of Bearer-token, bijvoorbeeld voor Home Assistant: [docs/api.md](docs/api.md).
 - Landelijk advies en publicatie van `advice.json`: [docs/publishing.md](docs/publishing.md).
+- Optioneel in `advice.json`: winterbandenregels per land (`WISSELWEER_PUBLISH_COUNTRIES`, informatief, geen juridisch advies) en een 14-daagse vooruitblik (`outlook`): [docs/regulations.md](docs/regulations.md), [docs/public-advice-contract.md](docs/public-advice-contract.md).
 - Vergelijking van weerbronnen (diagnostisch, er wordt niets gecombineerd) en een backtest-commando: [docs/backtesting.md](docs/backtesting.md).
 - Nederlandse interface via i18n-bestanden; er zijn ook `nl-BE`, `en` en `de-DE`-bestanden aanwezig, maar de interface is nog niet volledig meertalig.
 
@@ -65,7 +66,7 @@ Voertuig-, band-, garage- en locatiegegevens blijven in je eigen database. Naar 
 - [docs/STATUS.md](docs/STATUS.md): voortgang
 - [ROADMAP.md](ROADMAP.md)
 - [docs/advice-rules.md](docs/advice-rules.md), [docs/providers.md](docs/providers.md), [docs/api.md](docs/api.md)
-- [docs/publishing.md](docs/publishing.md), [docs/public-advice-contract.md](docs/public-advice-contract.md)
+- [docs/publishing.md](docs/publishing.md), [docs/public-advice-contract.md](docs/public-advice-contract.md), [docs/regulations.md](docs/regulations.md)
 - [docs/backtesting.md](docs/backtesting.md), [docs/testing.md](docs/testing.md), [docs/examples/](docs/examples)
 - [docs/install-docker.md](docs/install-docker.md), [docs/install-lxc.md](docs/install-lxc.md)
 - [SECURITY.md](SECURITY.md), [CONTRIBUTING.md](CONTRIBUTING.md)
