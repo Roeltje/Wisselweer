@@ -13,7 +13,7 @@
   var preview = form.querySelector("[data-photo-preview]");
   var status = form.querySelector("[data-photo-status]");
   var submit = form.querySelector("[data-photo-submit]");
-  if (!input || !preview || !status) { return; }
+  if (!input || !preview || !status || !submit) { return; }
 
   var supported = typeof window.createImageBitmap === "function" &&
     typeof window.DataTransfer === "function" && typeof window.File === "function";

@@ -38,8 +38,10 @@ def _corrupt() -> PhotoError:
 
 # --------------------------------------------------------------------------- JPEG
 
-# APP1-APP13, APP15 en COM; APP0 (JFIF) en APP14 (Adobe, kleurruimte) blijven staan.
+# APP1-APP13, APP15 en COM; APP0 (JFIF) en APP14 (Adobe, kleurruimte) blijven staan, net als
+# APP2 met een ICC-kleurprofiel (anders verschuiven de kleuren, bv. bij Display P3).
 _JPEG_DROP = frozenset([*range(0xE1, 0xEE), 0xEF, 0xFE])
+_JPEG_ICC = b"ICC_PROFILE\x00"
 # SOF0-SOF15, behalve DHT (C4), JPG (C8) en DAC (CC).
 _JPEG_SOF = frozenset(range(0xC0, 0xD0)) - {0xC4, 0xC8, 0xCC}
 
@@ -104,7 +106,9 @@ def _strip_jpeg(data: bytes) -> bytes:
             out += data[pos:stop]
             pos = stop
             continue
-        if marker not in _JPEG_DROP:
+        if marker not in _JPEG_DROP or (
+            marker == 0xE2 and data[pos + 4 : pos + 4 + len(_JPEG_ICC)] == _JPEG_ICC
+        ):
             out += data[pos:end]
         pos = end
 

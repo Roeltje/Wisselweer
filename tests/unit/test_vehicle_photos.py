@@ -102,6 +102,13 @@ def test_jpeg_segmenten_per_soort():
     assert out == make_jpeg(*kept)
 
 
+def test_jpeg_icc_profiel_blijft_andere_app2_niet():
+    icc = jpeg_segment(0xE2, b"ICC_PROFILE\x00\x01\x01profiel")
+    mpf = jpeg_segment(0xE2, b"MPF\x00geheim")
+    out, _ = clean_photo(make_jpeg(icc, mpf))
+    assert out == make_jpeg(icc)
+
+
 def test_jpeg_scandata_en_rest_ongewijzigd():
     out, _ = clean_photo(make_jpeg_with_exif())
     assert SCAN_DATA in out
