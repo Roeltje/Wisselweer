@@ -357,4 +357,3 @@ form:has(select[name="type"] option[value="summer"]:checked) .only-winter { disp
 .warn-text { color: var(--warn-ink); }
 .warn-text .icon { vertical-align: -2px; }
 .size-hint { color: var(--muted); font-size: .88rem; margin: 0; }
-.table-wrap td .row-actions { flex-wrap: nowrap; }
