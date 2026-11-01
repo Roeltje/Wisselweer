@@ -6,6 +6,6 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 dist/
-data/
+/data/
 *.egg-info/
 .DS_Store

@@ -1,0 +1,412 @@
+{
+  "checked_on": "2026-11-01",
+  "note": "Suggesties voor personenauto's op de Europese markt, geen volledige lijst. Samengesteld uit eigen kennis; modellen worden vervangen, dus controleer de naam op de band zelf. Vrije invoer blijft altijd mogelijk.",
+  "brands": [
+    {
+      "name": "Barum",
+      "summer": [
+        "Bravuris 5HM"
+      ],
+      "all_season": [
+        "Quartaris 5"
+      ],
+      "winter": [
+        "Polaris 5"
+      ]
+    },
+    {
+      "name": "BFGoodrich",
+      "summer": [
+        "Advantage"
+      ],
+      "all_season": [
+        "g-Grip All Season 2"
+      ],
+      "winter": [
+        "g-Force Winter 2"
+      ]
+    },
+    {
+      "name": "Bridgestone",
+      "summer": [
+        "Turanza 6",
+        "Turanza T005",
+        "Potenza Sport",
+        "Potenza S005"
+      ],
+      "all_season": [
+        "Weather Control A005 Evo",
+        "Turanza All Season 6"
+      ],
+      "winter": [
+        "Blizzak LM005"
+      ]
+    },
+    {
+      "name": "Continental",
+      "summer": [
+        "PremiumContact 7",
+        "PremiumContact 6",
+        "EcoContact 6",
+        "SportContact 7"
+      ],
+      "all_season": [
+        "AllSeasonContact",
+        "AllSeasonContact 2"
+      ],
+      "winter": [
+        "WinterContact TS 870",
+        "WinterContact TS 870 P",
+        "WinterContact TS 860 S"
+      ]
+    },
+    {
+      "name": "Dunlop",
+      "summer": [
+        "Sport BluResponse",
+        "Sport Maxx RT2",
+        "Sport Maxx RT"
+      ],
+      "all_season": [
+        "Sport All Season"
+      ],
+      "winter": [
+        "Winter Sport 5"
+      ]
+    },
+    {
+      "name": "Falken",
+      "summer": [
+        "Azenis FK510",
+        "Ziex ZE310 Ecorun"
+      ],
+      "all_season": [
+        "Euroall Season AS210"
+      ],
+      "winter": [
+        "Eurowinter HS02",
+        "Eurowinter HS02 Pro"
+      ]
+    },
+    {
+      "name": "Firestone",
+      "summer": [
+        "Roadhawk"
+      ],
+      "all_season": [
+        "Multiseason 2"
+      ],
+      "winter": [
+        "Winterhawk 4"
+      ]
+    },
+    {
+      "name": "Fulda",
+      "summer": [
+        "EcoControl HP 2",
+        "SportControl 2"
+      ],
+      "all_season": [
+        "MultiControl"
+      ],
+      "winter": [
+        "Kristall Control HP 2"
+      ]
+    },
+    {
+      "name": "General Tire",
+      "summer": [
+        "Altimax One S",
+        "Altimax Sport"
+      ],
+      "all_season": [
+        "Altimax A/S 365"
+      ],
+      "winter": [
+        "Altimax Winter 3",
+        "Snow Grabber Plus"
+      ]
+    },
+    {
+      "name": "Goodyear",
+      "summer": [
+        "EfficientGrip Performance 2",
+        "EfficientGrip Performance",
+        "Eagle F1 Asymmetric 6",
+        "Eagle F1 SuperSport"
+      ],
+      "all_season": [
+        "Vector 4Seasons Gen-3"
+      ],
+      "winter": [
+        "UltraGrip Performance 3",
+        "UltraGrip Performance+",
+        "UltraGrip 9+"
+      ]
+    },
+    {
+      "name": "Hankook",
+      "summer": [
+        "Ventus Prime4",
+        "Ventus Prime3",
+        "Ventus S1 evo3",
+        "Ventus V12 evo2"
+      ],
+      "all_season": [
+        "Kinergy 4S2"
+      ],
+      "winter": [
+        "Winter i*cept evo3",
+        "Winter i*cept RS3"
+      ]
+    },
+    {
+      "name": "Kleber",
+      "summer": [
+        "Dynaxer HP4"
+      ],
+      "all_season": [
+        "Quadraxer 2",
+        "Quadraxer 3"
+      ],
+      "winter": [
+        "Krisalp HP3"
+      ]
+    },
+    {
+      "name": "Kormoran",
+      "summer": [
+        "Road Performance",
+        "Ultra High Performance"
+      ],
+      "all_season": [
+        "All Season"
+      ],
+      "winter": [
+        "Snow"
+      ]
+    },
+    {
+      "name": "Kumho",
+      "summer": [
+        "Ecsta PS71",
+        "Ecsta HS51",
+        "Ecsta PS91",
+        "Ecowing ES31"
+      ],
+      "all_season": [
+        "Solus 4S HA32"
+      ],
+      "winter": [
+        "WinterCraft WP52",
+        "WinterCraft WP72"
+      ]
+    },
+    {
+      "name": "Laufenn",
+      "summer": [
+        "S Fit EQ+"
+      ],
+      "all_season": [
+        "G Fit 4S"
+      ],
+      "winter": [
+        "I Fit+"
+      ]
+    },
+    {
+      "name": "Linglong",
+      "summer": [
+        "Green-Max"
+      ],
+      "all_season": [
+        "Green-Max All Season"
+      ],
+      "winter": []
+    },
+    {
+      "name": "Maxxis",
+      "summer": [
+        "Premitra 5",
+        "Victra Sport 5",
+        "Mecotra ME3"
+      ],
+      "all_season": [
+        "Premitra All Season AP3"
+      ],
+      "winter": [
+        "Premitra Snow WP6"
+      ]
+    },
+    {
+      "name": "Michelin",
+      "summer": [
+        "Primacy 4+",
+        "e.Primacy",
+        "Pilot Sport 4",
+        "Pilot Sport 5"
+      ],
+      "all_season": [
+        "CrossClimate 2"
+      ],
+      "winter": [
+        "Alpin 6",
+        "Pilot Alpin 5"
+      ]
+    },
+    {
+      "name": "Nankang",
+      "summer": [
+        "Econex NA-1",
+        "Sportnex NS-25"
+      ],
+      "all_season": [],
+      "winter": [
+        "Winter Activa SV-55"
+      ]
+    },
+    {
+      "name": "Nexen",
+      "summer": [
+        "N'Blue HD Plus",
+        "N'Fera Primus",
+        "N'Fera SU1"
+      ],
+      "all_season": [
+        "N'Blue 4Season",
+        "N'Blue 4Season 2"
+      ],
+      "winter": [
+        "Winguard Snow'G 3",
+        "Winguard Sport 2"
+      ]
+    },
+    {
+      "name": "Nokian",
+      "summer": [
+        "Hakka Green 3",
+        "Hakka Blue 3",
+        "Hakka Black 2"
+      ],
+      "all_season": [
+        "Seasonproof",
+        "WR G4"
+      ],
+      "winter": [
+        "WR D4",
+        "WR Snowproof",
+        "WR Snowproof P"
+      ]
+    },
+    {
+      "name": "Pirelli",
+      "summer": [
+        "Cinturato P7",
+        "P Zero",
+        "Powergy",
+        "P Zero PZ4"
+      ],
+      "all_season": [
+        "Cinturato All Season SF 2"
+      ],
+      "winter": [
+        "Cinturato Winter",
+        "P Zero Winter",
+        "Sottozero 3"
+      ]
+    },
+    {
+      "name": "Sava",
+      "summer": [
+        "Intensa HP 2",
+        "Intensa UHP 2",
+        "Perfecta"
+      ],
+      "all_season": [
+        "All Weather"
+      ],
+      "winter": [
+        "Eskimo HP 2"
+      ]
+    },
+    {
+      "name": "Semperit",
+      "summer": [
+        "Speed-Life 3",
+        "Comfort-Life 2"
+      ],
+      "all_season": [
+        "Allseason-Grip"
+      ],
+      "winter": [
+        "Speed-Grip 5",
+        "Master-Grip 2"
+      ]
+    },
+    {
+      "name": "Toyo",
+      "summer": [
+        "Proxes Comfort",
+        "Proxes Sport",
+        "Proxes CF2"
+      ],
+      "all_season": [
+        "Celsius",
+        "Celsius 2",
+        "Celsius Sport"
+      ],
+      "winter": [
+        "Snowprox S954",
+        "Observe S944",
+        "Observe GSi-6"
+      ]
+    },
+    {
+      "name": "Uniroyal",
+      "summer": [
+        "RainSport 5",
+        "RainExpert 5"
+      ],
+      "all_season": [
+        "AllSeasonExpert 2"
+      ],
+      "winter": [
+        "WinterExpert"
+      ]
+    },
+    {
+      "name": "Vredestein",
+      "summer": [
+        "Ultrac",
+        "Ultrac Cento",
+        "Sportrac 5",
+        "Ultrac Vorti"
+      ],
+      "all_season": [
+        "Quatrac",
+        "Quatrac Pro"
+      ],
+      "winter": [
+        "Wintrac",
+        "Wintrac Pro",
+        "Snowtrac 5"
+      ]
+    },
+    {
+      "name": "Yokohama",
+      "summer": [
+        "BluEarth-GT AE51",
+        "BluEarth-Es ES32",
+        "BluEarth-XT AE61",
+        "Advan Sport V107"
+      ],
+      "all_season": [
+        "BluEarth-4S AW21"
+      ],
+      "winter": [
+        "BluEarth Winter V906",
+        "W.drive V905"
+      ]
+    }
+  ]
+}

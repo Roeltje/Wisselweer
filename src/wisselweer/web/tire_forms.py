@@ -45,8 +45,16 @@ def group_fields(
     ]
     if brand_model:
         fields += [
-            Field(f"{prefix}brand", "tire.group_brand", attrs={"maxlength": "80"}),
-            Field(f"{prefix}model", "tire.group_model", attrs={"maxlength": "80"}),
+            Field(
+                f"{prefix}brand",
+                "tire.group_brand",
+                attrs={"maxlength": "80", "list": "dl-brands"},
+            ),
+            Field(
+                f"{prefix}model",
+                "tire.group_model",
+                attrs={"maxlength": "80", "list": "dl-models"},
+            ),
         ]
     if positions:
         fields.append(

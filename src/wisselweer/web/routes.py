@@ -42,6 +42,7 @@ from wisselweer.storage.enums import (
 )
 from wisselweer.storage.errors import InvalidOperation, NotFoundError
 from wisselweer.storage.orm import ApiToken, AppSetting, Location, Vehicle
+from wisselweer.tires import catalog as tire_catalog
 from wisselweer.tires import service as tire_svc
 from wisselweer.tires.schemas import (
     TireGroupIn,
@@ -178,6 +179,20 @@ def local_today(tz_name: str) -> date:
 
 def to_utc(local_naive: datetime, tz_name: str) -> datetime:
     return local_naive.replace(tzinfo=views.tz_of(tz_name)).astimezone(UTC)
+
+
+def _catalog_ctx(season: str | None, set_brand: str | None = None) -> dict[str, Any]:
+    """Merk- en typesuggesties voor de formulieren (datalists + gegevens voor app.js)."""
+    return {
+        "tire_catalog": {
+            "brands": tire_catalog.brand_names(),
+            # Zonder JavaScript: alle typen van het seizoen van de set.
+            "models": tire_catalog.models_for(season),
+            "data": tire_catalog.client_data(),
+            "season": season or "",
+            "set_brand": set_brand or "",
+        }
+    }
 
 
 def _warn_years(request: Request) -> float:
@@ -776,8 +791,8 @@ def set_fields(tr: Any, *, status_options: tuple, with_groups: bool = False) -> 
             required=True,
             options=opts(TireType, "tire.type", tr),
         ),
-        Field("brand", "tire.brand", attrs={"maxlength": "80"}),
-        Field("model", "tire.model", attrs={"maxlength": "80"}),
+        Field("brand", "tire.brand", attrs={"maxlength": "80", "list": "dl-brands"}),
+        Field("model", "tire.model", attrs={"maxlength": "80", "list": "dl-models"}),
         Field(
             "size",
             "tire.size",
@@ -854,7 +869,7 @@ def set_new(request: Request, vehicle_id: int, factory: Factory) -> Response:
         action=f"/vehicles/{vehicle_id}/sets/new",
         cancel=f"/vehicles/{vehicle_id}",
         submit="tire.create",
-        ctx={"groups": tire_forms.group_rows(values, {})},
+        ctx={"groups": tire_forms.group_rows(values, {}), **_catalog_ctx("summer")},
     )
 
 
@@ -891,7 +906,10 @@ def set_create(request: Request, vehicle_id: int, form: FormDep, factory: Factor
         submit="tire.create",
         errors=rest,
         status=422,
-        ctx={"groups": tire_forms.group_rows(form.values(), p.errors)},
+        ctx={
+            "groups": tire_forms.group_rows(form.values(), p.errors),
+            **_catalog_ctx(form.get("type")),
+        },
     )
 
 
@@ -922,6 +940,7 @@ def set_edit(request: Request, vehicle_id: int, set_id: int, factory: Factory) -
         fields=bind(set_fields(tr, status_options=_status_options(tr, ts.status)), values, {}),
         action=f"/vehicles/{vehicle_id}/sets/{set_id}/edit",
         cancel=f"/vehicles/{vehicle_id}",
+        ctx=_catalog_ctx(ts.type.value),
     )
 
 
@@ -961,6 +980,7 @@ def set_update(
         cancel=f"/vehicles/{vehicle_id}",
         errors=rest,
         status=422,
+        ctx=_catalog_ctx(form.get("type") or current.type.value),
     )
 
 
@@ -1068,6 +1088,7 @@ def _group_page(
         submit=submit,
         errors=rest,
         status=status,
+        ctx=_catalog_ctx(ts.type.value, ts.brand),
     )
 
 
