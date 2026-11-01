@@ -32,8 +32,15 @@ SECURITY_HEADERS = {
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
     "Referrer-Policy": "no-referrer",
-    "Content-Security-Policy": "default-src 'self'; frame-ancestors 'none'; base-uri 'none'",
+    "Content-Security-Policy": (
+        "default-src 'self'; frame-ancestors 'none'; base-uri 'none'; "
+        "form-action 'self'; object-src 'none'"
+    ),
+    "Permissions-Policy": "geolocation=(), camera=(), microphone=()",
 }
+# Alles behalve statische bestanden en de healthcheck mag niet in een (tussen)cache terechtkomen.
+CACHEABLE_PATHS = ("/api/v1/health",)
+CACHEABLE_PREFIXES = ("/static/",)
 
 
 def _key_readable(path: Path | None) -> bool:
@@ -149,6 +156,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             response = _error(500, "internal_error")
         for k, v in SECURITY_HEADERS.items():
             response.headers.setdefault(k, v)  # een route mag een eigen CSP zetten (/docs)
+        path = request.url.path
+        if path not in CACHEABLE_PATHS and not path.startswith(CACHEABLE_PREFIXES):
+            response.headers.setdefault("Cache-Control", "no-store")
         return response
 
     install_auth(app, app.state.settings)
