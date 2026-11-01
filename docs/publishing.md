@@ -50,7 +50,7 @@ runuser -u wisselweer -- sftp -v -i /var/lib/wisselweer/.ssh/deploy_wisselweer_w
 | `Host key verification failed` | hostsleutel ontbreekt in known_hosts: `ssh-keyscan` en vingerafdruk controleren, zie [install-lxc.md](install-lxc.md) |
 | `Permission denied (publickey)` | publieke sleutel in `/etc/ssh/authorized_keys/deploy` komt niet overeen met `deploy_wisselweer_web.pub` (volledige regel, geen vingerafdruk) |
 
-Test een publicatie met `systemctl start wisselweer-publish.service` en `journalctl -u wisselweer-publish`: een handmatig `runuser … wisselweer publish` leest het env-bestand niet.
+Test een publicatie met `systemctl start wisselweer-publish.service` en `journalctl -u wisselweer-publish`. `wisselweer publish` (het commando dat `install.sh` installeert) werkt ook; een los `runuser … /opt/wisselweer/.venv/bin/wisselweer publish` leest het env-bestand niet.
 
 ## Planning
 

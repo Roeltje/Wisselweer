@@ -133,6 +133,14 @@ systemctl daemon-reload
 systemctl enable wisselweer.service >/dev/null
 systemctl restart wisselweer.service
 
+echo "==> CLI: wisselweer (als servicegebruiker met het env-bestand)"
+install -m 0755 -o root -g root "$HERE/wisselweer-cli.sh" /usr/local/bin/wisselweer
+# /usr/local/bin staat niet in elke root-sessie (bv. `pct enter`) in PATH; een link in /usr/bin
+# maakt `wisselweer` overal beschikbaar. Een bestaand bestand dat niet van ons is, blijft staan.
+if [[ ! -e /usr/bin/wisselweer || "$(readlink /usr/bin/wisselweer)" == /usr/local/bin/wisselweer ]]; then
+  ln -sfn /usr/local/bin/wisselweer /usr/bin/wisselweer
+fi
+
 cat <<MSG
 
 Klaar. Wisselweer luistert op http://127.0.0.1:8000 (alleen lokaal; geen poorten of firewall aangepast).
@@ -144,10 +152,9 @@ Volgende stappen:
        WISSELWEER_COOKIE_SECURE=true
      en WISSELWEER_HOST=0.0.0.0 (met poort 8000 beperkt tot het proxy-IP; zie docs/install-lxc.md).
      Zonder die cookie-instelling gaat de sessiecookie ook over plain http.
-  2. Maak de beheerder aan (wachtwoord minimaal 10 tekens; laadt het env-bestand):
-       systemd-run --pty --wait --collect -p User=$SVC_USER -p EnvironmentFile=$ENV_FILE \\
-         $APP_DIR/.venv/bin/wisselweer create-admin --username <naam>
-     (Commando's als servicegebruiker: runuser -u $SVC_USER -- ...)
+  2. Maak de beheerder aan (wachtwoord minimaal 10 tekens):
+       wisselweer create-admin --username <naam>
+     Het commando \`wisselweer\` draait als $SVC_USER met $ENV_FILE, net als de service.
   3. Publiceren via SFTP: zie docs/install-lxc.md (sleutel maken in $DATA_DIR/.ssh, hostsleutel
      in known_hosts, WISSELWEER_PUBLISH_SFTP_* instellen). Testen:
        systemctl start wisselweer-publish.service; journalctl -u wisselweer-publish -n 30

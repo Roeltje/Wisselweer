@@ -137,6 +137,7 @@ def test_login_page_without_admin(tmp_path):
     app = create_app(Settings(_env_file=None, data_dir=tmp_path / "d"))
     r = TestClient(app).get("/login")
     assert "wisselweer create-admin" in r.text and "<form" not in r.text
+    assert "docker compose exec wisselweer wisselweer create-admin" in r.text
 
 
 @pytest.mark.parametrize("method", ["post", "patch", "delete"])

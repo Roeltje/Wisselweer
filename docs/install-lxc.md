@@ -9,7 +9,7 @@ git clone <repo-url> && cd Wisselweer
 ./deploy/install.sh            # als root; of: ./deploy/install.sh https://host/repo.git [ref]
 ```
 
-Draai alles als root. In een Debian-LXC is `sudo` meestal niet geïnstalleerd; op een systeem met sudo zet je `sudo` ervoor. Commando's als servicegebruiker draai je met `runuser -u wisselweer -- …` (in plaats van `sudo -u wisselweer …`).
+Draai alles als root. In een Debian-LXC is `sudo` meestal niet geïnstalleerd; op een systeem met sudo zet je `sudo` ervoor. De CLI draai je gewoon als `wisselweer …` (zie hieronder); overige commando's als servicegebruiker met `runuser -u wisselweer -- …` (in plaats van `sudo -u wisselweer …`).
 
 Het script is idempotent en doet het volgende:
 
@@ -28,12 +28,10 @@ Het script opent geen poorten en wijzigt geen firewall. Daarna: pas het env-best
 
 ```sh
 systemctl restart wisselweer
-systemd-run --pty --wait --collect -p User=wisselweer \
-  -p EnvironmentFile=/etc/wisselweer/wisselweer.env \
-  /opt/wisselweer/.venv/bin/wisselweer create-admin --username <naam>
+wisselweer create-admin --username <naam>
 ```
 
-Een handmatig `runuser -u wisselweer -- wisselweer …` laadt `/etc/wisselweer/wisselweer.env` **niet**; gebruik daarom de `systemd-run`-vorm hierboven (met `-p EnvironmentFile=`) voor commando's die de configuratie nodig hebben.
+`install.sh` installeert het commando `wisselweer` (`/usr/local/bin/wisselweer`, met een link in `/usr/bin`). Het draait elk CLI-commando als de servicegebruiker met `/etc/wisselweer/wisselweer.env`, net als de service, dus met dezelfde database en instellingen: `wisselweer reset-password --username <naam>`, `wisselweer create-api-token --name ha`, enzovoort. Een los `runuser -u wisselweer -- /opt/wisselweer/.venv/bin/wisselweer …` laadt het env-bestand **niet**; gebruik daarom het commando `wisselweer`.
 
 ## Handmatig
 
