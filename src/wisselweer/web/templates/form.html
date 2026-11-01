@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import field, csrf with context %}
+{% from "_macros.html" import field, csrf, geocode_widget with context %}
 {% block title %}{{ title }} · Wisselweer{% endblock %}
 {% block content %}
 <section class="card form-card">
@@ -12,7 +12,10 @@
   {% endif %}
   <form method="post" action="{{ action }}" class="stack">
     {{ csrf() }}
-    {% for f in fields %}{{ field(f) }}{% endfor %}
+    {% for f in fields %}
+    {%- if geo and f.name == 'location_name' %}{{ geocode_widget(geo) }}{% endif %}
+    {{ field(f) }}
+    {%- endfor %}
     <p class="muted small">{{ t('form.required_legend') }}</p>
     <div class="actions">
       <button type="submit" class="btn btn-primary">{{ t(submit) }}</button>

@@ -16,6 +16,7 @@ from wisselweer import __version__
 from wisselweer.api.auth import install_auth, require_user
 from wisselweer.api.deps import ensure_db
 from wisselweer.api.routers.garages import router as garages_router
+from wisselweer.api.routers.geocode import router as geocode_router
 from wisselweer.api.routers.tires import router as tires_router
 from wisselweer.api.routers.v1 import health_router
 from wisselweer.api.routers.v1 import router as v1_router
@@ -36,7 +37,8 @@ SECURITY_HEADERS = {
         "default-src 'self'; frame-ancestors 'none'; base-uri 'none'; "
         "form-action 'self'; object-src 'none'"
     ),
-    "Permissions-Policy": "geolocation=(), camera=(), microphone=()",
+    # geolocation alleen voor onze eigen pagina's ("Gebruik mijn locatie"), nooit voor derden.
+    "Permissions-Policy": "geolocation=(self), camera=(), microphone=()",
 }
 # Alles behalve statische bestanden en de healthcheck mag niet in een (tussen)cache terechtkomen.
 CACHEABLE_PATHS = ("/api/v1/health",)
@@ -168,6 +170,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(vehicles_router, dependencies=protected)
     app.include_router(tires_router, dependencies=protected)
     app.include_router(garages_router, dependencies=protected)
+    app.include_router(geocode_router, dependencies=protected)
     app.mount("/static", web_routes.static_files, name="static")
     app.include_router(web_routes.router)
     return app

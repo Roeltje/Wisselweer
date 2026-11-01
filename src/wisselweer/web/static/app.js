@@ -64,4 +64,123 @@
       }
     });
   }
+
+  // Coördinaten opzoeken: adres/plaats via de geocode-API (sessiecookie, alleen GET; de URL staat in data-url) en
+  // "Gebruik mijn locatie" via de browser. DOM wordt met createElement/textContent gebouwd.
+  var geo = document.querySelector("[data-geo]");
+  var geoForm = geo ? geo.closest("form") : null;
+  if (geo && geoForm) {
+    var latInput = geoForm.querySelector('input[name="latitude"]');
+    var lonInput = geoForm.querySelector('input[name="longitude"]');
+    var nameInput = geoForm.querySelector('input[name="location_name"]');
+    var statusEl = geo.querySelector("[data-geo-status]");
+    var queryInput = geo.querySelector("[data-geo-query]");
+    var searchBtn = geo.querySelector("[data-geo-search]");
+    var locateBtn = geo.querySelector("[data-geo-locate]");
+    var resultList = geo.querySelector("[data-geo-results]");
+
+    var text = function (key) { return geo.getAttribute("data-msg-" + key) || ""; };
+    var say = function (key) { statusEl.textContent = text(key); };
+    var setCoords = function (lat, lon) {
+      latInput.value = String(lat);
+      lonInput.value = String(lon);
+    };
+
+    // "Domplein, Utrecht, ..." -> "Domplein"; een huisnummer vooraan ("12, Straat, ...") -> "Straat 12".
+    var shortName = function (label) {
+      var parts = label.split(",").map(function (p) { return p.trim(); });
+      var name = parts[0];
+      if (/^\d/.test(name) && parts.length > 1) { name = parts[1] + " " + name; }
+      var max = nameInput ? parseInt(nameInput.getAttribute("maxlength"), 10) : NaN;
+      return isNaN(max) ? name : name.slice(0, max);
+    };
+
+    var clearResults = function () {
+      while (resultList.firstChild) { resultList.removeChild(resultList.firstChild); }
+      resultList.hidden = true;
+    };
+
+    var choose = function (item) {
+      setCoords(item.latitude, item.longitude);
+      if (nameInput && !nameInput.value.trim()) { nameInput.value = shortName(item.label); }
+      clearResults();
+      say("filled");
+      queryInput.focus();
+    };
+
+    var showResults = function (items) {
+      var usable = Array.isArray(items) ? items.filter(function (item) {
+        return item && typeof item.label === "string" &&
+          typeof item.latitude === "number" && isFinite(item.latitude) &&
+          typeof item.longitude === "number" && isFinite(item.longitude);
+      }).slice(0, 5) : [];
+      if (!usable.length) { say("none"); return; }
+      usable.forEach(function (item) {
+        var li = document.createElement("li");
+        var button = document.createElement("button");
+        button.type = "button";
+        button.className = "btn btn-small";
+        button.textContent = item.label;
+        button.addEventListener("click", function () { choose(item); });
+        li.appendChild(button);
+        resultList.appendChild(li);
+      });
+      resultList.hidden = false;
+      say("found");
+      resultList.querySelector("button").focus();
+    };
+
+    var busy = false;
+    var search = function () {
+      if (busy) { return; }
+      var q = queryInput.value.trim();
+      clearResults();
+      if (q.length < 2) { say("short"); queryInput.focus(); return; }
+      busy = true;
+      say("searching");
+      fetch(geo.getAttribute("data-url") + "?q=" + encodeURIComponent(q), {
+        credentials: "same-origin",
+        headers: { "Accept": "application/json" }
+      }).then(function (response) {
+        if (!response.ok) {
+          var error = new Error("http");
+          error.status = response.status;
+          throw error;
+        }
+        return response.json();
+      }).then(function (items) {
+        showResults(items);
+      }).catch(function (error) {
+        say(error && error.status === 429 ? "busy" : "error");
+      }).then(function () {
+        busy = false;
+      });
+    };
+
+    if (searchBtn && queryInput && resultList) {
+      searchBtn.addEventListener("click", search);
+      queryInput.addEventListener("keydown", function (event) {
+        // Enter zoekt in plaats van het formulier te versturen.
+        if (event.key === "Enter") { event.preventDefault(); search(); }
+      });
+    }
+
+    var round3 = function (value) { return Math.round(value * 1000) / 1000 + 0; };
+    if (locateBtn && "geolocation" in navigator) {
+      locateBtn.hidden = false;
+      locateBtn.addEventListener("click", function () {
+        if (window.isSecureContext === false) { say("insecure"); return; }
+        say("locating");
+        navigator.geolocation.getCurrentPosition(function (position) {
+          setCoords(round3(position.coords.latitude), round3(position.coords.longitude));
+          say("located");
+        }, function (error) {
+          say(error && error.code === 1 ? "denied" : "unavailable");
+        }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
+      });
+    }
+
+    // Alleen tonen als er iets te doen valt (zoeken of de locatieknop).
+    if (searchBtn || (locateBtn && !locateBtn.hidden)) { geo.hidden = false; }
+  }
 })();

@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import httpx
 
-from wisselweer import __version__
 from wisselweer.core.models import HourlyPoint, PrecipType
 from wisselweer.weather._util import (
     build_forecast,
+    build_user_agent,
     http_get,
     json_body,
     make_client,
@@ -75,7 +75,7 @@ class MetNoProvider:
         )
 
     def _user_agent(self) -> str:
-        return f"Wisselweer/{__version__} (+https://wisselweer.nl; {self._contact})"
+        return build_user_agent(self._contact)
 
     def fetch(
         self, latitude: float, longitude: float, *, if_modified_since: str | None = None
