@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ locale or 'nl-NL' }}">
+<html lang="{{ locale or 'nl-NL' }}" data-theme-label-auto="{{ t('nav.theme.auto') }}" data-theme-label-light="{{ t('nav.theme.light') }}" data-theme-label-dark="{{ t('nav.theme.dark') }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,17 +7,18 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#0F4C5C">
   <title>{% block title %}Wisselweer{% endblock %}</title>
-  <link rel="icon" href="/static/favicon.ico" sizes="32x32">
-  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/static/app.css">
-  <script src="/static/app.js" defer></script>
+  <link rel="icon" href="/static/favicon.ico?v={{ static_v }}" sizes="32x32">
+  <link rel="icon" href="/static/favicon.svg?v={{ static_v }}" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/app.css?v={{ static_v }}">
+  <script src="/static/theme.js?v={{ static_v }}"></script>
+  <script src="/static/app.js?v={{ static_v }}" defer></script>
   {% block head %}{% endblock %}
 </head>
 <body>
   <a class="skip-link" href="#main">{{ t('nav.skip') }}</a>
   <header class="site-header">
     <div class="wrap header-row">
-      <a class="brand" href="/"><img src="/static/logo.svg" alt="" width="36" height="36"><span>Wisselweer</span></a>
+      <a class="brand" href="/"><img src="/static/logo-dark.svg?v={{ static_v }}" alt="" width="36" height="36"><span>Wisselweer</span></a>
       {% if authed %}
       <nav class="main-nav" aria-label="{{ t('nav.main') }}">
         <a href="/"{% if nav == 'dashboard' %} aria-current="page"{% endif %}>{{ t('nav.dashboard') }}</a>

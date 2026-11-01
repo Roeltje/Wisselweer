@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 from typing import Any
 
@@ -10,6 +11,7 @@ from fastapi.templating import Jinja2Templates
 from jinja2 import pass_context
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
+STATIC_DIR = Path(__file__).parent / "static"
 
 templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
 # Starlette zet autoescape standaard aan; hier expliciet vastgelegd.
@@ -26,6 +28,22 @@ def _csrf_token(context: dict[str, Any]) -> str:
 
 
 templates.env.globals["csrf_token"] = _csrf_token
+
+
+def _static_version() -> str:
+    """Korte hash van alle statische bestanden, als `?v=` tegen verouderde browsercaches.
+
+    Wordt eenmalig bij opstart bepaald; verandert bij elke wijziging van een bestand.
+    """
+    digest = hashlib.sha256()
+    for path in sorted(STATIC_DIR.rglob("*")):
+        if path.is_file():
+            digest.update(path.relative_to(STATIC_DIR).as_posix().encode())
+            digest.update(path.read_bytes())
+    return digest.hexdigest()[:10]
+
+
+templates.env.globals["static_v"] = _static_version()
 
 
 # --- i18n en opmaak ------------------------------------------------------------------------
