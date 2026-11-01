@@ -17,7 +17,7 @@ Het script is idempotent en doet het volgende:
 - maakt systeemgebruiker `wisselweer` (nologin, home `/var/lib/wisselweer`);
 - `/opt/wisselweer` (root-eigendom, leesbaar), `/var/lib/wisselweer` (0750 wisselweer), `/etc/wisselweer` (0750 root:wisselweer);
 - maakt `/var/lib/wisselweer/.ssh` (0700, eigendom wisselweer) voor de SFTP-sleutel en known_hosts;
-- installeert uv via de officiële standalone installer in `/usr/local/bin` (vaste versie, overschrijfbaar met `UV_VERSION`; het script roept uv aan via dat vaste pad, ook als `/usr/local/bin` niet in je PATH staat) en haalt Python 3.12 naar `/opt/wisselweer/python`;
+- installeert uv (`uv` en `uvx`) in `/usr/local/bin` uit de release-tarball van GitHub (`uv-<arch>-unknown-linux-gnu.tar.gz` voor x86_64 of aarch64), gecontroleerd met het `.sha256`-bestand van dezelfde release; de versie staat vast in het script en is niet via de omgeving te overschrijven. Het script roept uv aan via dat vaste pad, ook als `/usr/local/bin` niet in je PATH staat en haalt Python 3.12 naar `/opt/wisselweer/python`;
 - `uv sync --frozen --no-dev --no-editable` in `/opt/wisselweer/.venv`;
 - maakt `/etc/wisselweer/wisselweer.env` (0640) alleen als het nog niet bestaat, met `DATA_DIR=/var/lib/wisselweer`, `HOST=127.0.0.1` en een gegenereerde `SECRET_KEY`;
 - installeert de systemd-units en start `wisselweer`.
