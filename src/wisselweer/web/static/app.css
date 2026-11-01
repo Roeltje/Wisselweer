@@ -357,3 +357,15 @@ form:has(select[name="type"] option[value="summer"]:checked) .only-winter { disp
 .warn-text { color: var(--warn-ink); }
 .warn-text .icon { vertical-align: -2px; }
 .size-hint { color: var(--muted); font-size: .88rem; margin: 0; }
+
+/* Voertuigfoto: vaste verhouding, zodat de pagina niet verspringt als de foto laadt */
+.vehicle-photo { margin: 0 0 1rem; }
+.vehicle-photo img {
+  display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; max-height: 22rem;
+  object-fit: cover; border-radius: var(--radius); background: var(--surface-2);
+}
+.card-head.has-thumb { align-items: center; justify-content: flex-start; }
+.card-head.has-thumb h2 { flex: 1 1 8rem; min-width: 0; overflow-wrap: anywhere; }
+.vehicle-thumb { flex: none; width: 96px; height: 72px; object-fit: cover; border-radius: 10px; background: var(--surface-2); }
+.photo-preview canvas { display: block; width: 100%; max-width: 20rem; height: auto; border-radius: 10px; background: var(--surface-2); }
+.photo-delete { margin-top: .75rem; }

@@ -107,5 +107,22 @@
  "tire.pmsf_all": "All tires carry the 3PMSF symbol",
  "tire.open_set": "Tires",
  "tire.col.quantity": "Qty",
- "tire.col.age": "Age"
+ "tire.col.age": "Age",
+ "photo.title": "Photo",
+ "photo.add": "Add photo",
+ "photo.replace": "Replace photo",
+ "photo.help": "JPEG, PNG or WebP, up to 2 MB. On a phone you can take a photo or pick one from your library. Location data (EXIF) is removed.",
+ "photo.upload": "Upload photo",
+ "photo.delete": "Delete photo",
+ "photo.delete_confirm": "Delete the photo of this vehicle?",
+ "photo.working": "Resizing photo…",
+ "photo.ready": "Ready to upload (resized, without location data).",
+ "photo.failed": "Resizing failed; the original file will be sent and checked by the server.",
+ "photo.error.missing": "Choose a photo first.",
+ "photo.error.too_large": "The photo is too large (2 MB at most). Choose a smaller photo.",
+ "photo.error.unsupported": "This file type is not supported. Choose a JPEG, PNG or WebP photo.",
+ "photo.error.corrupt": "The photo is damaged or incomplete. Choose another photo.",
+ "photo.error.store": "The photo could not be saved; check the permissions on the data folder.",
+ "flash.photo_saved": "Photo saved.",
+ "flash.photo_deleted": "Photo deleted."
 }

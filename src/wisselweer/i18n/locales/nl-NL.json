@@ -368,5 +368,22 @@
  "tire.pmsf_not_all": "Niet alle banden hebben het 3PMSF-symbool.",
  "flash.group_added": "Banden toegevoegd.",
  "flash.group_deleted": "Regel verwijderd.",
- "flash.tires_replaced": "Banden vervangen."
+ "flash.tires_replaced": "Banden vervangen.",
+ "photo.title": "Foto",
+ "photo.add": "Foto toevoegen",
+ "photo.replace": "Foto vervangen",
+ "photo.help": "JPEG, PNG of WebP, maximaal 2 MB. Op een telefoon kun je een foto nemen of er een uit je bibliotheek kiezen. Locatiegegevens (EXIF) worden verwijderd.",
+ "photo.upload": "Foto uploaden",
+ "photo.delete": "Foto verwijderen",
+ "photo.delete_confirm": "De foto van dit voertuig verwijderen?",
+ "photo.working": "Foto verkleinen…",
+ "photo.ready": "Klaar om te uploaden (verkleind, zonder locatiegegevens).",
+ "photo.failed": "Verkleinen lukte niet; het originele bestand wordt verstuurd en door de server gecontroleerd.",
+ "photo.error.missing": "Kies eerst een foto.",
+ "photo.error.too_large": "De foto is te groot (maximaal 2 MB). Kies een kleinere foto.",
+ "photo.error.unsupported": "Dit bestandstype wordt niet ondersteund. Kies een JPEG-, PNG- of WebP-foto.",
+ "photo.error.corrupt": "De foto is beschadigd of onvolledig. Kies een andere foto.",
+ "photo.error.store": "De foto kon niet worden opgeslagen; controleer de rechten op de datamap.",
+ "flash.photo_saved": "Foto opgeslagen.",
+ "flash.photo_deleted": "Foto verwijderd."
 }

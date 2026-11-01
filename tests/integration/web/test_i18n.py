@@ -101,6 +101,7 @@ def test_every_key_used_in_ui_exists():
             f"warning.label.{w}"
             for w in ("possible_frost", "possible_snow", "possible_icy_conditions")
         ),
+        *(f"photo.error.{c}" for c in ("missing", "too_large", "unsupported", "corrupt", "store")),
         "provider.missing_contact",
         "provider.openmeteo_noncommercial",
         "provider.knmi_forecast_not_available",

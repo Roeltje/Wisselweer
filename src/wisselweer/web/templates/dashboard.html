@@ -19,7 +19,8 @@
   {% for c in cards %}
   {% set v = c.vehicle %}
   <article class="card vehicle-card" aria-labelledby="veh-{{ v.id }}">
-    <header class="card-head">
+    <header class="card-head{% if v.has_photo %} has-thumb{% endif %}">
+      {% if v.has_photo %}<img class="vehicle-thumb" src="/vehicles/{{ v.id }}/photo?v={{ v.photo_version }}" width="96" height="72" alt="" loading="lazy" decoding="async">{% endif %}
       <h2 id="veh-{{ v.id }}"><a href="/vehicles/{{ v.id }}">{{ v.name }}</a></h2>
       {% if v.license_plate %}<span class="plate">{{ v.license_plate }}</span>{% endif %}
     </header>
