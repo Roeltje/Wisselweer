@@ -90,4 +90,4 @@ Zet dit voor blijvend gebruik in `/etc/nftables.conf`. Houd de app bij voorkeur 
 
 ## Getest
 
-De native installatie op Debian 13 (unprivileged LXC) is in de praktijk getest, inclusief SFTP-publicatie naar een tweede LXC. De units en het script zijn niet door shellcheck of `systemd-analyze verify` gehaald. Docker is nog niet getest, zie [install-docker.md](install-docker.md).
+De native installatie op Debian 13 (unprivileged LXC) is in de praktijk getest, inclusief SFTP-publicatie naar een tweede LXC. De units en het script zijn niet door shellcheck of `systemd-analyze verify` gehaald. Voor Docker (in CI gebouwd en gestart) zie [install-docker.md](install-docker.md).

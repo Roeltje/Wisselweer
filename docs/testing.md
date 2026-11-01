@@ -30,6 +30,10 @@ uv run pytest tests/security
 - Persoonsgegevens in fixtures zijn fictief: kenteken `XX-000-X`, e-mail `garage@example.invalid`.
 - Elke test gebruikt een eigen tijdelijke database (`tmp_path`).
 
+## Docker
+
+De pytest-suite test de Docker-bestanden statisch (`tests/unit/test_docker_files.py`: hardening, localhost-binding, geen SFTP-sleutel in de webapp) en `deploy/docker-install.sh` met een nep-`docker` en nep-`curl` (`tests/unit/test_docker_install.py`). Het echte image wordt alleen in CI gebouwd en gestart: de job `docker` in `.github/workflows/ci.yml` draait het installatiescript (nieuwe installatie en update) en controleert health, UID, read-only root-fs, `.env`-rechten, `create-admin`, de back-up en het stoppen van de publisher. Lokaal kun je hetzelfde doen met `docker build -t ghcr.io/roeltje/wisselweer:ci .` en daarna `IMAGE_TAG=ci WISSELWEER_ASSETS_DIR=$PWD WISSELWEER_SKIP_PULL=1 WISSELWEER_CONTACT=https://example.invalid/contact bash deploy/docker-install.sh /tmp/ww-test`.
+
 ## Live smoke-test (optioneel, handmatig)
 
 Niet onderdeel van de testsuite. Met een draaiende server of direct tegen een provider, bijvoorbeeld MET Norway, is een contactadres verplicht:
