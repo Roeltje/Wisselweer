@@ -37,3 +37,159 @@ jobs:
         run: |
           uv export --frozen --no-dev --no-emit-project --format requirements-txt > /tmp/req.txt
           uvx pip-audit -r /tmp/req.txt --strict
+
+  docker:
+    # Bouwt het image (amd64) en test de volledige installatie met deploy/docker-install.sh:
+    # eerst een nieuwe installatie, daarna het update-pad. arm64 wordt alleen bij een release gebouwd.
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      # Voor het installatiescript: bestanden uit deze checkout, het lokaal gebouwde image (geen pull).
+      IMAGE_TAG: ci
+      WISSELWEER_ASSETS_DIR: ${{ github.workspace }}
+      WISSELWEER_SKIP_PULL: "1"
+      WISSELWEER_HEALTH_TIMEOUT: "90"
+      WISSELWEER_CONTACT: https://example.invalid/contact
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Compose-bestanden valideren (alle varianten)
+        run: |
+          set -euo pipefail
+          unset IMAGE_TAG # hier testen we de standaardwaarde
+          cfg="$RUNNER_TEMP/compose-config"
+          mkdir "$cfg"
+          cp compose.yaml compose.build.yaml "$cfg"/
+          touch "$cfg/.env" # env_file moet bestaan voor `config`
+          cd "$cfg"
+          docker compose config --quiet
+          docker compose --profile publish config --quiet
+          docker compose -f compose.yaml -f compose.build.yaml config --quiet
+          docker compose -f compose.yaml -f compose.build.yaml --profile publish config --quiet
+          # De publisher hoort alleen bij het profiel `publish`.
+          test "$(docker compose config --services)" = "wisselweer"
+          services="$(docker compose --profile publish config --services)"
+          grep -qx publisher <<<"$services"
+          # Zonder IMAGE_TAG: latest; met compose.build.yaml het lokale image.
+          plain="$(docker compose config)"
+          grep -q 'image: ghcr.io/roeltje/wisselweer:latest' <<<"$plain"
+          build="$(docker compose -f compose.yaml -f compose.build.yaml config)"
+          grep -q 'image: wisselweer:local' <<<"$build"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Image bouwen (amd64, lokaal geladen)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          push: false
+          tags: ghcr.io/roeltje/wisselweer:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max,ignore-error=true
+
+      - name: Installatiemap bepalen
+        run: echo "INSTALL_DIR=$RUNNER_TEMP/wisselweer" >> "$GITHUB_ENV"
+
+      - name: Nieuwe installatie met het installatiescript
+        run: bash deploy/docker-install.sh "$INSTALL_DIR"
+
+      - name: Webapp controleren
+        run: |
+          set -euo pipefail
+          cd "$INSTALL_DIR"
+          health="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/api/v1/health)"
+          login="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/login)"
+          test "$health" = 200 || { echo "::error::health gaf $health"; exit 1; }
+          test "$login" = 200 || { echo "::error::/login gaf $login"; exit 1; }
+
+          # Niet-root en read-only root-bestandssysteem; /data blijft schrijfbaar.
+          test "$(docker compose exec -T wisselweer id -u)" = 10001
+          if out="$(docker compose exec -T wisselweer touch /app/schrijftest 2>&1)"; then
+            echo "::error::schrijven naar /app lukte, root-fs is niet read-only"; exit 1
+          fi
+          grep -qi 'read-only file system' <<<"$out"
+          docker compose exec -T wisselweer sh -c 'echo ok > /data/schrijftest && rm /data/schrijftest'
+
+          # Hardening en localhost-binding zoals Docker ze toepast.
+          test "$(docker inspect -f '{{.HostConfig.ReadonlyRootfs}}' wisselweer)" = true
+          caps="$(docker inspect -f '{{.HostConfig.CapDrop}}' wisselweer)"
+          secopt="$(docker inspect -f '{{.HostConfig.SecurityOpt}}' wisselweer)"
+          port="$(docker port wisselweer 8000/tcp)"
+          mounts="$(docker inspect -f '{{json .Mounts}}' wisselweer)"
+          grep -q ALL <<<"$caps"
+          grep -q 'no-new-privileges' <<<"$secopt"
+          grep -qx '127\.0\.0\.1:8000' <<<"$port"
+          # De webapp krijgt de SFTP-sleutel (/run/secrets) niet.
+          if grep -q '/run/secrets' <<<"$mounts"; then
+            echo "::error::de webapp heeft /run/secrets gemount"; exit 1
+          fi
+
+          # .env: rechten 600 en een gegenereerde sleutel van minimaal 32 tekens.
+          test "$(stat -c '%a' .env)" = 600
+          secret="$(grep '^WISSELWEER_SECRET_KEY=' .env | cut -d= -f2-)"
+          test "${#secret}" -ge 32
+
+      - name: Beheerder aanmaken via de CLI
+        run: |
+          set -euo pipefail
+          cd "$INSTALL_DIR"
+          pw="$(head -c 24 /dev/urandom | base64 | tr -dc 'A-Za-z0-9')"
+          printf '%s\n' "$pw" | docker compose exec -T wisselweer wisselweer create-admin --username ci --password-stdin
+          # Nu is er een beheerder: de loginpagina toont het formulier.
+          page="$(curl -fsS http://127.0.0.1:8000/login)"
+          grep -q 'name="username"' <<<"$page"
+
+      - name: Publisher starten en netjes laten stoppen
+        run: |
+          set -euo pipefail
+          cd "$INSTALL_DIR"
+          mkdir -p secrets # bind-mount van de publisher; leeg is genoeg voor deze test
+          docker compose --profile publish up -d publisher
+          for _ in $(seq 1 30); do
+            logs="$(docker compose --profile publish logs publisher 2>&1)"
+            if grep -q 'Publicatielus gestart' <<<"$logs"; then break; fi
+            sleep 1
+          done
+          grep -q 'Publicatielus gestart' <<<"$logs"
+          test "$(docker compose --profile publish exec -T publisher id -u)" = 10001
+          start="$(date +%s)"
+          docker compose --profile publish stop publisher
+          elapsed=$(( $(date +%s) - start ))
+          echo "stop duurde ${elapsed}s"
+          test "$elapsed" -lt 8 # SIGTERM wordt afgehandeld; geen 10 s wachten op SIGKILL
+          test "$(docker inspect -f '{{.State.ExitCode}}' wisselweer-publisher)" = 0
+          docker compose --profile publish rm -f publisher
+
+      - name: Update-pad met het installatiescript
+        run: |
+          set -euo pipefail
+          cd "$INSTALL_DIR"
+          before="$(sha256sum .env)"
+          unset WISSELWEER_CONTACT # bij een update is dat niet nodig
+          bash "$GITHUB_WORKSPACE/deploy/docker-install.sh" "$INSTALL_DIR"
+          test "$(sha256sum .env)" = "$before"
+          test "$(stat -c '%a' .env)" = 600
+          # Back-up van de database: aanwezig, niet leeg, geldig, rechten 700/600.
+          test "$(stat -c '%a' backups)" = 700
+          db="$(ls backups/wisselweer-*.db | head -n 1)"
+          test -s "$db"
+          test "$(stat -c '%a' "$db")" = 600
+          python3 -c "import sqlite3,sys; sys.exit(0 if sqlite3.connect(sys.argv[1]).execute('PRAGMA integrity_check').fetchone()[0] == 'ok' else 1)" "$db"
+          # Gegevens bleven bewaard (beheerder bestaat nog) en de app draait weer.
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/api/v1/health)" = 200
+          page="$(curl -fsS http://127.0.0.1:8000/login)"
+          grep -q 'name="username"' <<<"$page"
+
+      - name: Logs tonen bij een fout
+        if: failure()
+        run: |
+          cd "$INSTALL_DIR" 2>/dev/null || exit 0
+          docker compose --profile publish ps -a
+          docker compose --profile publish logs --tail 80
+
+      - name: Opruimen
+        if: always()
+        run: |
+          cd "$INSTALL_DIR" 2>/dev/null || exit 0
+          docker compose --profile publish down -v
