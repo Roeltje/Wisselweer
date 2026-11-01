@@ -2,7 +2,8 @@
 {% block title %}{{ t('login.title') }} · Wisselweer{% endblock %}
 {% block content %}
 <section class="card login-card">
-  <img class="login-logo" src="/static/logo.svg" alt="" width="72" height="72">
+  <img class="login-logo logo-l" src="/static/logo-light.svg?v={{ static_v }}" alt="" width="72" height="72">
+  <img class="login-logo logo-d" src="/static/logo-dark.svg?v={{ static_v }}" alt="" width="72" height="72">
   <h1>{{ t('login.title') }}</h1>
   {% if no_admin %}
     <p>{{ t('login.no_admin') }}</p>

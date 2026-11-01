@@ -50,7 +50,10 @@ def test_static_assets_are_public(anon):
     for path, ctype in (
         ("/static/app.css", "text/css"),
         ("/static/app.js", "javascript"),
+        ("/static/theme.js", "javascript"),
         ("/static/logo.svg", "image/svg+xml"),
+        ("/static/logo-light.svg", "image/svg+xml"),
+        ("/static/logo-dark.svg", "image/svg+xml"),
         ("/static/favicon.svg", "image/svg+xml"),
         ("/static/favicon.ico", "icon"),
     ):
@@ -75,7 +78,52 @@ def test_empty_dashboard_has_add_button(web):
 
 def test_login_page_is_styled_and_static(anon):
     r = anon.get("/login")
-    assert "/static/app.css" in r.text and "/static/favicon.svg" in r.text
+    assert "/static/app.css?v=" in r.text and "/static/favicon.svg?v=" in r.text
+
+
+def test_login_page_has_theme_assets_and_both_logos(anon):
+    text = anon.get("/login").text
+    assert re.search(r"/static/theme\.js\?v=\w+", text)
+    assert 'class="login-logo logo-l"' in text and "/static/logo-light.svg?v=" in text
+    assert 'class="login-logo logo-d"' in text and "/static/logo-dark.svg?v=" in text
+
+
+def test_base_loads_theme_before_app_js_with_cache_busting(web):
+    text = web.get("/").text
+    head = text[: text.index("</head>")]
+    assert head.index("/static/theme.js?v=") < head.index("/static/app.js?v=")
+    assert "defer" not in re.search(r"<script[^>]*theme\.js[^>]*>", head).group(0)
+    # de kop is in licht en donker petrol: daar staat de variant met lichte inkt
+    assert "/static/logo-dark.svg?v=" in text
+    assert re.search(r'data-theme-label-auto="[^"]+"', text)
+    assert re.search(r'href="/static/app\.css\?v=\w+"', text)
+
+
+def test_static_version_changes_with_content(tmp_path, monkeypatch):
+    from wisselweer.web import templating
+
+    monkeypatch.setattr(templating, "STATIC_DIR", tmp_path)
+    (tmp_path / "a.css").write_text("a")
+    first = templating._static_version()
+    (tmp_path / "a.css").write_text("b")
+    assert templating._static_version() != first
+
+
+def test_css_dark_tokens_follow_theme_switch(anon):
+    css = anon.get("/static/app.css").text
+    assert ':root[data-theme="dark"]' in css
+    # elke donkere media query moet door de licht-keuze overschreven kunnen worden
+    blocks = re.findall(r"@media \(prefers-color-scheme:\s*dark\)[^{]*\{\s*([^{]*)\{", css)
+    assert blocks
+    for selector in blocks:
+        assert ':not([data-theme="light"])' in selector, selector
+    assert ".theme-switch" in css
+
+
+def test_theme_js_contract(anon):
+    js = anon.get("/static/theme.js").text
+    assert "ww-theme" in js and "data-theme" in js and "localStorage" in js
+    assert "try" in js and "aria-label" in js and "title" in js
 
 
 def test_vehicle_flow_set_change_history(web):
@@ -333,7 +381,7 @@ def test_no_inline_scripts_or_styles(web, anon):
     for body in bodies:
         for rx in INLINE:
             assert not rx.search(body), (rx.pattern, body[:200])
-    for path in ("/static/app.css", "/static/app.js"):
+    for path in ("/static/app.css", "/static/app.js", "/static/theme.js"):
         assert "http://" not in anon.get(path).text.replace("http://www.w3.org", "")
         assert "https://" not in anon.get(path).text
         assert "@import" not in anon.get(path).text

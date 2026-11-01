@@ -35,8 +35,9 @@
   --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+/* Donker: systeemthema (tenzij de gebruiker licht koos) of handmatig via data-theme op <html>, zie theme.js. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #0A2B33;
     --surface: #0A3540;
     --surface-2: #0E4352;
@@ -64,6 +65,35 @@
     --shadow: 0 1px 2px rgba(0, 0, 0, .3);
   }
 }
+:root[data-theme="dark"] {
+  --bg: #0A2B33;
+  --surface: #0A3540;
+  --surface-2: #0E4352;
+  --text: #EAF2F4;
+  --muted: #A9C2C9;
+  --border: #1F5666;
+  --link: #8CC6EA;
+  --primary: #5BA4CF;
+  --primary-ink: #04202A;
+  --header-bg: #0A3540;
+  --header-ink: #F7F5F0;
+  --focus: #F28C28;
+  --danger: #FFB4A6;
+  --danger-bg: #4A1E17;
+  --warn-bg: #4A3213;
+  --warn-ink: #FFE2BD;
+  --badge-ok-bg: #123F52;
+  --badge-ok-ink: #CFE8F7;
+  --badge-prepare-bg: #4A3213;
+  --badge-prepare-ink: #FFE2BD;
+  --badge-change-bg: #F28C28;
+  --badge-change-ink: #1F1100;
+  --badge-unknown-bg: #1B4552;
+  --badge-unknown-ink: #D9E6EA;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3);
+}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
 
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -121,12 +151,21 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fo
 .main-nav a[aria-current="page"] { background: rgba(255, 255, 255, .2); font-weight: 700; }
 .site-header :focus-visible { outline-color: #fff; }
 .logout { margin: 0; }
+.theme-switch {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; padding: 0; cursor: pointer;
+  background: transparent; color: inherit; border: 1px solid rgba(255, 255, 255, .45); border-radius: 999px;
+}
+.theme-switch:hover { background: rgba(255, 255, 255, .12); }
+.theme-switch svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .site-header .btn-quiet { color: inherit; border-color: rgba(255, 255, 255, .45); }
 .site-header .btn-quiet:hover { background: rgba(255, 255, 255, .12); }
 @media (min-width: 40rem) {
   .main-nav { order: 0; width: auto; }
   .brand { margin-right: 1rem; }
   .logout { margin-left: auto; }
+  .theme-switch { margin-left: auto; }
+  .theme-switch + .logout { margin-left: 0; }
 }
 
 .site-footer { color: var(--muted); font-size: .88rem; padding: 1rem 0 2rem; border-top: 1px solid var(--border); }
@@ -259,7 +298,8 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { border-color
 .btn-quiet { background: transparent; }
 .btn-block { width: 100%; }
 .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
-@media (prefers-color-scheme: dark) { .btn-danger { color: #2A0C07; } }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn-danger { color: #2A0C07; } }
+:root[data-theme="dark"] .btn-danger { color: #2A0C07; }
 .btn-danger-quiet { color: var(--danger); background: transparent; border-color: var(--danger); }
 .danger-card { border-color: var(--danger); }
 
@@ -269,6 +309,13 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { border-color
 .flash ul { margin: 0; padding-left: 1.2rem; }
 
 /* Login */
+.logo-d { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .logo-l { display: none; }
+  :root:not([data-theme="light"]) .logo-d { display: inline; }
+}
+:root[data-theme="dark"] .logo-l { display: none; }
+:root[data-theme="dark"] .logo-d { display: inline; }
 .login-card { max-width: 24rem; margin: 2rem auto; text-align: center; }
 .login-card .field, .login-card .stack { text-align: left; }
 .login-card pre { text-align: left; }
