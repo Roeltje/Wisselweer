@@ -51,6 +51,8 @@ install -d -m 0750 -o "$SVC_USER" -g "$SVC_USER" "$DATA_DIR"
 install -d -m 0750 -o root -g "$SVC_USER" "$ETC_DIR"
 # Voor de SFTP-publicatiesleutel en known_hosts.
 install -d -m 0700 -o "$SVC_USER" -g "$SVC_USER" "$DATA_DIR/.ssh"
+# Voertuigfoto's; wisselweer-publish.service ziet deze map niet.
+install -d -m 0700 -o "$SVC_USER" -g "$SVC_USER" "$DATA_DIR/photos"
 
 # Vast pad: /usr/local/bin staat niet in elke root-sessie (bv. `pct enter`) in PATH.
 UV=/usr/local/bin/uv

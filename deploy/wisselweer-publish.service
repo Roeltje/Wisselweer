@@ -21,6 +21,8 @@ TimeoutStartSec=5min
 NoNewPrivileges=true
 ProtectSystem=strict
 ReadWritePaths=/var/lib/wisselweer
+# Voertuigfoto's zijn privé en niet nodig voor de publicatie; de publicatieservice ziet ze niet.
+InaccessiblePaths=-/var/lib/wisselweer/photos
 ProtectHome=true
 PrivateTmp=true
 PrivateDevices=true

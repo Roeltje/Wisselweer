@@ -45,9 +45,34 @@ def test_hardening_aanwezig(unit):
 
 def test_webapp_kan_sftp_sleutel_niet_lezen():
     assert "InaccessiblePaths=-/var/lib/wisselweer/.ssh" in _regels("wisselweer.service")
-    assert not any(
-        r.startswith("InaccessiblePaths=") for r in _regels("wisselweer-publish.service")
+    # De publicatieservice heeft de sleutel wel nodig, dus die mag hem niet verbergen.
+    assert "InaccessiblePaths=-/var/lib/wisselweer/.ssh" not in _regels(
+        "wisselweer-publish.service"
     )
+
+
+def test_publicatieservice_ziet_de_voertuigfotos_niet():
+    assert "InaccessiblePaths=-/var/lib/wisselweer/photos" in _regels("wisselweer-publish.service")
+    # De webapp serveert de foto's en moet erbij kunnen.
+    webapp = _regels("wisselweer.service")
+    assert not any("photos" in r for r in webapp if r.startswith("InaccessiblePaths="))
+    assert "ReadWritePaths=/var/lib/wisselweer" in webapp
+
+
+def test_update_script_maakt_fotoback_up():
+    import subprocess
+
+    script = DEPLOY / "update.sh"
+    assert subprocess.run(["bash", "-n", str(script)]).returncode == 0
+    text = script.read_text()
+    for needle in (
+        'if [[ -d "$DATA_DIR/photos" ]]; then',
+        'tar -C "$DATA_DIR" -czf "$BACKUP_DIR/wisselweer-$STAMP-photos.tar.gz" photos',
+        'chmod 0600 "$BACKUP_DIR/wisselweer-$STAMP-photos.tar.gz"',
+    ):
+        assert needle in text, needle
+    # De foto-back-up gebeurt vóór de installatie van de nieuwe code.
+    assert text.index("photos.tar.gz") < text.index('"$HERE/install.sh"')
 
 
 def test_cli_wrapper_runs_as_service_user_with_env_file():
