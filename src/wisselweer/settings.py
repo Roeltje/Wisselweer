@@ -14,6 +14,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from wisselweer.publisher.national import ReferenceLocation
 
 MIN_SECRET_KEY_LENGTH = 32
+DEFAULT_GEOCODER_URL = "https://nominatim.openstreetmap.org"
+# Waarden die geocoderen uitzetten. Een lege omgevingsvariabele telt als "niet gezet" (zie
+# `env_ignore_empty`), dus uitzetten via de omgeving kan met "off".
+_GEOCODER_OFF = {"", "off", "none", "false", "0", "uit"}
 
 if TYPE_CHECKING:
     from wisselweer.publisher.national import NationalConfig
@@ -27,6 +31,20 @@ def is_loopback_host(host: str) -> bool:
         return ipaddress.ip_address(host).is_loopback
     except ValueError:
         return False
+
+
+def _require_https(value: str, name: str) -> str:
+    """Alleen https-URL's; http alleen voor localhost of een loopback-adres."""
+    parts = urlparse(value.strip())
+    host = parts.hostname or ""
+    if parts.scheme == "https" and host:
+        return value.strip()
+    if parts.scheme == "http" and is_loopback_host(host):
+        return value.strip()
+    raise ValueError(
+        f"{name} moet een https://-URL zijn "
+        "(http:// is alleen toegestaan voor localhost of een loopback-adres)"
+    )
 
 
 class Settings(BaseSettings):
@@ -48,6 +66,8 @@ class Settings(BaseSettings):
     default_provider: str = "metno"
     commercial: bool = False
     openmeteo_base_url: str = "https://api.open-meteo.com"
+    # Nominatim-compatibele geocoder (adres/plaats -> coördinaten). Leeg of "off" = uit. Vereist `contact`.
+    geocoder_url: str = DEFAULT_GEOCODER_URL
     openmeteo_api_key: SecretStr | None = None
     knmi_api_key: SecretStr | None = None
     wu_api_key: SecretStr | None = None
@@ -96,22 +116,27 @@ class Settings(BaseSettings):
     @classmethod
     def _https_base_url(cls, value: str) -> str:
         """De Open-Meteo-URL kan een API-key in de query-string dragen: alleen https (of loopback)."""
-        parts = urlparse(value.strip())
-        host = parts.hostname or ""
-        if parts.scheme == "https" and host:
-            return value.strip()
-        if parts.scheme == "http" and is_loopback_host(host):
-            return value.strip()
-        raise ValueError(
-            "WISSELWEER_OPENMETEO_BASE_URL moet een https://-URL zijn "
-            "(http:// is alleen toegestaan voor localhost of een loopback-adres)"
-        )
+        return _require_https(value, "WISSELWEER_OPENMETEO_BASE_URL")
+
+    @field_validator("geocoder_url")
+    @classmethod
+    def _geocoder_url(cls, value: str) -> str:
+        """Leeg/"off" = uit; anders https (of loopback) zodat zoektekst niet onversleuteld meegaat."""
+        value = value.strip()
+        if value.lower() in _GEOCODER_OFF:
+            return ""
+        return _require_https(value, "WISSELWEER_GEOCODER_URL").rstrip("/")
 
     @model_validator(mode="after")
     def _default_publish_dir(self) -> Settings:
         if self.publish_dir is None:
             self.publish_dir = self.data_dir / "public"
         return self
+
+    @property
+    def geocoding_enabled(self) -> bool:
+        """Geocoderen staat aan met een URL én een contactgegeven (verplicht voor de User-Agent)."""
+        return bool(self.geocoder_url) and bool((self.contact or "").strip())
 
     def national_config(self) -> NationalConfig:
         from wisselweer.publisher.national import NationalConfig

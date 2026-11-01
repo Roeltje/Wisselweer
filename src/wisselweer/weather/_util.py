@@ -11,6 +11,7 @@ from email.utils import parsedate_to_datetime
 
 import httpx
 
+from wisselweer import __version__
 from wisselweer.core.models import Forecast, HourlyPoint
 from wisselweer.weather.base import ProviderRateLimited, ProviderUnavailable
 
@@ -19,6 +20,11 @@ MAX_RESPONSE_BYTES = 5 * 1024 * 1024  # een weerbron levert hooguit enkele honde
 DEFAULT_TZ = "Europe/Amsterdam"
 
 _HOURLY_FIELDS = tuple(f for f in HourlyPoint.model_fields if f != "time")
+
+
+def build_user_agent(contact: str | None) -> str:
+    """Herkenbare User-Agent met contactgegeven (verplicht bij MET Norway en Nominatim)."""
+    return f"Wisselweer/{__version__} (+https://wisselweer.nl; {contact})"
 
 
 def round_coord(value: float) -> float:
