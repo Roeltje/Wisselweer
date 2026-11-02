@@ -49,7 +49,7 @@ Plannen kunnen wijzigen. Vinkjes volgen [docs/STATUS.md](docs/STATUS.md); de Doc
 
 - [ ] PWA
 - [ ] Pushmeldingen
-- [ ] Kalenderintegratie
+- [ ] Kalenderintegratie (een agendafeed die zichzelf bijwerkt; een los `.ics`-item per voertuig bestaat al)
 - [ ] Automatische garage-mails na expliciete toestemming
 - [ ] Uitgebreider slijtagebeheer
 - [ ] Verdere Europese ondersteuning

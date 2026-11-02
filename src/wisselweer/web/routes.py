@@ -57,7 +57,7 @@ from wisselweer.vehicles import service as vehicle_svc
 from wisselweer.vehicles.schemas import LocationIn, VehicleIn, VehicleOut, VehiclePatch
 from wisselweer.weather.base import ProviderError
 from wisselweer.weather.compare import compare_forecasts
-from wisselweer.web import tire_forms, views
+from wisselweer.web import ical, tire_forms, views
 from wisselweer.web.forms import (
     Field,
     Form,
@@ -252,7 +252,14 @@ def _card(
         weather = views.last_weather(s, vehicle.id, infos, locale, tz)
         appointment = views.next_appointment(s, vehicle.id, locale, tz, now)
     advice_view = (
-        views.build_advice_view(advice, locale, tz, infos, no_mounted=mounted is None)
+        views.build_advice_view(
+            advice,
+            locale,
+            tz,
+            infos,
+            no_mounted=mounted is None,
+            self_change=vehicle.change_method == ChangeMethod.SELF,
+        )
         if advice is not None
         else None
     )
@@ -563,6 +570,37 @@ def vehicle_delete(request: Request, vehicle_id: int, form: FormDep, factory: Fa
         vehicle_svc.delete_vehicle(s, vehicle_id, request.app.state.settings.photos_dir)
     flash(request, tr("flash.vehicle_deleted"))
     return redirect("/")
+
+
+@router.get("/vehicles/{vehicle_id}/advice.ics")
+def vehicle_advice_ics(
+    request: Request, vehicle_id: int, factory: Factory, advisor: Advisor
+) -> Response:
+    """Agenda-item voor de wisseldag van dit voertuig (alleen als er een datum of periode is)."""
+    tr = views.make_tr(current_locale(request))
+    with session_scope(factory) as s:
+        vehicle = get_vehicle_or_404(s, vehicle_id)
+    advice = _compute_advice(advisor, vehicle_id, datetime.now(UTC))
+    day = views.calendar_date(advice) if advice is not None else None
+    if advice is None or day is None:
+        raise NotFoundError("geen wisseldatum")
+    body = ical.advice_event(
+        vehicle_id=vehicle_id,
+        direction=advice.direction.value,
+        day=day,
+        summary=tr("ical.summary", vehicle=vehicle.name),
+        description=tr(f"ical.{advice.direction.value}"),
+        remind_days=vehicle.prep_days,
+    )
+    return Response(
+        body,
+        media_type="text/calendar; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="wisselweer-{vehicle_id}.ics"',
+            "X-Content-Type-Options": "nosniff",
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 @router.get("/vehicles/{vehicle_id}/photo")

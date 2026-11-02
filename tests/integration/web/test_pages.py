@@ -417,7 +417,14 @@ def test_dashboard_shows_advice_and_weather(web):
     assert (
         "Waarom dit advies?" in detail and "Hoe ver vooruit" in detail and "Onzekerheden" in detail
     )
-    assert "Plan een afspraak vóór" in detail or "Nog geen betrouwbare wisseldatum" in detail
+    assert any(
+        s in detail
+        for s in (
+            "Plan een afspraak vóór",
+            "Plan zo snel mogelijk",
+            "Nog geen betrouwbare wisseldatum",
+        )
+    )
 
 
 def test_dashboard_works_when_provider_fails(app, web):
@@ -554,3 +561,50 @@ def test_login_has_seasonal_photo_and_no_tabbar(anon):
     text = anon.get("/login").text
     assert 'class="page-hero login-hero"' in text
     assert "has-tabs" not in text and "main-nav" not in text
+
+
+def test_advice_ics_requires_login(anon):
+    r = anon.get("/vehicles/1/advice.ics", follow_redirects=False)
+    assert r.status_code in (303, 401)
+
+
+def test_advice_ics_is_calendar_or_404(web):
+    vid = create_vehicle(web)
+    create_sets(web, vid)
+    r = web.get(f"/vehicles/{vid}/advice.ics")
+    assert r.status_code in (200, 404)
+    if r.status_code == 200:
+        assert r.headers["content-type"].startswith("text/calendar")
+        assert "attachment" in r.headers["content-disposition"]
+        assert r.text.startswith("BEGIN:VCALENDAR") and "Banden wisselen:" in r.text
+        assert f'href="/vehicles/{vid}/advice.ics"' in web.get(f"/vehicles/{vid}").text
+
+
+def test_advice_ics_with_fixed_advice(app, web):
+    from datetime import UTC, date, datetime
+
+    from wisselweer.api.deps import get_advice_service
+    from wisselweer.core.models import Advice, AdviceStatus, Direction
+
+    class FixedAdvisor:
+        def advice_for_vehicle(self, vehicle_id, now):
+            return Advice(
+                direction=Direction.TO_WINTER,
+                heading="heading.to_winter.prepare_change",
+                status=AdviceStatus.PREPARE_CHANGE,
+                recommended_period=(date(2030, 11, 20), date(2030, 11, 25)),
+                plan_appointment_by=date(2030, 11, 13),
+                evaluated_at=datetime.now(UTC),
+            )
+
+    vid = create_vehicle(web)
+    create_sets(web, vid)
+    app.dependency_overrides[get_advice_service] = lambda: FixedAdvisor()
+    try:
+        r = web.get(f"/vehicles/{vid}/advice.ics")
+        assert r.status_code == 200 and r.headers["content-type"].startswith("text/calendar")
+        assert "DTSTART;VALUE=DATE:20301120" in r.text and "TRIGGER:-P" in r.text
+        page = web.get(f"/vehicles/{vid}").text
+        assert f'href="/vehicles/{vid}/advice.ics"' in page and "Zet in agenda" in page
+    finally:
+        app.dependency_overrides.pop(get_advice_service, None)

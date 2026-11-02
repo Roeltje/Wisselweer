@@ -11,6 +11,7 @@ Eerste release met een Docker-image op GHCR.
 ### Nieuw
 - **Docker**: image `ghcr.io/roeltje/wisselweer` (amd64 en arm64) met herkomstverklaring en SBOM, installatiescript `docker-install.sh` en een aparte publisher-service (#20).
 - **Kenteken opzoeken bij de RDW**: merk, type en bouwjaar vooraf invullen en openstaande terugroepacties tonen; het kentekenveld staat bovenaan het voertuigformulier (#26).
+- **Zet in agenda**: een `.ics`-bestand per voertuig met de wisseldag en een herinnering, voorbereidingstijd vooraf (#29).
 - **Talen**: de interface is volledig beschikbaar in het Nederlands, Vlaams, Engels en Duits; de taal volgt de browser tot je zelf kiest (#22).
 - **Banden per groep**, merk- en typesuggesties, 3PMSF per band en een handleiding voor Home Assistant (#17).
 - **Winterbandenregels voor 16 landen** (DE, AT, FR, CH, IT, BE, LU, CZ, SI, HR, DK, SE, NO, FI, ES, PL) met bronnen en weercheck, plus een 14-daagse vooruitblik in `advice.json` (#10, #28).
@@ -21,6 +22,7 @@ Eerste release met een Docker-image op GHCR.
 ### Gewijzigd
 - **Nieuwe huisstijl**, gelijk aan wisselweer.nl: nieuw logo (band met sneeuwvlok en zon), seizoensfoto op dashboard en login, tabbalk onderaan op mobiel, themaknop met drie standen (#15, #24, #25).
 - Icoon en naam op het beginscherm van iOS en Android (#21).
+- Bij zelf wisselen "Plan het wisselen vóór …" in plaats van een garageafspraak; ligt die datum vandaag of eerder, dan "zo snel mogelijk". Op de voertuigpagina staat waarom het advies per auto kan afwijken van het landelijke advies (#29).
 - Het commando `wisselweer` werkt direct na de installatie (#14).
 
 ### Beveiliging en onderhoud

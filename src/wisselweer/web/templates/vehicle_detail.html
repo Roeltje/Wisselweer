@@ -37,12 +37,13 @@
       <p>{{ badge(adv) }}</p>
       <p class="headline">{{ adv.heading }}</p>
       {% if adv.date_line %}<p class="when">{{ adv.date_line }}</p>{% endif %}
-      {% if adv.plan_by %}<p class="plan">{{ icon('calendar', 16) }} {{ adv.plan_by }}</p>{% endif %}
+      {% if adv.plan_by or adv.calendar %}<p class="plan">{{ icon('calendar', 16) }} {% if adv.plan_by %}{{ adv.plan_by }}{% endif %}{% if adv.plan_by and adv.calendar %} · {% endif %}{% if adv.calendar %}<a href="/vehicles/{{ v.id }}/advice.ics" download>{{ t('advice.calendar') }}</a>{% endif %}</p>{% endif %}
     {% endif %}
     {% for n in adv.notices %}<p class="notice">{{ icon('cloud', 16) }} {{ n }}</p>{% endfor %}
 
     <details class="why">
       <summary>{{ t('vehicle.why') }}</summary>
+      <p class="muted small">{{ t('vehicle.why_personal') }}</p>
       {% if adv.reasons %}<ul>{% for r in adv.reasons %}<li>{{ r }}</li>{% endfor %}</ul>{% else %}<p class="muted">{{ t('vehicle.no_reasons') }}</p>{% endif %}
     </details>
     <details class="why">
