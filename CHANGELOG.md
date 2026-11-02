@@ -13,7 +13,7 @@ Eerste release met een Docker-image op GHCR.
 - **Kenteken opzoeken bij de RDW**: merk, type en bouwjaar vooraf invullen en openstaande terugroepacties tonen; het kentekenveld staat bovenaan het voertuigformulier (#26).
 - **Talen**: de interface is volledig beschikbaar in het Nederlands, Vlaams, Engels en Duits; de taal volgt de browser tot je zelf kiest (#22).
 - **Banden per groep**, merk- en typesuggesties, 3PMSF per band en een handleiding voor Home Assistant (#17).
-- **Winterbandenregels voor 8 landen** (DE, AT, FR, CH, IT, BE, LU, CZ) met weercheck, plus een 14-daagse vooruitblik in `advice.json` (#10).
+- **Winterbandenregels voor 16 landen** (DE, AT, FR, CH, IT, BE, LU, CZ, SI, HR, DK, SE, NO, FI, ES, PL) met bronnen en weercheck, plus een 14-daagse vooruitblik in `advice.json` (#10, #28).
 - **Foto per voertuig**: verkleind in de browser, metadata gestript, nooit gepubliceerd (#18, #19).
 - **Locatie zoeken** op adres of plaats (Nominatim) en "Gebruik mijn locatie" (#16).
 - Symbool achter 3PMSF en M+S in de teksten (#23).
