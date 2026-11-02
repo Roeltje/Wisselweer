@@ -28,9 +28,9 @@
     </dd></div>
     {% if sm.oldest_warn %}<div><dt></dt><dd class="small">{{ t('tire.age_warn', years=warn_years) }}</dd></div>{% endif %}
     {% if sm.pmsf_relevant %}
-    <div><dt>{{ t('tire.pmsf_short') }}</dt><dd>
+    <div><dt>{{ t('tire.pmsf_short')|marks }}</dt><dd>
       {% if sm.all_3pmsf %}<span class="pmsf-flag">{{ icon('3pmsf', 22) }} {{ t('tire.pmsf_all') }}</span>
-      {% else %}<span class="muted">{{ t('tire.pmsf_not_all') }}</span>{% endif %}
+      {% else %}<span class="muted">{{ t('tire.pmsf_not_all')|marks }}</span>{% endif %}
     </dd></div>
     {% endif %}
     {% if s.size %}<div><dt>{{ t('tire.size') }}</dt><dd>{{ s.size }}</dd></div>{% endif %}

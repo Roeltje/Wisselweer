@@ -238,7 +238,9 @@ def test_3pmsf_alleen_bij_winter_en_vierseizoenen(web):
     html = web.get(f"/vehicles/{vid}/sets/new").text
     assert 'name="g1_has_3pmsf"' in html and "only-winter" in html
     assert "3PMSF-symbool (bergtop met sneeuwvlok) op de band" in html
-    assert "het oude M+S-merk alleen is in o.a. Duitsland en Frankrijk niet meer genoeg" in html
+    # Achter M+S staat het symbool (filter `marks`), dus de zin is in twee stukken te vinden.
+    assert 'het oude <span class="mark-keep">M+S<svg class="mark-inline"' in html
+    assert "</svg>-merk</span> alleen is in o.a. Duitsland en Frankrijk niet meer genoeg" in html
     assert 'class="icon icon-3pmsf"' in html
     css = web.c.get("/static/app.css").text
     assert ':has(select[name="type"] option[value="summer"]:checked) .only-winter' in css
@@ -263,7 +265,8 @@ def test_3pmsf_alleen_bij_winter_en_vierseizoenen(web):
     sid = _new_set(web, vid, type="winter")  # symbool niet aangevinkt
     assert _groups(web, sid)[0].has_3pmsf is False
     assert (
-        "Niet alle banden hebben het 3PMSF-symbool" in web.get(f"/vehicles/{vid}/sets/{sid}").text
+        'Niet alle banden hebben het <span class="mark-keep">3PMSF<svg'
+        in web.get(f"/vehicles/{vid}/sets/{sid}").text
     )
     # Wijzigen via het groepsformulier.
     (g,) = _groups(web, sid)

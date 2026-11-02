@@ -32,13 +32,13 @@
     {%- if f.icon %} {{ icon(f.icon, 28) }}{% endif %}
     <span>{{ t(f.label) }}</span>
   </label>
-  {% if f.help %}<p class="hint" id="h-{{ f.name }}">{{ t(f.help) }}</p>{% endif %}
+  {% if f.help %}<p class="hint" id="h-{{ f.name }}">{{ t(f.help)|marks }}</p>{% endif %}
   {% if f.error %}<p class="error" id="e-{{ f.name }}">{{ f.error }}</p>{% endif %}
 </div>
 {%- else -%}
 <div class="field{% if f.wrapper_class %} {{ f.wrapper_class }}{% endif %}{% if f.error %} has-error{% endif %}">
   <label for="f-{{ f.name }}">{{ t(f.label) }}{% if f.required %} <span class="req" aria-hidden="true">*</span>{% endif %}</label>
-  {% if f.help %}<p class="hint" id="h-{{ f.name }}">{{ t(f.help) }}</p>{% endif %}
+  {% if f.help %}<p class="hint" id="h-{{ f.name }}">{{ t(f.help)|marks }}</p>{% endif %}
   {% if f.kind == 'select' -%}
   <select id="f-{{ f.name }}" name="{{ f.name }}"{% if f.required %} required{% endif %}{% if describedby %} aria-describedby="{{ describedby|join(' ') }}"{% endif %}{% if f.error %} aria-invalid="true"{% endif %}>
     {%- for value, text in f.options %}
