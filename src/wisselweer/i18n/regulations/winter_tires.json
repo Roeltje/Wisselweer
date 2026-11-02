@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "disclaimer_nl": "Indicatie op basis van openbare bronnen en een weersvoorspelling; dit is geen juridisch advies. Of een winterbandenplicht geldt hangt af van de werkelijke weg- en weersomstandigheden ter plaatse, niet van een voorspelling. Regels kunnen wijzigen: controleer vóór vertrek de officiële bron of de ANWB. Sancties en bedragen zijn bewust niet opgenomen. Laatst gecontroleerd: 1 november 2026.",
+  "disclaimer_nl": "Indicatie op basis van openbare bronnen en een weersvoorspelling; dit is geen juridisch advies. Of een winterbandenplicht geldt hangt af van de werkelijke weg- en weersomstandigheden ter plaatse, niet van een voorspelling. Regels kunnen wijzigen: controleer vóór vertrek de officiële bron of de ANWB. Sancties en bedragen zijn bewust niet opgenomen. Laatst gecontroleerd: 1 november 2026 (DE tot en met CZ) en 2 november 2026 (SI tot en met PL).",
   "countries": [
     {
       "code": "DE",
@@ -215,6 +215,226 @@
         {"name": "Špindlerův Mlýn", "latitude": 50.727, "longitude": 15.61, "elevation_m": 715, "mountain": true},
         {"name": "Železná Ruda (Šumava)", "latitude": 49.136, "longitude": 13.236, "elevation_m": 720, "mountain": true}
       ]
+    },
+    {
+      "code": "SI",
+      "name_nl": "Slovenië",
+      "rule_types": ["period", "situational"],
+      "period": {"start_month": 11, "start_day": 15, "end_month": 3, "end_day": 15},
+      "conditions_nl": "Van 15 november tot 15 maart, en daarbuiten bij winterse omstandigheden (sneeuwval, sneeuw of ijs op de weg, gladheid).",
+      "tires_nl": "Winterbanden op alle wielen; banden met M+S (of M.S, M&S) gelden als winterband. Met minder dan 3 mm profiel geldt een winterband als zomerband. All-season banden met 3PMSF voldoen.",
+      "min_tread_mm": 3.0,
+      "alternatives_nl": "Zomerbanden (minimaal 3 mm) mogen als er passende sneeuwkettingen voor de aangedreven wielen in de auto liggen; bij winterse omstandigheden moeten die gemonteerd worden. Waar een rond blauw bord kettingen voorschrijft, zijn ze ook met winterbanden verplicht; maximaal 50 km/u.",
+      "notes_nl": "Spijkerbanden zijn verboden. Rij je via Duitsland, dan volstaan kettingen daar niet. Bij een ongeval op zomerbanden kan medeschuld worden aangevoerd.",
+      "sources": [
+        {
+          "title": "ANWB: winterbanden in Slovenië",
+          "url": "https://www.anwb.nl/auto/banden/winterbanden/winterbanden-slovenie"
+        },
+        {
+          "title": "Promet.si (Sloveense verkeersinformatie): winteruitrusting",
+          "url": "https://promet.si/en/preparations-for-winter-conditions-"
+        },
+        {
+          "title": "Your Europe (EU): verkeersregels in Slovenië",
+          "url": "https://europa.eu/youreurope/citizens/travel/driving-abroad/road-rules-and-safety/slovenia/index_nl.htm"
+        }
+      ],
+      "checked_on": "2026-11-02",
+      "confidence": "high",
+      "reference_locations": [
+        {"name": "Ljubljana", "latitude": 46.0569, "longitude": 14.5058, "elevation_m": 295, "mountain": false},
+        {"name": "Maribor", "latitude": 46.5547, "longitude": 15.6459, "elevation_m": 275, "mountain": false},
+        {"name": "Kranjska Gora", "latitude": 46.4845, "longitude": 13.7857, "elevation_m": 810, "mountain": true}
+      ]
+    },
+    {
+      "code": "HR",
+      "name_nl": "Kroatië",
+      "rule_types": ["period", "area_or_signage", "situational"],
+      "period": {"start_month": 11, "start_day": 15, "end_month": 4, "end_day": 15},
+      "conditions_nl": "Van 15 november tot 15 april op de aangewezen winterwegvakken (veel hoofdwegen; kaart bij de HAK), ongeacht het weer. Op overige wegen bij winterweer, als de weg met sneeuw of ijs is bedekt.",
+      "tires_nl": "Winterbanden op alle wielen, met M+S of 3PMSF. All-season banden met 3PMSF voldoen.",
+      "min_tread_mm": 4.0,
+      "alternatives_nl": "Zomerbanden met minimaal 4 mm profiel mogen, als er passende sneeuwkettingen voor de aangedreven wielen in de auto liggen. Sneeuwsokken gelden als alternatief voor kettingen. Buiten de periode kunnen kettingen verplicht zijn bij sneeuw of ijzel.",
+      "notes_nl": "In Lika en Gorski Kotar moeten volgens de ANWB altijd kettingen in de auto liggen, ook met winterbanden. Spijkerbanden zijn verboden. De ANWB noemt ook een sneeuwschep in de winter. Bij een controle zonder de vereiste uitrusting kan doorrijden worden geweigerd.",
+      "sources": [
+        {
+          "title": "ANWB: winterbanden in Kroatië",
+          "url": "https://www.anwb.nl/auto/banden/winterbanden/winterbanden-kroatie"
+        },
+        {
+          "title": "Your Europe (EU): verkeersregels in Kroatië",
+          "url": "https://europa.eu/youreurope/citizens/travel/driving-abroad/road-rules-and-safety/croatia/index_nl.htm"
+        }
+      ],
+      "checked_on": "2026-11-02",
+      "confidence": "high",
+      "reference_locations": [
+        {"name": "Zagreb", "latitude": 45.815, "longitude": 15.9819, "elevation_m": 158, "mountain": false},
+        {"name": "Delnice (Gorski Kotar)", "latitude": 45.4007, "longitude": 14.7997, "elevation_m": 730, "mountain": true},
+        {"name": "Split", "latitude": 43.5081, "longitude": 16.4402, "elevation_m": 10, "mountain": false}
+      ]
+    },
+    {
+      "code": "DK",
+      "name_nl": "Denemarken",
+      "rule_types": ["situational"],
+      "period": null,
+      "conditions_nl": "Sinds 1 juli 2025 mag je niet rijden met banden die kennelijk ongeschikt zijn voor de weg, zoals zomerbanden op een weg met sneeuw, ijs of sneeuwmodder. Er is geen vaste periode.",
+      "tires_nl": "Bij winterse omstandigheden minimaal banden met M+S; bij zwaar winterweer banden met 3PMSF. All-season banden met 3PMSF voldoen.",
+      "min_tread_mm": null,
+      "alternatives_nl": "Sneeuwkettingen en sneeuwsokken zijn toegestaan, mits het wegdek niet beschadigd raakt.",
+      "notes_nl": "Spijkerbanden zijn toegestaan van 1 november tot en met 15 april, op alle wielen (ook van een aanhanger). De bronnen noemen geen apart wettelijk minimumprofiel voor de winter; de FDM raadt 3 mm aan op gladde wegen.",
+      "sources": [
+        {
+          "title": "ANWB: winterbanden in Denemarken",
+          "url": "https://www.anwb.nl/auto/banden/winterbanden/winterbanden-in-denemarken"
+        },
+        {
+          "title": "FDM: regels voor winterbanden in Denemarken",
+          "url": "https://fdm.dk/node/13567"
+        }
+      ],
+      "checked_on": "2026-11-02",
+      "confidence": "medium",
+      "reference_locations": [
+        {"name": "Kopenhagen", "latitude": 55.6761, "longitude": 12.5683, "elevation_m": 10, "mountain": false},
+        {"name": "Aarhus", "latitude": 56.1629, "longitude": 10.2039, "elevation_m": 30, "mountain": false},
+        {"name": "Aalborg", "latitude": 57.0488, "longitude": 9.9217, "elevation_m": 10, "mountain": false}
+      ]
+    },
+    {
+      "code": "SE",
+      "name_nl": "Zweden",
+      "rule_types": ["period", "situational"],
+      "period": {"start_month": 12, "start_day": 1, "end_month": 3, "end_day": 31},
+      "conditions_nl": "Van 1 december tot en met 31 maart bij winterse omstandigheden: sneeuw, ijs, sneeuwmodder of rijp op enig deel van de weg. De politie beoordeelt dat per weg. Ook voor buitenlandse auto's.",
+      "tires_nl": "Winterbanden met het 3PMSF-symbool of spijkerbanden; banden met alleen M+S tellen sinds 30 november 2024 niet meer (behalve op aanhangers tot 3500 kg, tot 30 november 2028). Minimaal 3 mm profiel bij winterse omstandigheden.",
+      "min_tread_mm": 3.0,
+      "alternatives_nl": "Sneeuwkettingen zijn toegestaan bij winterse omstandigheden, maar zijn voor personenauto's geen vervanging van winterbanden.",
+      "notes_nl": "Spijkerbanden zijn toegestaan van 1 oktober tot en met 15 april, en daarbuiten bij (verwachte) winterse omstandigheden; altijd op alle wielen, niet gemengd. In sommige straten van grote steden zijn spijkerbanden verboden (bord). Buiten winterse omstandigheden mogen zomerbanden ook in de periode.",
+      "sources": [
+        {
+          "title": "Transportstyrelsen: winterbanden",
+          "url": "https://www.transportstyrelsen.se/en/road/vehicles/winter-tyres/"
+        },
+        {
+          "title": "ANWB: winterbanden in Zweden",
+          "url": "https://www.anwb.nl/auto/banden/winterbanden/winterbanden-in-zweden"
+        }
+      ],
+      "checked_on": "2026-11-02",
+      "confidence": "high",
+      "reference_locations": [
+        {"name": "Malmö", "latitude": 55.605, "longitude": 13.0038, "elevation_m": 20, "mountain": false},
+        {"name": "Stockholm", "latitude": 59.3293, "longitude": 18.0686, "elevation_m": 30, "mountain": false},
+        {"name": "Åre", "latitude": 63.399, "longitude": 13.0815, "elevation_m": 380, "mountain": true}
+      ]
+    },
+    {
+      "code": "NO",
+      "name_nl": "Noorwegen",
+      "rule_types": ["situational"],
+      "period": null,
+      "conditions_nl": "Geen winterbandenplicht voor personenauto's tot 3500 kg, wel de plicht om voldoende grip te hebben: bij sneeuw of ijs op de weg winterbanden of sneeuwkettingen. Van 1 november tot de eerste zondag na tweede paasdag (in Nordland, Troms en Finnmark van 16 oktober tot en met 30 april) geldt een minimaal profiel van 3 mm voor alle banden.",
+      "tires_nl": "Winterbanden (met of zonder spijkers) worden aangeraden, op alle wielen. Zomerbanden zijn op een winterse weg niet toegestaan zonder kettingen.",
+      "min_tread_mm": 3.0,
+      "alternatives_nl": "Sneeuwkettingen zijn verplicht op wegen met sneeuw of ijs als je niet op winterbanden rijdt; sneeuwsokken mogen ook. Bij hevige sneeuwval rijdt op sommige bergpassen alleen een begeleid konvooi.",
+      "notes_nl": "Spijkerbanden zijn toegestaan van 1 november tot de eerste zondag na tweede paasdag (in het noorden van 16 oktober tot en met 30 april) en daarbuiten bij winterse omstandigheden; op alle wielen. In Oslo, Bergen, Trondheim en Stavanger is voor spijkerbanden een vergunning (sticker) nodig. Voor voertuigen vanaf 3500 kg gelden strengere regels.",
+      "sources": [
+        {
+          "title": "Statens vegvesen: bandeneisen",
+          "url": "https://www.vegvesen.no/en/vehicles/own-and-maintain/tyre-requirements/"
+        },
+        {
+          "title": "ANWB: winterbanden in Noorwegen",
+          "url": "https://www.anwb.nl/auto/banden/winterbanden/winterbanden-in-noorwegen"
+        }
+      ],
+      "checked_on": "2026-11-02",
+      "confidence": "high",
+      "reference_locations": [
+        {"name": "Oslo", "latitude": 59.9139, "longitude": 10.7522, "elevation_m": 20, "mountain": false},
+        {"name": "Bergen", "latitude": 60.3913, "longitude": 5.3221, "elevation_m": 10, "mountain": false},
+        {"name": "Geilo", "latitude": 60.534, "longitude": 8.206, "elevation_m": 800, "mountain": true}
+      ]
+    },
+    {
+      "code": "FI",
+      "name_nl": "Finland",
+      "rule_types": ["period", "situational"],
+      "period": {"start_month": 11, "start_day": 1, "end_month": 3, "end_day": 31},
+      "conditions_nl": "Van 1 november tot en met 31 maart als het weer of de weg dat vraagt (sneeuw, ijs, gladheid of kans daarop). Zomerbanden mogen in die periode zolang de wegen niet glad zijn of dreigen te worden. Ook voor buitenlandse auto's.",
+      "tires_nl": "Winterbanden met het 3PMSF-symbool of spijkerbanden; banden met alleen M+S tellen sinds 1 december 2024 niet meer. Minimaal 3 mm profiel; 5 mm wordt aangeraden op sneeuw en ijs.",
+      "min_tread_mm": 3.0,
+      "alternatives_nl": "Sneeuwkettingen zijn tijdelijk toegestaan als de weg met sneeuw of ijs is bedekt; ze vervangen geen winterbanden.",
+      "notes_nl": "Spijkerbanden zijn toegestaan in de winterperiode en daarbuiten als het weer dat vraagt; op alle wielen en ook op een aanhanger. Onzeker: de ANWB noemt voor Lapland een periode van half oktober tot eind april; dat staat niet bij Liikenneturva of Traficom en is hier niet overgenomen. In de winter gelden op veel wegen lagere maximumsnelheden.",
+      "sources": [
+        {
+          "title": "Liikenneturva (Fins verkeersveiligheidsinstituut): autobanden",
+          "url": "https://www.liikenneturva.fi/en/liikenteessa/car-tyres"
+        },
+        {
+          "title": "ANWB: winterbanden in Finland",
+          "url": "https://www.anwb.nl/auto/banden/winterbanden/winterbanden-in-finland"
+        }
+      ],
+      "checked_on": "2026-11-02",
+      "confidence": "medium",
+      "reference_locations": [
+        {"name": "Helsinki", "latitude": 60.1699, "longitude": 24.9384, "elevation_m": 20, "mountain": false},
+        {"name": "Tampere", "latitude": 61.4978, "longitude": 23.761, "elevation_m": 110, "mountain": false},
+        {"name": "Rovaniemi", "latitude": 66.5039, "longitude": 25.7294, "elevation_m": 100, "mountain": false}
+      ]
+    },
+    {
+      "code": "ES",
+      "name_nl": "Spanje",
+      "rule_types": ["area_or_signage"],
+      "period": null,
+      "conditions_nl": "Geen algemene winterbandenplicht. Op wegen waar een rond blauw bord (witte band met ketting, R-412) of de verkeersdienst DGT het aangeeft, meestal op bergpassen bij sneeuw, zijn sneeuwkettingen of winterbanden verplicht.",
+      "tires_nl": "Waar kettingen verplicht zijn, gelden winterbanden met het 3PMSF-symbool als alternatief. Of banden met alleen M+S volstaan, is onzeker (zie opmerkingen).",
+      "min_tread_mm": null,
+      "alternatives_nl": "Sneeuwkettingen op minimaal de aangedreven wielen, alleen op met sneeuw of ijs bedekte weg, maximaal 50 km/u en niet in tunnels. Sneeuwsokken volgens EN 16662-1 zijn toegestaan waar kettingen verplicht zijn.",
+      "notes_nl": "Onzeker: de ANWB accepteert ook M+S, de Spaanse autoclub RACE noemt alleen 3PMSF als wettelijk alternatief voor kettingen; hier is de strengste lezing aangehouden. Spijkerbanden alleen op met sneeuw of ijs bedekte wegen. Sinds 1 oktober 2026 is inhalen op autosnelwegen verboden bij sneeuwhinder. Afgesloten wegen: infocar.dgt.es. Andorra heeft een eigen winterperiode.",
+      "sources": [
+        {
+          "title": "ANWB: winterbanden in Spanje",
+          "url": "https://www.anwb.nl/auto/banden/winterbanden/winterbanden-in-spanje"
+        },
+        {
+          "title": "RACE: winterbanden in plaats van sneeuwkettingen",
+          "url": "https://www.race.es/neumaticos-invierno-sustituyen-cadenas"
+        }
+      ],
+      "checked_on": "2026-11-02",
+      "confidence": "medium",
+      "reference_locations": []
+    },
+    {
+      "code": "PL",
+      "name_nl": "Polen",
+      "rule_types": ["area_or_signage"],
+      "period": null,
+      "conditions_nl": "Geen winterbandenplicht. Waar het bord C-18 (rond, blauw, band met ketting) staat, meestal op bergwegen, zijn sneeuwkettingen op minimaal twee aangedreven wielen verplicht, tot het bord C-19.",
+      "tires_nl": "Geen wettelijke eisen voor winterbanden. Winterbanden of all-season banden met 3PMSF worden aangeraden.",
+      "min_tread_mm": null,
+      "alternatives_nl": "Waar het bord C-18 staat, vervangen winterbanden de kettingen niet. Kettingen mogen alleen op met sneeuw bedekte wegen.",
+      "notes_nl": "Een onderbord kan de kettingplicht beperken tot bepaalde voertuigen. Volgens de politie moeten bij vierwielaandrijving kettingen op alle wielen. Er is geen officiële overheidspagina geraadpleegd; de regel komt uit de tekst van de verordening over verkeerstekens.",
+      "sources": [
+        {
+          "title": "Verordening verkeerstekens, § 42 (bord C-18), via lexlege.pl",
+          "url": "https://lexlege.pl/znaki-dr/znaki-nakazu/14181/"
+        },
+        {
+          "title": "Otomoto: zijn sneeuwkettingen in Polen verplicht?",
+          "url": "https://www.otomoto.pl/news/lancuchy-sniegowe-kiedy-trzeba-je-stosowac"
+        }
+      ],
+      "checked_on": "2026-11-02",
+      "confidence": "medium",
+      "reference_locations": []
     }
   ]
 }

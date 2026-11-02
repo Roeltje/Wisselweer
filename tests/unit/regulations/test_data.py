@@ -34,14 +34,17 @@ def _minimal(**kw):
     return base | kw
 
 
-def test_first_eight_countries_present():
-    assert [c.code for c in RULES] == ["DE", "AT", "FR", "CH", "IT", "BE", "LU", "CZ"]
+def test_sixteen_countries_present_in_roadmap_order():
+    assert [c.code for c in RULES] == [
+        *("DE", "AT", "FR", "CH", "IT", "BE", "LU", "CZ"),
+        *("SI", "HR", "DK", "SE", "NO", "FI", "ES", "PL"),
+    ]
 
 
 @pytest.mark.parametrize("rule", RULES, ids=lambda r: r.code)
 def test_every_country_has_sources_and_date(rule):
     assert rule.sources and all(s.url.startswith("https://") for s in rule.sources)
-    assert rule.checked_on == date(2026, 11, 1)
+    assert rule.checked_on in (date(2026, 11, 1), date(2026, 11, 2))
 
 
 @pytest.mark.parametrize("rule", RULES, ids=lambda r: r.code)
@@ -61,7 +64,8 @@ def test_no_text_claims_duty_applies_now():
 
 def test_uncertain_country_is_marked():
     by = {c.code: c for c in RULES}
-    assert by["FR"].confidence != "high" and "Onzeker" in (by["FR"].notes_nl or "")
+    for code in ("FR", "FI", "ES"):
+        assert by[code].confidence != "high" and "Onzeker" in (by[code].notes_nl or ""), code
 
 
 def test_disclaimer_says_no_legal_advice():
