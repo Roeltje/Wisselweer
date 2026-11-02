@@ -246,7 +246,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fo
 .correct summary { list-style: none; cursor: pointer; }
 .correct summary::-webkit-details-marker { display: none; }
 .correct[open] { flex-basis: 100%; }
-.table-wrap { overflow-x: auto; margin-top: .75rem; border: 1px solid var(--border); border-radius: 10px; }
+.table-wrap { position: relative; overflow-x: auto; margin-top: .75rem; border: 1px solid var(--border); border-radius: 10px; }
 table { border-collapse: collapse; width: 100%; font-size: .92rem; }
 caption { text-align: left; padding: .5rem .75rem; font-weight: 600; }
 th, td { text-align: left; padding: .5rem .75rem; border-top: 1px solid var(--border); vertical-align: top; white-space: nowrap; }

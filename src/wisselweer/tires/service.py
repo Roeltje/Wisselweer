@@ -145,7 +145,9 @@ def _mounted_set(session: Session, vehicle_id: int) -> TireSet | None:
 def create_tire_set(session: Session, vehicle_id: int, data: TireSetIn) -> TireSetOut:
     _vehicle(session, vehicle_id)
     if data.status == TireStatus.MOUNTED and _mounted_set(session, vehicle_id) is not None:
-        raise InvalidOperation("er is al een gemonteerde set; gebruik een bandenwissel")
+        raise InvalidOperation(
+            "er is al een gemonteerde set; gebruik een bandenwissel", key="err.mounted_exists"
+        )
     groups = data.tire_groups if data.tire_groups is not None else [TireGroupIn()]
     _check_total(sum(g.quantity for g in groups))
     s = TireSet(vehicle_id=vehicle_id, **data.model_dump(exclude={"tire_groups"}))
@@ -159,9 +161,11 @@ def create_tire_set(session: Session, vehicle_id: int, data: TireSetIn) -> TireS
 
 def _check_total(total: int) -> None:
     if total < 1:
-        raise InvalidOperation("een set heeft minimaal één band")
+        raise InvalidOperation("een set heeft minimaal één band", key="err.set_min_tires")
     if total > MAX_TIRES:
-        raise InvalidOperation(f"een set heeft hooguit {MAX_TIRES} banden")
+        raise InvalidOperation(
+            f"een set heeft hooguit {MAX_TIRES} banden", key="err.set_max_tires", max=MAX_TIRES
+        )
 
 
 def get_tire_set(session: Session, set_id: int, *, include_removed: bool = False) -> TireSetOut:
@@ -182,10 +186,10 @@ def update_tire_set(session: Session, set_id: int, patch: TireSetPatch) -> TireS
     changes = patch.model_dump(exclude_unset=True)
     for non_null in ("type", "status"):
         if non_null in changes and changes[non_null] is None:
-            raise InvalidOperation(f"{non_null} mag niet leeg zijn")
+            raise InvalidOperation(f"{non_null} mag niet leeg zijn", key="error.required")
     new_status = changes.get("status")
     if new_status == TireStatus.MOUNTED and s.status != TireStatus.MOUNTED:
-        raise InvalidOperation("monteren gaat via een bandenwissel")
+        raise InvalidOperation("monteren gaat via een bandenwissel", key="err.mount_via_change")
     for k, val in changes.items():
         setattr(s, k, val)
     session.flush()
@@ -196,14 +200,18 @@ def delete_tire_set(session: Session, set_id: int) -> None:
     """Verwijdert een set met metingen; niet als hij gemonteerd is of in de wisselhistorie staat."""
     s = _set(session, set_id)
     if s.status == TireStatus.MOUNTED:
-        raise InvalidOperation("een gemonteerde set kan niet verwijderd worden")
+        raise InvalidOperation(
+            "een gemonteerde set kan niet verwijderd worden", key="err.mounted_no_delete"
+        )
     in_history = session.scalar(
         select(TireChange.id)
         .where((TireChange.to_set_id == set_id) | (TireChange.from_set_id == set_id))
         .limit(1)
     )
     if in_history is not None:
-        raise InvalidOperation("set staat in de wisselhistorie; zet de status op 'retired'")
+        raise InvalidOperation(
+            "set staat in de wisselhistorie; zet de status op 'retired'", key="err.set_in_history"
+        )
     session.execute(delete(TreadMeasurement).where(TreadMeasurement.tire_set_id == set_id))
     session.execute(delete(TireGroup).where(TireGroup.tire_set_id == set_id))
     session.delete(s)
@@ -238,11 +246,13 @@ def add_tire_group(session: Session, set_id: int, data: TireGroupIn) -> TireGrou
 def update_tire_group(session: Session, group_id: int, patch: TireGroupPatch) -> TireGroupOut:
     g = _group(session, group_id)
     if g.removed_on is not None:
-        raise InvalidOperation("een vervangen groep kan niet meer gewijzigd worden")
+        raise InvalidOperation(
+            "een vervangen groep kan niet meer gewijzigd worden", key="err.group_replaced_locked"
+        )
     changes = patch.model_dump(exclude_unset=True)
     if "quantity" in changes:
         if changes["quantity"] is None:
-            raise InvalidOperation("quantity mag niet leeg zijn")
+            raise InvalidOperation("quantity mag niet leeg zijn", key="error.required")
         _check_total(_active_total(session, g.tire_set_id, exclude_id=g.id) + changes["quantity"])
     for k, val in changes.items():
         setattr(g, k, val)
@@ -254,7 +264,7 @@ def delete_tire_group(session: Session, group_id: int) -> None:
     """Verwijdert een groep; een set houdt altijd minimaal één actieve groep."""
     g = _group(session, group_id)
     if g.removed_on is None and _active_total(session, g.tire_set_id, exclude_id=g.id) < 1:
-        raise InvalidOperation("een set houdt minimaal één actieve groep")
+        raise InvalidOperation("een set houdt minimaal één actieve groep", key="err.set_min_group")
     session.delete(g)
     session.flush()
 
@@ -276,13 +286,17 @@ def replace_tires(
         if g.tire_set_id != set_id:
             raise NotFoundError("bandengroep niet gevonden")
         if g.removed_on is not None:
-            raise InvalidOperation("deze groep is al vervangen")
+            raise InvalidOperation("deze groep is al vervangen", key="err.group_already_replaced")
         n = data.quantity if data.quantity is not None else g.quantity
         if n > g.quantity:
-            raise InvalidOperation("je kunt niet meer banden vervangen dan de groep telt")
+            raise InvalidOperation(
+                "je kunt niet meer banden vervangen dan de groep telt", key="err.replace_too_many"
+            )
         when = data.replaced_on or today
         if when > today:
-            raise InvalidOperation("de datum van vervangen ligt in de toekomst")
+            raise InvalidOperation(
+                "de datum van vervangen ligt in de toekomst", key="err.replace_future"
+            )
         if n == g.quantity:
             g.removed_on = when
             g.removed_note = data.note
@@ -372,7 +386,7 @@ def _resolve(session: Session, reading: OdometerReading | None) -> OdometerReadi
     seen: set[int] = set()
     while reading is not None and reading.superseded_by_id is not None:
         if reading.id in seen:
-            raise InvalidOperation("cyclische correctieketen")
+            raise InvalidOperation("cyclische correctieketen", key="err.odometer_cycle")
         seen.add(reading.id)
         reading = session.get(OdometerReading, reading.superseded_by_id)
     return reading
@@ -396,7 +410,9 @@ def _check_monotonic(session: Session, vehicle_id: int, when: datetime, km: int)
         if (r.recorded_at <= when and r.reading_km > km) or (
             r.recorded_at > when and r.reading_km < km
         ):
-            raise InvalidOperation("kilometerstand past niet bij de bestaande standen")
+            raise InvalidOperation(
+                "kilometerstand past niet bij de bestaande standen", key="err.odometer_inconsistent"
+            )
 
 
 def add_odometer_reading(
@@ -409,7 +425,7 @@ def add_odometer_reading(
     """Handmatige stand; moet monotoon passen bij de geldige standen."""
     _vehicle(session, vehicle_id)
     if reading_km < 0:
-        raise InvalidOperation("kilometerstand mag niet negatief zijn")
+        raise InvalidOperation("kilometerstand mag niet negatief zijn", key="err.odometer_negative")
     _check_monotonic(session, vehicle_id, recorded_at, reading_km)
     r = OdometerReading(
         vehicle_id=vehicle_id,
@@ -431,9 +447,12 @@ def correct_odometer(
     if old is None:
         raise NotFoundError("kilometerstand niet gevonden")
     if old.superseded_by_id is not None:
-        raise InvalidOperation("deze stand is al gecorrigeerd; corrigeer de geldige stand")
+        raise InvalidOperation(
+            "deze stand is al gecorrigeerd; corrigeer de geldige stand",
+            key="err.odometer_corrected",
+        )
     if new_km < 0:
-        raise InvalidOperation("kilometerstand mag niet negatief zijn")
+        raise InvalidOperation("kilometerstand mag niet negatief zijn", key="err.odometer_negative")
     new = OdometerReading(
         vehicle_id=old.vehicle_id,
         reading_km=new_km,
@@ -490,17 +509,23 @@ def register_tire_change(
         _vehicle(session, vehicle_id)
         to_set = _set(session, to_set_id)
         if to_set.vehicle_id != vehicle_id:
-            raise InvalidOperation("bandenset hoort niet bij dit voertuig")
+            raise InvalidOperation(
+                "bandenset hoort niet bij dit voertuig", key="err.set_wrong_vehicle"
+            )
         if to_set.status == TireStatus.RETIRED:
-            raise InvalidOperation("een afgeschreven set kan niet gemonteerd worden")
+            raise InvalidOperation(
+                "een afgeschreven set kan niet gemonteerd worden", key="err.retired_no_mount"
+            )
         if to_set.status == TireStatus.MOUNTED:
-            raise InvalidOperation("deze set is al gemonteerd")
+            raise InvalidOperation("deze set is al gemonteerd", key="err.already_mounted")
         if changed_at > today:
-            raise InvalidOperation("wisseldatum ligt in de toekomst")
+            raise InvalidOperation("wisseldatum ligt in de toekomst", key="err.change_future")
         if garage_id is not None and session.get(Garage, garage_id) is None:
             raise NotFoundError("garage niet gevonden")
         if odometer_km is not None and odometer_km < 0:
-            raise InvalidOperation("kilometerstand mag niet negatief zijn")
+            raise InvalidOperation(
+                "kilometerstand mag niet negatief zijn", key="err.odometer_negative"
+            )
 
         when = datetime.combine(changed_at, time.min, tzinfo=UTC)
         reading: OdometerReading | None = None

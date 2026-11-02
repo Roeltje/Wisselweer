@@ -62,7 +62,8 @@ def group_fields(
                 f"{prefix}positions",
                 "tire.positions",
                 help="tire.positions_help",
-                attrs={"maxlength": "20", "placeholder": "LV,RV"},
+                placeholder="tire.positions_example",
+                attrs={"maxlength": "20"},
             )
         )
     if pmsf:

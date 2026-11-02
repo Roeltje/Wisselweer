@@ -41,9 +41,9 @@
   <footer class="site-footer">
     <div class="wrap">
       <p>{{ t('app.tagline') }}</p>
-      {% if authed %}
-      <p class="lang" aria-label="{{ t('nav.language') }}">
-        {% for code in locales %}<a href="?lang={{ code }}" hreflang="{{ code }}"{% if code == locale %} aria-current="true"{% endif %}>{{ code }}</a>{% endfor %}
+      {% if locales %}
+      <p class="lang" role="group" aria-label="{{ t('nav.language') }}">
+        {% for code in locales %}<a href="?lang={{ code }}{{ lang_extra or '' }}" lang="{{ code }}" hreflang="{{ code }}"{% if code == locale %} aria-current="true"{% endif %}>{{ locale_names[code] }}</a>{% endfor %}
       </p>
       {% endif %}
     </div>

@@ -389,6 +389,32 @@ def test_mailto(session):
         gsvc.mailto_link(v, bare, adv)
 
 
+def test_mailto_follows_locale(session):
+    g = gsvc.create_garage(session, GarageIn(name="Garage Zn", email="garage@example.invalid"))
+    v = _vehicle(session, name="Auto")
+    adv = Advice(
+        direction=Direction.TO_SUMMER,
+        heading="h",
+        status=AdviceStatus.PREPARE_CHANGE,
+        recommended_date=date(2026, 4, 2),
+        evaluated_at=datetime(2026, 3, 30, tzinfo=UTC),
+    )
+    en = parse_qs(urlsplit(gsvc.mailto_link(v, g, adv, "en")).query)
+    assert en["subject"] == ["Tyre change appointment Auto"]
+    assert "from winter to summer tyres" in en["body"][0]
+    assert "Number plate: XX-000-X" in en["body"][0] and "around 02-04-2026" in en["body"][0]
+    assert "Kind regards" in en["body"][0] and "Kenteken" not in en["body"][0]
+    de = parse_qs(urlsplit(gsvc.mailto_link(v, g, adv, "de-DE")).query)
+    assert "Kennzeichen: XX-000-X" in de["body"][0] and "Sommerreifen" in de["body"][0]
+    assert de["body"][0].rstrip().endswith("Mit freundlichen Grüßen")
+    # standaard (en de API) blijft Nederlands
+    nl = parse_qs(urlsplit(gsvc.mailto_link(v, g, adv)).query)
+    assert (
+        "van winter- naar zomerbanden" in nl["body"][0]
+        and "Met vriendelijke groet" in nl["body"][0]
+    )
+
+
 # --- Cache en migraties -----------------------------------------------------------------
 
 

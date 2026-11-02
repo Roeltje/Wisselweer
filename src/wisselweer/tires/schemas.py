@@ -12,7 +12,17 @@ from wisselweer.storage.enums import ChangeMethod, OdometerSource, Position, Tir
 MAX_TIRES = 4
 _POSITION_ORDER = ("FL", "FR", "RL", "RR")
 # Nederlandse afkortingen (links/rechts voor/achter) zijn ook toegestaan.
-_POSITION_ALIASES = {"LV": "FL", "RV": "FR", "LA": "RL", "RA": "RR"}
+# Nederlandse (links/rechts, voor/achter) en Duitse (vorne/hinten) afkortingen.
+_POSITION_ALIASES = {
+    "LV": "FL",
+    "RV": "FR",
+    "LA": "RL",
+    "RA": "RR",
+    "VL": "FL",
+    "VR": "FR",
+    "HL": "RL",
+    "HR": "RR",
+}
 
 
 def _blank_to_none(value: str | None) -> str | None:

@@ -18,7 +18,7 @@ from wisselweer.geocoding import (
     GeocoderRateLimited,
     GeocoderUnavailable,
 )
-from wisselweer.i18n import SUPPORTED_LOCALES, normalize_locale
+from wisselweer.i18n import SUPPORTED_LOCALES, request_locale
 
 log = logging.getLogger("wisselweer.api")
 
@@ -34,10 +34,10 @@ SearchText = Annotated[
 
 
 def _locale(request: Request, lang: str | None) -> str:
-    """Taal voor de resultaten: `lang`, anders de taal van de sessie, anders de standaardtaal."""
+    """Taal voor de resultaten: `lang`, anders de taal van de sessie, anders de browsertaal."""
     if lang in SUPPORTED_LOCALES:
         return lang
-    return normalize_locale(request.session.get("lang"))
+    return request_locale(request, persist=False)
 
 
 @router.get("/geocode", response_model=list[GeocodeResult])

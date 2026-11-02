@@ -321,7 +321,7 @@ def test_garage_crud_and_appointment_mailto(web):
     # garage met afspraken kan niet verwijderd worden: foutmelding via flash
     r = web.post("/garages/1/delete")
     assert r.status_code == 303
-    assert "kan niet verwijderd" in web.c.get("/garages").text
+    assert "kan niet worden verwijderd" in web.c.get("/garages").text
 
 
 def test_garage_delete(web):

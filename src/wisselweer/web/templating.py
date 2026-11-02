@@ -76,14 +76,25 @@ def _datetime(context: Any, value: Any) -> str:
     return format_datetime(value, _locale(context))
 
 
-def _km(value: int | None) -> str:
-    return "" if value is None else f"{value:,}".replace(",", ".")
+@pass_context
+def _km(context: Any, value: int | None) -> str:
+    from wisselweer.i18n import format_number
+
+    return "" if value is None else format_number(value, _locale(context))
 
 
-def _euro(cents: int | None) -> str:
-    if cents is None:
-        return ""
-    return "€ " + f"{cents / 100:,.2f}".replace(",", "_").replace(".", ",").replace("_", ".")
+@pass_context
+def _euro(context: Any, cents: int | None) -> str:
+    from wisselweer.i18n import format_euro
+
+    return format_euro(cents, _locale(context))
+
+
+def locale_context(locale: str) -> dict[str, Any]:
+    """Gegevens voor de taalkiezer in de footer (taalnamen staan in de eigen taal)."""
+    from wisselweer.i18n import LOCALE_NAMES, SUPPORTED_LOCALES
+
+    return {"locale": locale, "locales": SUPPORTED_LOCALES, "locale_names": LOCALE_NAMES}
 
 
 templates.env.globals["t"] = _t
