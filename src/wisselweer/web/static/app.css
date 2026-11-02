@@ -351,6 +351,9 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { border-color
 /* 3PMSF alleen bij winter- en vierseizoenenbanden: de checkbox verdwijnt zolang zomerbanden gekozen zijn
    (puur CSS, dus ook zonder JavaScript; browsers zonder :has() tonen hem gewoon altijd). */
 form:has(select[name="type"] option[value="summer"]:checked) .only-winter { display: none; }
+/* Symbool direct achter 3PMSF of M+S in lopende tekst; volgt de tekstkleur */
+.mark-keep { white-space: nowrap; }
+.mark-inline { display: inline-block; width: 1.3em; height: 1.3em; margin: 0 .1em 0 .25em; vertical-align: -.3em; }
 .pmsf-flag { display: inline-flex; align-items: center; gap: .3rem; vertical-align: middle; color: var(--primary); }
 .chip-warn { background: var(--badge-prepare-bg); color: var(--badge-prepare-ink); border-color: var(--orange); display: inline-flex; align-items: center; gap: .25rem; }
 .notice-warn { background: var(--warn-bg); color: var(--warn-ink); border: 2px solid var(--orange); }
