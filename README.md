@@ -26,7 +26,7 @@ Wisselweer adviseert wanneer je van zomer- naar winterbanden wisselt (en terug),
 - Landelijk advies en publicatie van `advice.json`: [docs/publishing.md](docs/publishing.md).
 - Optioneel in `advice.json`: winterbandenregels per land (`WISSELWEER_PUBLISH_COUNTRIES`, informatief, geen juridisch advies) en een 14-daagse vooruitblik (`outlook`): [docs/regulations.md](docs/regulations.md), [docs/public-advice-contract.md](docs/public-advice-contract.md).
 - Vergelijking van weerbronnen (diagnostisch, er wordt niets gecombineerd) en een backtest-commando: [docs/backtesting.md](docs/backtesting.md).
-- Nederlandse interface via i18n-bestanden; er zijn ook `nl-BE`, `en` en `de-DE`-bestanden aanwezig, maar de interface is nog niet volledig meertalig.
+- Interface volledig in het Nederlands (`nl-NL`, `nl-BE`), Engels (`en`) en Duits (`de-DE`) via i18n-bestanden; de taal volgt de browser (`Accept-Language`) tot je in de footer zelf een taal kiest.
 
 ## Snelle start (lokaal)
 
