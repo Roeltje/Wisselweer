@@ -9,6 +9,10 @@
   <title>{% block title %}Wisselweer{% endblock %}</title>
   <link rel="icon" href="/static/favicon.ico?v={{ static_v }}" sizes="32x32">
   <link rel="icon" href="/static/favicon.svg?v={{ static_v }}" type="image/svg+xml">
+  {# Beginscherm (iOS/Android): zonder deze regels maakt iOS een icoon van de eerste letter van de titel. #}
+  <link rel="apple-touch-icon" href="/static/apple-touch-icon.png?v={{ static_v }}">
+  <link rel="manifest" href="/static/manifest.webmanifest?v={{ static_v }}">
+  <meta name="apple-mobile-web-app-title" content="Wisselweer">
   <link rel="stylesheet" href="/static/app.css?v={{ static_v }}">
   <script src="/static/theme.js?v={{ static_v }}"></script>
   <script src="/static/app.js?v={{ static_v }}" defer></script>
