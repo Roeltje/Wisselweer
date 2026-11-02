@@ -48,7 +48,7 @@
   {%- elif f.kind == 'textarea' -%}
   <textarea id="f-{{ f.name }}" name="{{ f.name }}" rows="3"{% if describedby %} aria-describedby="{{ describedby|join(' ') }}"{% endif %}{% if f.error %} aria-invalid="true"{% endif %}>{{ f.value }}</textarea>
   {%- else -%}
-  <input id="f-{{ f.name }}" name="{{ f.name }}" type="{{ f.kind }}" value="{{ f.value }}"{% if f.required %} required{% endif %}{% for k, v in f.attrs.items() %} {{ k }}="{{ v }}"{% endfor %}{% if describedby %} aria-describedby="{{ describedby|join(' ') }}"{% endif %}{% if f.error %} aria-invalid="true"{% endif %}>
+  <input id="f-{{ f.name }}" name="{{ f.name }}" type="{{ f.kind }}" value="{{ f.value }}"{% if f.placeholder %} placeholder="{{ t(f.placeholder) }}"{% endif %}{% if f.required %} required{% endif %}{% for k, v in f.attrs.items() %} {{ k }}="{{ v }}"{% endfor %}{% if describedby %} aria-describedby="{{ describedby|join(' ') }}"{% endif %}{% if f.error %} aria-invalid="true"{% endif %}>
   {%- endif %}
   {% if f.error %}<p class="error" id="e-{{ f.name }}">{{ f.error }}</p>{% endif %}
 </div>

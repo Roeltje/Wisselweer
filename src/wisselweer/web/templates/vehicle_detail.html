@@ -122,7 +122,7 @@
           {% else %}{{ t('tire.km_unknown') }}{% endif %}
           {% if r.tread %}
             · {{ t('tire.tread') }}{% if r.tread_date %} ({{ r.tread_date|d }}){% endif %}:
-            {% for pos in ['FL', 'FR', 'RL', 'RR'] %}{% if r.tread.get(pos) %}{{ t('tread.short.' ~ pos) }} {{ r.tread[pos] }} mm{% if not loop.last %}, {% endif %}{% endif %}{% endfor %}
+            {% for pos in ['FL', 'FR', 'RL', 'RR'] if r.tread.get(pos) %}{{ t('tread.short.' ~ pos) }} {{ r.tread[pos] }} mm{% if not loop.last %}, {% endif %}{% endfor %}
           {% endif %}
         </p>
       </div>

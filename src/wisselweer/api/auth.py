@@ -27,9 +27,10 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from wisselweer.api.deps import ensure_db
+from wisselweer.i18n import SUPPORTED_LOCALES, request_locale, t
 from wisselweer.settings import Settings
 from wisselweer.storage.orm import AdminUser, ApiToken
-from wisselweer.web.templating import templates
+from wisselweer.web.templating import locale_context, templates
 
 log = logging.getLogger("wisselweer.auth")
 
@@ -41,7 +42,6 @@ TOKEN_PREFIX = "wwt_"
 LOGIN_MAX_FAILURES = 5
 LOGIN_WINDOW_SECONDS = 300
 MUTATING_METHODS = {"POST", "PATCH", "PUT", "DELETE"}
-LOGIN_ERROR = "Onjuiste gebruikersnaam of wachtwoord"
 
 # Parameters staan in de hash, dus oudere hashes (N=2**14, p=1) blijven verifieerbaar.
 # Geheugen is ~128*N*r = 64 MiB; `maxmem` staat ruim daarboven (ook voor oude hashes).
@@ -50,7 +50,15 @@ _SCRYPT_MAXMEM = 256 * 1024 * 1024
 
 
 class AuthError(ValueError):
-    """Ongeldige invoer bij het beheren van gebruikers of tokens (bevat nooit geheimen)."""
+    """Ongeldige invoer bij het beheren van gebruikers of tokens (bevat nooit geheimen).
+
+    De boodschap is Nederlands (CLI en logs); `key` is de i18n-sleutel voor de webinterface.
+    """
+
+    def __init__(self, message: str, *, key: str | None = None, **params: object) -> None:
+        super().__init__(message)
+        self.key = key
+        self.params = params
 
 
 # --------------------------------------------------------------------------- wachtwoorden
@@ -140,7 +148,7 @@ def resolve_secret_key(settings: Settings) -> str:
 def _clean_username(username: str) -> str:
     username = username.strip()
     if not username or len(username) > 80:
-        raise AuthError("Gebruikersnaam moet 1 tot 80 tekens bevatten")
+        raise AuthError("Gebruikersnaam moet 1 tot 80 tekens bevatten", key="err.name_length")
     return username
 
 
@@ -173,7 +181,7 @@ def create_api_token(session: Session, name: str) -> str:
         select(ApiToken).where(ApiToken.name == name, ApiToken.revoked_at.is_(None))
     )
     if active is not None:
-        raise AuthError("Er bestaat al een actief token met deze naam")
+        raise AuthError("Er bestaat al een actief token met deze naam", key="err.token_exists")
     token = TOKEN_PREFIX + secrets.token_urlsafe(32)
     session.add(ApiToken(name=name, token_hash=hash_token(token)))
     session.flush()
@@ -185,7 +193,7 @@ def revoke_api_token(session: Session, name: str) -> int:
         select(ApiToken).where(ApiToken.name == name.strip(), ApiToken.revoked_at.is_(None))
     ).all()
     if not rows:
-        raise AuthError("Geen actief token met deze naam")
+        raise AuthError("Geen actief token met deze naam", key="err.token_missing")
     now = datetime.now(UTC)
     for row in rows:
         row.revoked_at = now
@@ -209,9 +217,17 @@ def _password_fingerprint(password_hash: str) -> str:
     return hashlib.sha256(password_hash.encode("utf-8")).hexdigest()[:16]
 
 
+def _clear_session(request: Request) -> None:
+    """Wist de sessie, maar bewaart de gekozen taal (geen geheim, wel prettig na in-/uitloggen)."""
+    lang = request.session.get("lang")
+    request.session.clear()
+    if lang in SUPPORTED_LOCALES:
+        request.session["lang"] = lang
+
+
 def start_session(request: Request, user: AdminUser) -> None:
     """Nieuwe sessie na login; oude sessiedata (incl. CSRF-token) wordt gewist."""
-    request.session.clear()
+    _clear_session(request)
     request.session.update(
         {
             "uid": user.id,
@@ -396,12 +412,16 @@ def _render_login(
 ) -> Response:
     with _factory(request)() as db:
         no_admin = not db.scalar(select(func.count()).select_from(AdminUser))
-    return templates.TemplateResponse(
-        request,
-        "login.html",
-        {"error": error, "next": next_path, "no_admin": no_admin},
-        status_code=status,
-    )
+    locale = request_locale(request)
+    context = {
+        **locale_context(locale),
+        "error": t(error, locale) if error else None,
+        "next": next_path,
+        # de taalkiezer behoudt de bestemming na het inloggen
+        "lang_extra": f"&next={quote(next_path, safe='')}" if next_path != "/" else "",
+        "no_admin": no_admin,
+    }
+    return templates.TemplateResponse(request, "login.html", context, status_code=status)
 
 
 @router.get("/login")
@@ -431,7 +451,7 @@ async def login_submit(
         log.warning("login_rate_limited")
         return _render_login(
             request,
-            error="Te veel mislukte pogingen; probeer het later opnieuw",
+            error="login.rate_limited",
             next_path=next_path,
             status=429,
         )
@@ -451,7 +471,7 @@ async def login_submit(
     if user is None:
         limiter.fail(ip)
         log.warning("login_failed")
-        return _render_login(request, error=LOGIN_ERROR, next_path=next_path, status=401)
+        return _render_login(request, error="login.error", next_path=next_path, status=401)
     limiter.reset(ip)
     start_session(request, user)
     return RedirectResponse(next_path, status_code=303)
@@ -461,7 +481,7 @@ async def login_submit(
 async def logout(request: Request) -> Response:
     if _session_principal(request) is not None and not await _csrf_ok(request):
         return JSONResponse(status_code=403, content={"detail": "csrf_failed"})
-    request.session.clear()
+    _clear_session(request)
     return RedirectResponse("/login", status_code=303)
 
 

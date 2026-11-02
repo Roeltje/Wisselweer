@@ -119,6 +119,22 @@ def test_geocode_taal_van_de_sessie(app):
     assert route.calls.last.request.url.params["accept-language"] == "en"
 
 
+@respx.mock
+def test_geocode_taal_van_de_browser(client):
+    route = respx.get(SEARCH).respond(200, json=[])
+    client.get(
+        "/api/v1/geocode", params={"q": "Utrecht"}, headers={"Accept-Language": "de-AT,de;q=0.8"}
+    )
+    assert route.calls.last.request.url.params["accept-language"] == "de-DE"
+    # expliciete ?lang= gaat voor op de browsertaal
+    client.get(
+        "/api/v1/geocode",
+        params={"q": "Utrecht 2", "lang": "nl-BE"},
+        headers={"Accept-Language": "en"},
+    )
+    assert route.calls.last.request.url.params["accept-language"] == "nl-BE"
+
+
 @pytest.mark.parametrize("q", ["", "a", " a ", "   ", "x" * 201])
 def test_geocode_q_te_kort_of_te_lang(client, q):
     r = client.get("/api/v1/geocode", params={"q": q})

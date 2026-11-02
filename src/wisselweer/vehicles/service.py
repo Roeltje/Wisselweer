@@ -162,7 +162,7 @@ def update_vehicle(session: Session, vehicle_id: int, patch: VehiclePatch) -> Ve
             plain[name] = getattr(patch, name)
     for non_nullable in ("name", "timezone", "change_method", "prep_days", "countries_of_use"):
         if non_nullable in plain and plain[non_nullable] is None:
-            raise InvalidOperation(f"{non_nullable} mag niet leeg zijn")
+            raise InvalidOperation(f"{non_nullable} mag niet leeg zijn", key="error.required")
     if "preferred_garage_id" in plain:
         _check_garage(session, plain["preferred_garage_id"])
     for k, val in plain.items():
@@ -172,11 +172,11 @@ def update_vehicle(session: Session, vehicle_id: int, patch: VehiclePatch) -> Ve
         v.license_plate_display = _display_plate(patch.license_plate)
     if "driving_profile" in fields:
         if patch.driving_profile is None:
-            raise InvalidOperation("driving_profile mag niet leeg zijn")
+            raise InvalidOperation("driving_profile mag niet leeg zijn", key="error.required")
         v.driving_profile = patch.driving_profile.model_dump(mode="json")
     if "location" in fields:
         if patch.location is None:
-            raise InvalidOperation("location mag niet leeg zijn")
+            raise InvalidOperation("location mag niet leeg zijn", key="error.required")
         v.location_id = get_or_create_location(session, patch.location).id
     v.updated_at = datetime.now(UTC)
     session.flush()

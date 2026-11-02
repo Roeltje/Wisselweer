@@ -23,7 +23,7 @@ from wisselweer.core.models import (
 )
 from wisselweer.garages.schemas import AppointmentOut, GarageOut
 from wisselweer.garages.service import list_appointments, list_garages
-from wisselweer.i18n import format_date, format_datetime, t
+from wisselweer.i18n import format_date, format_datetime, format_number, t
 from wisselweer.storage.enums import APPOINTMENT_TRANSITIONS, AppointmentStatus, TireStatus
 from wisselweer.storage.errors import NotFoundError
 from wisselweer.storage.orm import AdviceSnapshot, ForecastSnapshot
@@ -125,6 +125,21 @@ def _item(item: ReasonItem, locale: str) -> str:
     return t(item.key, locale, **_params(item.params, locale))
 
 
+def _own_text(tr: Tr, key: str, default: str) -> str:
+    text = tr(key)
+    return default if text == key else text
+
+
+def provider_name(info: ProviderInfo, tr: Tr) -> str:
+    """Weergavenaam van een bron; vertaald waar de naam Nederlandse woorden bevat."""
+    return _own_text(tr, f"provider.name.{info.id}", info.name)
+
+
+def provider_attribution(info: ProviderInfo, tr: Tr) -> str:
+    """Bronvermelding in de taal van de gebruiker (de API houdt de Nederlandse tekst)."""
+    return _own_text(tr, f"provider.attribution.{info.id}", info.attribution)
+
+
 def provider_map(infos: list[ProviderInfo]) -> dict[str, ProviderInfo]:
     return {i.id: i for i in infos}
 
@@ -184,7 +199,9 @@ def build_advice_view(
         info = next((i for i in infos if i.id == advice.forecast_provider), None)
         if info is not None:
             horizon_text += " " + tr(
-                "advice.horizon_provider", name=info.name, days=max(1, info.horizon_hours // 24)
+                "advice.horizon_provider",
+                name=provider_name(info, tr),
+                days=max(1, info.horizon_hours // 24),
             )
 
     return AdviceView(
@@ -218,6 +235,7 @@ def set_label(s: TireSetOut, tr: Tr) -> str:
 def last_weather(
     session: Session, vehicle_id: int, infos: list[ProviderInfo], locale: str, tz: ZoneInfo
 ) -> dict | None:
+    tr = make_tr(locale)
     row = session.execute(
         select(ForecastSnapshot.fetched_at, ForecastSnapshot.provider)
         .join(AdviceSnapshot, AdviceSnapshot.forecast_snapshot_id == ForecastSnapshot.id)
@@ -233,8 +251,8 @@ def last_weather(
         fetched = fetched.replace(tzinfo=UTC)
     return {
         "at": format_datetime(fetched.astimezone(tz), locale),
-        "source": info.name if info else row.provider,
-        "attribution": info.attribution if info else None,
+        "source": provider_name(info, tr) if info else row.provider,
+        "attribution": provider_attribution(info, tr) if info else None,
     }
 
 
@@ -295,12 +313,13 @@ def profile_summary(profile: DrivingProfile, locale: str) -> str:
     return tr("profile.custom") + ": " + "; ".join(days)
 
 
-def _decimal_nl(value: float) -> str:
-    return f"{value:.1f}".replace(".", ",")
+def _decimal(value: float, locale: str) -> str:
+    """Eén decimaal, met het decimaalteken van de taal (nl/de: 7,5; en: 7.5)."""
+    return format_number(value, locale, 1)
 
 
-def age_text(years: float | None, tr: Tr) -> str:
-    return tr("tire.age_value", years=_decimal_nl(years)) if years is not None else ""
+def age_text(years: float | None, tr: Tr, locale: str) -> str:
+    return tr("tire.age_value", years=_decimal(years, locale)) if years is not None else ""
 
 
 def positions_text(positions: str | None, tr: Tr) -> str:
@@ -309,13 +328,13 @@ def positions_text(positions: str | None, tr: Tr) -> str:
     return ", ".join(tr(f"tread.short.{p}") for p in positions.split(","))
 
 
-def group_view(g: TireGroupOut, tr: Tr, warn_years: float) -> dict:
+def group_view(g: TireGroupOut, tr: Tr, locale: str, warn_years: float) -> dict:
     """Een groep voor in de tabel; merk/model alleen als ze van de set afwijken."""
     return {
         "id": g.id,
         "quantity": g.quantity,
         "dot_code": g.dot_code,
-        "age_text": age_text(g.age_years, tr),
+        "age_text": age_text(g.age_years, tr, locale),
         "age_warn": g.age_years is not None and g.age_years >= warn_years,
         "purchase_date": g.purchase_date,
         "own_label": " ".join(p for p in (g.brand, g.model) if p),
@@ -326,11 +345,11 @@ def group_view(g: TireGroupOut, tr: Tr, warn_years: float) -> dict:
     }
 
 
-def set_summary(s: TireSetOut, tr: Tr, warn_years: float) -> dict:
+def set_summary(s: TireSetOut, tr: Tr, locale: str, warn_years: float) -> dict:
     """Leeftijd van de oudste band, aantalwaarschuwing en 3PMSF voor een set."""
     oldest = s.oldest_tire_age_years
     return {
-        "oldest_text": age_text(oldest, tr),
+        "oldest_text": age_text(oldest, tr, locale),
         "oldest_warn": oldest is not None and oldest >= warn_years,
         "count": s.tire_count,
         "count_warn": s.tire_count != MAX_TIRES,
@@ -357,9 +376,9 @@ def tire_set_rows(
                 "type_text": tr(f"tire.type.{s.type.value}"),
                 "status_text": tr(f"tire.status.{s.status.value}"),
                 "km": km,
-                "tread": {p: f"{v:.1f}".replace(".", ",") for p, (_, v) in latest.items()},
+                "tread": {p: _decimal(v, locale) for p, (_, v) in latest.items()},
                 "tread_date": max(dates) if dates else None,
-                "summary": set_summary(s, tr, warn_years),
+                "summary": set_summary(s, tr, locale, warn_years),
             }
         )
     return rows
@@ -386,11 +405,11 @@ def set_detail(
         "type_text": tr(f"tire.type.{s.type.value}"),
         "status_text": tr(f"tire.status.{s.status.value}"),
         "km": km,
-        "tread": {p: _decimal_nl(v) for p, (_, v) in latest.items()},
+        "tread": {p: _decimal(v, locale) for p, (_, v) in latest.items()},
         "tread_date": max(dates) if dates else None,
-        "summary": set_summary(s, tr, warn_years),
-        "groups": [group_view(g, tr, warn_years) for g in active],
-        "history": [group_view(g, tr, warn_years) for g in reversed(history)],
+        "summary": set_summary(s, tr, locale, warn_years),
+        "groups": [group_view(g, tr, locale, warn_years) for g in active],
+        "history": [group_view(g, tr, locale, warn_years) for g in reversed(history)],
         "can_add_group": s.tire_count < MAX_TIRES,
     }
 

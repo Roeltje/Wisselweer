@@ -34,6 +34,8 @@ class Field:
     # Extra CSS-klasse(n) op de omhullende `.field` en (bij een checkbox) de naam van een icoon.
     wrapper_class: str = ""
     icon: str = ""
+    # i18n-sleutel van een voorbeeldtekst in het veld (placeholder).
+    placeholder: str = ""
 
 
 def bind(fields: Iterable[Field], values: dict[str, str], errors: dict[str, str]) -> list[Field]:

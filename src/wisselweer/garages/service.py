@@ -16,6 +16,7 @@ from wisselweer.garages.schemas import (
     GarageOut,
     GaragePatch,
 )
+from wisselweer.i18n import DEFAULT_LOCALE, t
 from wisselweer.storage.enums import APPOINTMENT_TRANSITIONS, AppointmentStatus
 from wisselweer.storage.errors import InvalidOperation, NotFoundError
 from wisselweer.storage.orm import Appointment, Garage, TireChange, Vehicle
@@ -61,7 +62,7 @@ def update_garage(session: Session, garage_id: int, patch: GaragePatch) -> Garag
     g = _garage(session, garage_id)
     for k, val in patch.model_dump(exclude_unset=True).items():
         if val is None and k in ("name", "lead_time_days"):
-            raise InvalidOperation(f"{k} mag niet leeg zijn")
+            raise InvalidOperation(f"{k} mag niet leeg zijn", key="error.required")
         setattr(g, k, val)
     session.flush()
     return _g_out(g)
@@ -70,7 +71,10 @@ def update_garage(session: Session, garage_id: int, patch: GaragePatch) -> Garag
 def delete_garage(session: Session, garage_id: int) -> None:
     g = _garage(session, garage_id)
     if session.scalar(select(Appointment.id).where(Appointment.garage_id == garage_id).limit(1)):
-        raise InvalidOperation("garage heeft afspraken en kan niet verwijderd worden")
+        raise InvalidOperation(
+            "garage heeft afspraken en kan niet verwijderd worden",
+            key="err.garage_has_appointments",
+        )
     session.execute(
         update(Vehicle)
         .where(Vehicle.preferred_garage_id == garage_id)
@@ -118,7 +122,7 @@ def create_appointment(session: Session, data: AppointmentIn) -> AppointmentOut:
         and data.target_period_end
         and data.target_period_end < data.target_period_start
     ):
-        raise InvalidOperation("periode-einde ligt voor het begin")
+        raise InvalidOperation("periode-einde ligt voor het begin", key="err.period_order")
     now = datetime.now(UTC)
     a = Appointment(
         **data.model_dump(),
@@ -151,11 +155,14 @@ def set_appointment_status(
     a = _appt(session, appointment_id)
     if new_status not in APPOINTMENT_TRANSITIONS[a.status]:
         raise InvalidOperation(
-            f"overgang {a.status.value} -> {new_status.value} is niet toegestaan"
+            f"overgang {a.status.value} -> {new_status.value} is niet toegestaan",
+            key="err.transition_not_allowed",
         )
     if new_status == AppointmentStatus.CONFIRMED:
         if appointment_at is None and a.appointment_at is None:
-            raise InvalidOperation("een bevestigde afspraak heeft een tijdstip nodig")
+            raise InvalidOperation(
+                "een bevestigde afspraak heeft een tijdstip nodig", key="err.confirmed_needs_time"
+            )
     if appointment_at is not None:
         a.appointment_at = appointment_at
     a.status = new_status
@@ -166,45 +173,46 @@ def set_appointment_status(
 
 # --- mailto -----------------------------------------------------------------------------
 
-_DIRECTION_TEXT = {
-    Direction.TO_WINTER: "van zomer- naar winterbanden",
-    Direction.TO_SUMMER: "van winter- naar zomerbanden",
-}
-
 
 def _fmt(d: date) -> str:
     return d.strftime("%d-%m-%Y")
 
 
-def mailto_link(vehicle: VehicleOut, garage: GarageOut, advice: Advice | None = None) -> str:
-    """Bouwt een `mailto:`-URL (alleen een link; er wordt niets verzonden)."""
+def mailto_link(
+    vehicle: VehicleOut,
+    garage: GarageOut,
+    advice: Advice | None = None,
+    locale: str = DEFAULT_LOCALE,
+) -> str:
+    """Bouwt een `mailto:`-URL (alleen een link; er wordt niets verzonden).
+
+    De tekst van de e-mail volgt `locale` (de taal van de gebruiker); de API gebruikt de standaard.
+    """
     if not garage.email:
-        raise InvalidOperation("garage heeft geen e-mailadres")
+        raise InvalidOperation("garage heeft geen e-mailadres", key="err.garage_no_email")
+
+    def tr(key: str, **params: object) -> str:
+        return t(key, locale, **params)
+
     direction = advice.direction if advice else Direction.NONE
-    wissel = _DIRECTION_TEXT.get(direction, "bandenwissel")
     period = None
     if advice:
         if advice.recommended_period:
             a, b = advice.recommended_period
-            period = f"tussen {_fmt(a)} en {_fmt(b)}"
+            period = tr("mail.period_between", start=_fmt(a), end=_fmt(b))
         elif advice.recommended_date:
-            period = f"rond {_fmt(advice.recommended_date)}"
+            period = tr("mail.period_around", date=_fmt(advice.recommended_date))
         elif advice.plan_appointment_by:
-            period = f"uiterlijk rond {_fmt(advice.plan_appointment_by)}"
-    subject = f"Afspraak bandenwissel {vehicle.name}"
-    lines = [f"Beste {garage.name},", ""]
-    lines.append(f"Graag maak ik een afspraak voor het wisselen {wissel}.")
-    lines.append(f"Voertuig: {vehicle.name}")
+            period = tr("mail.period_latest", date=_fmt(advice.plan_appointment_by))
+    subject = tr("mail.subject", name=vehicle.name)
+    lines = [tr("mail.greeting", name=garage.name), ""]
+    lines.append(tr(f"mail.intro.{direction.value}"))
+    lines.append(tr("mail.vehicle", name=vehicle.name))
     if vehicle.license_plate:
-        lines.append(f"Kenteken: {vehicle.license_plate}")
+        lines.append(tr("mail.plate", plate=vehicle.license_plate))
     if period:
-        lines.append(f"Voorgestelde periode: {period}")
-    lines += [
-        "",
-        "Kunt u mij laten weten welke momenten beschikbaar zijn?",
-        "",
-        "Met vriendelijke groet",
-    ]
+        lines.append(tr("mail.period", period=period))
+    lines += ["", tr("mail.ask"), "", tr("mail.closing")]
     body = "\r\n".join(lines)
     return (
         f"mailto:{quote(garage.email, safe='@')}"

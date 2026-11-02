@@ -173,7 +173,7 @@ def test_groep_wijzigen_toevoegen_en_verwijderen(web):
     r = web.post(f"{base}/groups/{g1.id}/delete")
     assert r.status_code == 303
     assert len(_groups(web, sid)) == 1  # laatste groep blijft; melding via flash
-    assert "minimaal één actieve groep" in web.c.get(r.headers["location"]).text
+    assert "minimaal één actieve regel" in web.c.get(r.headers["location"]).text
 
 
 def test_banden_vervangen_via_het_formulier(web):

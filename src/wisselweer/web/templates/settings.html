@@ -18,12 +18,12 @@
     {% for p in providers %}
     <li class="row">
       <div class="row-main">
-        <strong>{{ p.info.name }}</strong>
+        <strong>{{ p.name }}</strong>
         {% if p.default %}<span class="chip chip-mounted">{{ t('settings.default') }}</span>{% endif %}
         <span class="chip {{ 'chip-ok' if p.info.configured else 'chip-retired' }}">{{ t('settings.configured') if p.info.configured else t('settings.not_configured') }}</span>
         <span class="chip">{{ t('settings.commercial_ok') if p.info.commercial_use_ok else t('settings.commercial_no') }}</span>
         {% if p.status %}<p class="small">{{ p.status }}</p>{% endif %}
-        <p class="muted small">{{ p.info.attribution }} · <a href="{{ p.info.license_url }}" rel="noopener noreferrer">{{ t('settings.license') }}</a> · {{ t('settings.horizon_days', days=p.days) }}</p>
+        <p class="muted small">{{ p.attribution }} · <a href="{{ p.info.license_url }}" rel="noopener noreferrer">{{ t('settings.license') }}</a> · {{ t('settings.horizon_days', days=p.days) }}</p>
       </div>
     </li>
     {% endfor %}

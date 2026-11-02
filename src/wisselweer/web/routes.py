@@ -32,7 +32,7 @@ from wisselweer.core.models import (
 )
 from wisselweer.garages import service as garage_svc
 from wisselweer.garages.schemas import AppointmentIn, GarageIn, GaragePatch
-from wisselweer.i18n import SUPPORTED_LOCALES, format_date, normalize_locale
+from wisselweer.i18n import format_date, format_number, request_locale
 from wisselweer.storage.db import session_scope
 from wisselweer.storage.enums import (
     AppointmentStatus,
@@ -68,7 +68,7 @@ from wisselweer.web.forms import (
     read_form,
     read_upload,
 )
-from wisselweer.web.templating import templates
+from wisselweer.web.templating import locale_context, templates
 
 log = logging.getLogger("wisselweer.web")
 
@@ -96,10 +96,8 @@ DEFAULT_TZ = "Europe/Amsterdam"
 
 
 def current_locale(request: Request) -> str:
-    lang = request.query_params.get("lang")
-    if lang in SUPPORTED_LOCALES:
-        request.session["lang"] = lang
-    return normalize_locale(request.session.get("lang"))
+    """Taal van het verzoek: `?lang=` (wordt bewaard), anders de sessie, anders de browsertaal."""
+    return request_locale(request)
 
 
 def flash(request: Request, text: str, kind: str = "ok") -> None:
@@ -120,8 +118,7 @@ def render(
     locale = current_locale(request)
     flashes = request.session.pop("flash", []) if "flash" in request.session else []
     context: dict[str, Any] = {
-        "locale": locale,
-        "locales": SUPPORTED_LOCALES,
+        **locale_context(locale),
         "nav": nav,
         "authed": True,
         "flashes": flashes,
@@ -208,10 +205,18 @@ def _warn_years(request: Request) -> float:
     return float(request.app.state.settings.tire_age_warn_years)
 
 
-def service_error(exc: Exception) -> str:
+def _years_text(years: float, locale: str) -> str:
+    """Aantal jaren zonder overbodige decimalen (8 -> '8', 7.5 -> '7,5' / '7.5')."""
+    return format_number(years, locale, 0 if years == int(years) else 1)
+
+
+def service_error(exc: Exception, tr: views.Tr) -> str:
+    """Melding voor de gebruiker, in zijn taal. Servicefouten dragen een i18n-sleutel; de
+    technische (Nederlandse) boodschap uit `str(exc)` is alleen voor API en logs."""
     if isinstance(exc, IntegrityError):
-        return "conflict"
-    return str(exc)[:200]
+        return tr("error.conflict")
+    key = getattr(exc, "key", None)
+    return tr(key, **getattr(exc, "params", {})) if key else tr("error.invalid")
 
 
 # --------------------------------------------------------------------------- dashboard
@@ -374,7 +379,7 @@ def vehicle_create(request: Request, form: FormDep, factory: Factory) -> Respons
         except ValidationError as exc:
             rest = p.apply_validation_error(exc, list(basics))
         except (InvalidOperation, IntegrityError) as exc:
-            rest = [service_error(exc)]
+            rest = [service_error(exc, tr)]
     fields = bind(vehicle_fields(tr) + location_fields(tr), form.values(), p.errors)
     return form_page(
         request,
@@ -429,7 +434,7 @@ def vehicle_detail(
     def mail(g: Any) -> str | None:
         if g is None or not g.email:
             return None
-        return garage_svc.mailto_link(vehicle, g, advice)
+        return garage_svc.mailto_link(vehicle, g, advice, locale)
 
     for a in appts:
         a["mailto"] = mail(a["garage"])
@@ -523,7 +528,7 @@ def vehicle_update(request: Request, vehicle_id: int, form: FormDep, factory: Fa
         except ValidationError as exc:
             rest = p.apply_validation_error(exc, list(basics))
         except (InvalidOperation, IntegrityError) as exc:
-            rest = [service_error(exc)]
+            rest = [service_error(exc, tr)]
     return form_page(
         request,
         title=tr("vehicle.edit"),
@@ -641,7 +646,7 @@ def location_update(request: Request, vehicle_id: int, form: FormDep, factory: F
             flash(request, tr("flash.saved"))
             return redirect(f"/vehicles/{vehicle_id}")
         except (InvalidOperation, IntegrityError) as exc:
-            rest = [service_error(exc)]
+            rest = [service_error(exc, tr)]
     return form_page(
         request,
         title=tr("location.edit"),
@@ -721,7 +726,7 @@ def method_update(request: Request, vehicle_id: int, form: FormDep, factory: Fac
         except (InvalidOperation, NotFoundError) as exc:
             if isinstance(exc, NotFoundError) and "garage" not in str(exc):
                 raise
-            rest = [service_error(exc)]
+            rest = [service_error(exc, tr)]
     with session_scope(factory) as s:
         garages = garage_svc.list_garages(s)
     return form_page(
@@ -957,7 +962,7 @@ def set_create(request: Request, vehicle_id: int, form: FormDep, factory: Factor
         except ValidationError as exc:
             rest = p.apply_validation_error(exc, list(raw))
         except InvalidOperation as exc:
-            rest = [service_error(exc)]
+            rest = [service_error(exc, tr)]
     options = _status_options(tr, None)
     return form_page(
         request,
@@ -1031,7 +1036,7 @@ def set_update(
         except ValidationError as exc:
             rest = p.apply_validation_error(exc, list(raw))
         except InvalidOperation as exc:
-            rest = [service_error(exc)]
+            rest = [service_error(exc, tr)]
     return form_page(
         request,
         title=tr("tire.edit"),
@@ -1059,7 +1064,7 @@ def set_delete(
             tire_svc.delete_tire_set(s, set_id)
         flash(request, tr("flash.set_deleted"))
     except InvalidOperation as exc:
-        flash(request, service_error(exc), "error")
+        flash(request, service_error(exc, tr), "error")
     return redirect(f"/vehicles/{vehicle_id}#sets")
 
 
@@ -1075,7 +1080,7 @@ def set_detail(request: Request, vehicle_id: int, set_id: int, factory: Factory)
     return render(
         request,
         "set_detail.html",
-        {"v": v, "d": detail, "warn_years": f"{_warn_years(request):g}"},
+        {"v": v, "d": detail, "warn_years": _years_text(_warn_years(request), locale)},
         nav="vehicles",
     )
 
@@ -1181,7 +1186,7 @@ def group_create(
             flash(request, tr("flash.group_added"))
             return redirect(f"/vehicles/{vehicle_id}/sets/{set_id}")
         except InvalidOperation as exc:
-            rest = [service_error(exc)]
+            rest = [service_error(exc, tr)]
     return _group_page(
         request,
         factory,
@@ -1231,7 +1236,7 @@ def group_update(
             flash(request, tr("flash.saved"))
             return redirect(f"/vehicles/{vehicle_id}/sets/{set_id}")
         except InvalidOperation as exc:
-            rest = [service_error(exc)]
+            rest = [service_error(exc, tr)]
     return _group_page(
         request,
         factory,
@@ -1264,7 +1269,7 @@ def group_delete(
             tire_svc.delete_tire_group(s, group_id)
         flash(request, tr("flash.group_deleted"))
     except InvalidOperation as exc:
-        flash(request, service_error(exc), "error")
+        flash(request, service_error(exc, tr), "error")
     return redirect(f"/vehicles/{vehicle_id}/sets/{set_id}")
 
 
@@ -1309,7 +1314,7 @@ def group_replace(
             flash(request, tr("flash.tires_replaced"))
             return redirect(f"/vehicles/{vehicle_id}/sets/{set_id}")
         except InvalidOperation as exc:
-            rest = [service_error(exc)]
+            rest = [service_error(exc, tr)]
     return _group_page(
         request,
         factory,
@@ -1434,9 +1439,9 @@ def change_create(request: Request, vehicle_id: int, form: FormDep, factory: Fac
             flash(request, tr("flash.change_registered"))
             return redirect(f"/vehicles/{vehicle_id}#history")
         except InvalidOperation as exc:
-            rest = [service_error(exc)]
+            rest = [service_error(exc, tr)]
         except NotFoundError as exc:
-            rest = [service_error(exc)]
+            rest = [service_error(exc, tr)]
     return _change_page(request, factory, vehicle_id, form.values(), p.errors, rest, 422)
 
 
@@ -1470,7 +1475,7 @@ def odometer_add(request: Request, vehicle_id: int, form: FormDep, factory: Fact
                 tire_svc.add_odometer_reading(s, vehicle_id, km, when, note)
             flash(request, tr("flash.odometer_added"))
         except InvalidOperation as exc:
-            flash(request, service_error(exc), "error")
+            flash(request, service_error(exc, tr), "error")
     else:
         flash(request, " ".join(p.errors.values()), "error")
     return redirect(f"/vehicles/{vehicle_id}#odometer")
@@ -1495,7 +1500,7 @@ def odometer_correct(
             tire_svc.correct_odometer(s, reading_id, km, note)
         flash(request, tr("flash.odometer_corrected"))
     except InvalidOperation as exc:
-        flash(request, service_error(exc), "error")
+        flash(request, service_error(exc, tr), "error")
     return redirect(f"/vehicles/{vehicle_id}#odometer")
 
 
@@ -1554,7 +1559,7 @@ def appointment_create(
         except (InvalidOperation, NotFoundError) as exc:
             if isinstance(exc, NotFoundError) and "garage" not in str(exc):
                 raise
-            flash(request, service_error(exc), "error")
+            flash(request, service_error(exc, tr), "error")
     else:
         flash(request, " ".join(p.errors.values()) or tr("error.invalid"), "error")
     return redirect(f"/vehicles/{vehicle_id}#appointments")
@@ -1587,7 +1592,7 @@ def appointment_status(
             )
         flash(request, tr("flash.appointment_updated"))
     except InvalidOperation as exc:
-        flash(request, service_error(exc), "error")
+        flash(request, service_error(exc, tr), "error")
     return redirect(f"/vehicles/{vehicle_id}#appointments")
 
 
@@ -1729,7 +1734,7 @@ def garage_update(request: Request, garage_id: int, form: FormDep, factory: Fact
         except ValidationError as exc:
             rest = p.apply_validation_error(exc, list(raw))
         except InvalidOperation as exc:
-            rest = [service_error(exc)]
+            rest = [service_error(exc, tr)]
     return form_page(
         request,
         title=tr("garage.edit"),
@@ -1750,7 +1755,7 @@ def garage_delete(request: Request, garage_id: int, form: FormDep, factory: Fact
             garage_svc.delete_garage(s, garage_id)
         flash(request, tr("flash.garage_deleted"))
     except InvalidOperation as exc:
-        flash(request, service_error(exc), "error")
+        flash(request, service_error(exc, tr), "error")
     return redirect("/garages")
 
 
@@ -1770,6 +1775,8 @@ def _settings_context(
     providers = [
         {
             "info": i,
+            "name": views.provider_name(i, tr),
+            "attribution": views.provider_attribution(i, tr),
             "status": tr(i.status_detail) if i.status_detail else None,
             "days": max(1, i.horizon_hours // 24),
             "default": i.id == forecasts.default_provider,
@@ -1811,7 +1818,7 @@ def _settings_context(
         "providers": providers,
         "default_provider": forecasts.default_provider,
         "configured_options": [
-            (p["info"].id, p["info"].name) for p in providers if p["info"].configured
+            (p["info"].id, p["name"]) for p in providers if p["info"].configured
         ],
         "locations": locations,
         "tokens": tokens,
@@ -1830,8 +1837,8 @@ def _compare(forecasts: Any, loc: dict, infos: list[Any], locale: str) -> dict:
         try:
             fcs.append(forecasts.get_forecast(loc["lat"], loc["lon"], info.id))
         except ProviderError:
-            failed.append(info.name)
-    names = {i.id: i.name for i in infos}
+            failed.append(views.provider_name(info, tr))
+    names = {i.id: views.provider_name(i, tr) for i in infos}
     with_data = [f for f in fcs if f.hourly]
     days = compare_forecasts(with_data, DEFAULT_TZ)[:14]
     provider_ids = [f.provider for f in with_data]
@@ -1889,7 +1896,7 @@ def settings_provider(
     with session_scope(factory) as s:
         s.merge(AppSetting(key=DEFAULT_PROVIDER_KEY, value=choice))
     forecasts.set_default_provider(choice)
-    flash(request, tr("flash.provider_saved", name=info.name))
+    flash(request, tr("flash.provider_saved", name=views.provider_name(info, tr)))
     return redirect("/settings")
 
 
@@ -1897,13 +1904,14 @@ def settings_provider(
 def settings_token_create(
     request: Request, form: FormDep, factory: Factory, forecasts: Forecasts
 ) -> Response:
+    locale = current_locale(request)
     name = form.get("token_name")
     token: str | None = None
     try:
         with session_scope(factory) as s:
             token = auth.create_api_token(s, name)
     except auth.AuthError as exc:
-        flash(request, str(exc), "error")
+        flash(request, service_error(exc, views.make_tr(locale)), "error")
         return redirect("/settings#tokens")
     ctx = _settings_context(request, factory, forecasts, None, new_token=token)
     ctx["token_name"] = name
@@ -1921,5 +1929,5 @@ def settings_token_revoke(request: Request, form: FormDep, factory: Factory) -> 
             auth.revoke_api_token(s, form.get("token_name"))
         flash(request, tr("flash.token_revoked"))
     except auth.AuthError as exc:
-        flash(request, str(exc), "error")
+        flash(request, service_error(exc, tr), "error")
     return redirect("/settings#tokens")

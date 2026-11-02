@@ -5,10 +5,12 @@ import re
 from datetime import date, datetime
 from pathlib import Path
 
+from wisselweer import i18n
 from wisselweer.core.messages import DEFAULT_NL
 from wisselweer.i18n import LOCALES_DIR, chain, format_date, format_datetime, has_key, t
 
-WEB = Path(__file__).parents[3] / "src" / "wisselweer" / "web"
+SRC = Path(__file__).parents[3] / "src" / "wisselweer"
+WEB = SRC / "web"
 
 
 def test_nl_contains_engine_messages_and_ui_texts():
@@ -27,15 +29,30 @@ def test_fallback_chain():
     assert chain("xx") == ("nl-NL",)
     # nl-BE heeft (bijna) niets eigens: valt terug op nl-NL
     assert t("nav.dashboard", "nl-BE") == "Overzicht"
-    # en/de vertaald waar beschikbaar, anders nl-NL
     assert t("nav.dashboard", "en") == "Overview"
     assert t("nav.dashboard", "de-DE") == "Übersicht"
-    assert t("advice.question.to_winter", "en") == "When winter tires?"
-    assert t("garage.new", "en") == t("garage.new", "nl-NL")  # ontbreekt in en
-    assert t("reason.no_forecast", "de-DE") == DEFAULT_NL["reason.no_forecast"]
+    assert t("advice.question.to_winter", "en") == "When winter tyres?"
+    assert t("garage.new", "en") == "Add garage"
+    assert t("reason.no_forecast", "de-DE") == "Es ist keine Wettervorhersage verfügbar."
     # onbekende sleutel => sleutel zelf
     assert t("bestaat.niet", "en") == "bestaat.niet"
     assert not has_key("bestaat.niet")
+
+
+def test_fallback_to_dutch_is_a_safety_net(monkeypatch):
+    """en/de-DE bevatten alle sleutels (zie test_locales_complete); mocht er toch een ontbreken,
+    dan valt de app terug op nl-NL in plaats van een kale sleutel te tonen."""
+    real = i18n._catalog
+
+    def partial(locale: str) -> dict[str, str]:
+        data = dict(real(locale))
+        if locale == "en":
+            data.pop("garage.new", None)
+        return data
+
+    monkeypatch.setattr(i18n, "_catalog", partial)
+    assert t("garage.new", "en") == t("garage.new", "nl-NL") == "Garage toevoegen"
+    assert t("nav.dashboard", "en") == "Overview"
 
 
 def test_params_and_missing_params():
@@ -78,8 +95,20 @@ def test_every_key_used_in_ui_exists():
         text = path.read_text(encoding="utf-8")
         used |= set(re.findall(r"""\b(?:t|tr)\(\s*['"]([a-z_.]+[a-z_])['"]""", text))
         used |= set(
-            re.findall(r"""(?:Field\(\s*"[a-z_]+",\s*|label=|help=)"([a-z_]+\.[a-z_.]+)"?""", text)
+            re.findall(
+                r"""(?:Field\(\s*"[a-z_]+",\s*|label=|help=|placeholder=)"([a-z_]+\.[a-z_.]+)"?""",
+                text,
+            )
         )
+    # meldingen uit de servicelaag en de login (`key="..."`, `error="..."`)
+    for path in [
+        SRC / "tires" / "service.py",
+        SRC / "garages" / "service.py",
+        SRC / "vehicles" / "service.py",
+        SRC / "api" / "auth.py",
+    ]:
+        text = path.read_text(encoding="utf-8")
+        used |= set(re.findall(r"""\b(?:key|error)="([a-z_]+\.[a-z_.]+)\"""", text))
     assert len(used) > 80
     missing = sorted(k for k in used if not has_key(k))
     assert not missing, missing
@@ -102,6 +131,21 @@ def test_every_key_used_in_ui_exists():
             for w in ("possible_frost", "possible_snow", "possible_icy_conditions")
         ),
         *(f"photo.error.{c}" for c in ("missing", "too_large", "unsupported", "corrupt", "store")),
+        *(f"mail.intro.{d}" for d in ("to_winter", "to_summer", "none")),
+        *(
+            f"provider.attribution.{p}"
+            for p in (
+                "openmeteo",
+                "metno",
+                "brightsky",
+                "brightsky_obs",
+                "knmi",
+                "knmi_forecast",
+                "wunderground",
+            )
+        ),
+        *(f"provider.name.{p}" for p in ("knmi", "brightsky_obs", "wunderground")),
+        "provider.knmi_missing_station",
         "provider.missing_contact",
         "provider.openmeteo_noncommercial",
         "provider.knmi_forecast_not_available",
