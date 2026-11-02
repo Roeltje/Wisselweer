@@ -1,11 +1,12 @@
-<!doctype html>
+{% from "_macros.html" import icon %}<!doctype html>
 <html lang="{{ locale or 'nl-NL' }}" data-theme-label-auto="{{ t('nav.theme.auto') }}" data-theme-label-light="{{ t('nav.theme.light') }}" data-theme-label-dark="{{ t('nav.theme.dark') }}">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="robots" content="noindex">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#0F4C5C">
+  <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0A2A31" media="(prefers-color-scheme: dark)">
   <title>{% block title %}Wisselweer{% endblock %}</title>
   <link rel="icon" href="/static/favicon.ico?v={{ static_v }}" sizes="32x32">
   <link rel="icon" href="/static/favicon.svg?v={{ static_v }}" type="image/svg+xml">
@@ -13,27 +14,33 @@
   <link rel="apple-touch-icon" href="/static/apple-touch-icon.png?v={{ static_v }}">
   <link rel="manifest" href="/static/manifest.webmanifest?v={{ static_v }}">
   <meta name="apple-mobile-web-app-title" content="Wisselweer">
+  <link rel="preload" href="/static/fonts/atkinson-hyperlegible-next-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/app.css?v={{ static_v }}">
   <script src="/static/theme.js?v={{ static_v }}"></script>
   <script src="/static/app.js?v={{ static_v }}" defer></script>
   {% block head %}{% endblock %}
 </head>
-<body>
+<body{% if authed %} class="has-tabs"{% endif %}>
   <a class="skip-link" href="#main">{{ t('nav.skip') }}</a>
   <header class="site-header">
     <div class="wrap header-row">
-      <a class="brand" href="/"><img src="/static/logo-dark.svg?v={{ static_v }}" alt="" width="36" height="36"><span>Wisselweer</span></a>
+      <a class="brand" href="/"><img class="logo-l" src="/static/logo-light.svg?v={{ static_v }}" alt="" width="36" height="36"><img class="logo-d" src="/static/logo-dark.svg?v={{ static_v }}" alt="" width="36" height="36"><span>Wisselweer</span></a>
       {% if authed %}
+      {# Eén navigatie: op brede schermen in de kop, op smalle schermen als tabbalk onderaan (CSS). #}
       <nav class="main-nav" aria-label="{{ t('nav.main') }}">
-        <a href="/"{% if nav == 'dashboard' %} aria-current="page"{% endif %}>{{ t('nav.dashboard') }}</a>
-        <a href="/garages"{% if nav == 'garages' %} aria-current="page"{% endif %}>{{ t('nav.garages') }}</a>
-        <a href="/settings"{% if nav == 'settings' %} aria-current="page"{% endif %}>{{ t('nav.settings') }}</a>
+        <a href="/"{% if nav == 'dashboard' %} aria-current="page"{% endif %}>{{ icon('home', 22) }}<span>{{ t('nav.dashboard') }}</span></a>
+        <a href="/garages"{% if nav == 'garages' %} aria-current="page"{% endif %}>{{ icon('wrench', 22) }}<span>{{ t('nav.garages') }}</span></a>
+        <a href="/settings"{% if nav == 'settings' %} aria-current="page"{% endif %}>{{ icon('settings', 22) }}<span>{{ t('nav.settings') }}</span></a>
       </nav>
-      <form class="logout" method="post" action="/logout">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="btn btn-quiet">{{ t('nav.logout') }}</button>
-      </form>
       {% endif %}
+      <div class="header-tools">
+        {% if authed %}
+        <form class="logout" method="post" action="/logout">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-quiet btn-small" aria-label="{{ t('nav.logout') }}">{{ icon('logout', 18) }}<span class="logout-text">{{ t('nav.logout') }}</span></button>
+        </form>
+        {% endif %}
+      </div>
     </div>
   </header>
   <main id="main" class="wrap" tabindex="-1">

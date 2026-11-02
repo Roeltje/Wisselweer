@@ -60,6 +60,9 @@ def test_static_assets_are_public(anon):
         ("/static/icon-192.png", "image/png"),
         ("/static/icon-512.png", "image/png"),
         ("/static/manifest.webmanifest", "application/manifest+json"),
+        ("/static/fonts/atkinson-hyperlegible-next-latin-wght-normal.woff2", "font/woff2"),
+        ("/static/img/hero-winter-1280.webp", "image/webp"),
+        ("/static/img/hero-summer-1920.webp", "image/webp"),
     ):
         r = anon.get(path)
         assert r.status_code == 200 and ctype in r.headers["content-type"], path
@@ -534,3 +537,20 @@ def test_language_switch_and_date_format(web):
     assert "Overview" in r.text and 'lang="en"' in r.text
     assert "Overzicht" in web.get("/?lang=nl-NL").text
     assert "Overzicht" in web.get("/?lang=xx").text  # onbekende taal: standaard
+
+
+def test_navigation_is_one_nav_with_icons_and_tabbar_class(web):
+    # Eén navigatie: in de kop op brede schermen, als tabbalk onderaan op mobiel (zie app.css).
+    text = web.get("/").text
+    assert '<body class="has-tabs">' in text
+    nav = text.split('<nav class="main-nav"', 1)[1].split("</nav>", 1)[0]
+    for href in ('href="/"', 'href="/garages"', 'href="/settings"'):
+        assert href in nav
+    assert nav.count("<svg") == 3 and nav.count("<span>") == 3
+    assert 'aria-current="page"' in nav
+
+
+def test_login_has_seasonal_photo_and_no_tabbar(anon):
+    text = anon.get("/login").text
+    assert 'class="page-hero login-hero"' in text
+    assert "has-tabs" not in text and "main-nav" not in text

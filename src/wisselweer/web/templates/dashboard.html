@@ -2,10 +2,12 @@
 {% from "_macros.html" import icon, tire_icon, badge, warnings with context %}
 {% block title %}{{ t('nav.dashboard') }} · Wisselweer{% endblock %}
 {% block content %}
-<div class="page-head">
-  <h1>{{ t('dashboard.title') }}</h1>
-  {% if cards %}<a class="btn btn-primary" href="/vehicles/new">{{ icon('plus', 18) }} {{ t('vehicle.add') }}</a>{% endif %}
-</div>
+<section class="page-hero" aria-labelledby="dash-title">
+  <div class="page-head">
+    <h1 id="dash-title">{{ t('dashboard.title') }}</h1>
+    {% if cards %}<a class="btn btn-primary" href="/vehicles/new">{{ icon('plus', 18) }} {{ t('vehicle.add') }}</a>{% endif %}
+  </div>
+</section>
 
 {% if not cards %}
 <section class="card empty">

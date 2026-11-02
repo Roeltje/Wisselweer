@@ -6,11 +6,12 @@
   var KEY = "ww-theme";
   var ORDER = ["auto", "light", "dark"];
   var FALLBACK = { auto: "Thema: automatisch", light: "Thema: licht", dark: "Thema: donker" };
-  // Constante iconen; er komt nooit invoer van buiten in innerHTML.
+  // Constante iconen (drie standen naast elkaar; de actieve staat op een vlakje); er komt nooit
+  // invoer van buiten in innerHTML.
   var ICON = {
-    auto: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4v16"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg>',
-    light: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></svg>',
-    dark: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>'
+    auto: '<svg viewBox="0 0 62 30" aria-hidden="true"><rect class="knob" x="23" y="3" width="16" height="24" rx="4"/><circle class="off" cx="10" cy="15" r="3"/><path class="off" d="M10 9.5v1M10 19.5v1M4.5 15h1M14.5 15h1M6.1 11.1l.7.7M13.2 18.2l.7.7M6.1 18.9l.7-.7M13.2 11.8l.7-.7"/><circle class="on" cx="31" cy="15" r="4.5"/><path class="on-fill" d="M31 10.5a4.5 4.5 0 0 1 0 9z"/><path class="off" d="M52.5 10.2a5 5 0 1 0 4.3 7.3 5.6 5.6 0 0 1-4.3-7.3z"/></svg>',
+    light: '<svg viewBox="0 0 62 30" aria-hidden="true"><rect class="knob" x="2" y="3" width="16" height="24" rx="4"/><circle class="on" cx="10" cy="15" r="3"/><path class="on" d="M10 9.5v1M10 19.5v1M4.5 15h1M14.5 15h1M6.1 11.1l.7.7M13.2 18.2l.7.7M6.1 18.9l.7-.7M13.2 11.8l.7-.7"/><circle class="off" cx="31" cy="15" r="4.5"/><path class="off-fill" d="M31 10.5a4.5 4.5 0 0 1 0 9z"/><path class="off" d="M52.5 10.2a5 5 0 1 0 4.3 7.3 5.6 5.6 0 0 1-4.3-7.3z"/></svg>',
+    dark: '<svg viewBox="0 0 62 30" aria-hidden="true"><rect class="knob" x="44" y="3" width="16" height="24" rx="4"/><circle class="off" cx="10" cy="15" r="3"/><path class="off" d="M10 9.5v1M10 19.5v1M4.5 15h1M14.5 15h1M6.1 11.1l.7.7M13.2 18.2l.7.7M6.1 18.9l.7-.7M13.2 11.8l.7-.7"/><circle class="off" cx="31" cy="15" r="4.5"/><path class="off-fill" d="M31 10.5a4.5 4.5 0 0 1 0 9z"/><path class="on" d="M52.5 10.2a5 5 0 1 0 4.3 7.3 5.6 5.6 0 0 1-4.3-7.3z"/></svg>'
   };
   var root = document.documentElement;
 
@@ -39,6 +40,9 @@
 
   var current = read();
   apply(current);
+  // Seizoen voor de foto's (1 feb t/m 31 jul = zomer, anders winter), zoals op wisselweer.nl.
+  var month = new Date().getMonth(); // 0 = januari
+  root.setAttribute("data-season", month >= 1 && month <= 6 ? "summer" : "winter");
 
   function attach() {
     var row = document.querySelector(".header-row");
@@ -59,10 +63,11 @@
       paint();
     });
     paint();
-    // Voor de uitlogknop als die er is, anders achteraan in de kop.
-    var logout = row.querySelector(".logout");
-    if (logout) row.insertBefore(b, logout);
-    else row.appendChild(b);
+    // In de gereedschapsgroep rechts in de kop, vóór de uitlogknop.
+    var tools = row.querySelector(".header-tools") || row;
+    var logout = tools.querySelector(".logout");
+    if (logout) tools.insertBefore(b, logout);
+    else tools.appendChild(b);
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", attach);

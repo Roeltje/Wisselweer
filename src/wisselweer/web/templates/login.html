@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ t('login.title') }} · Wisselweer{% endblock %}
 {% block content %}
+<div class="page-hero login-hero">
 <section class="card login-card">
   <img class="login-logo logo-l" src="/static/logo-light.svg?v={{ static_v }}" alt="" width="72" height="72">
   <img class="login-logo logo-d" src="/static/logo-dark.svg?v={{ static_v }}" alt="" width="72" height="72">
@@ -27,4 +28,5 @@
     </form>
   {% endif %}
 </section>
+</div>
 {% endblock %}
