@@ -56,6 +56,10 @@ def test_static_assets_are_public(anon):
         ("/static/logo-dark.svg", "image/svg+xml"),
         ("/static/favicon.svg", "image/svg+xml"),
         ("/static/favicon.ico", "icon"),
+        ("/static/apple-touch-icon.png", "image/png"),
+        ("/static/icon-192.png", "image/png"),
+        ("/static/icon-512.png", "image/png"),
+        ("/static/manifest.webmanifest", "application/manifest+json"),
     ):
         r = anon.get(path)
         assert r.status_code == 200 and ctype in r.headers["content-type"], path
@@ -79,6 +83,13 @@ def test_empty_dashboard_has_add_button(web):
 def test_login_page_is_styled_and_static(anon):
     r = anon.get("/login")
     assert "/static/app.css?v=" in r.text and "/static/favicon.svg?v=" in r.text
+
+
+def test_login_page_has_homescreen_icon_and_manifest(anon):
+    text = anon.get("/login").text
+    assert re.search(r'rel="apple-touch-icon" href="/static/apple-touch-icon\.png\?v=\w+"', text)
+    assert re.search(r'rel="manifest" href="/static/manifest\.webmanifest\?v=\w+"', text)
+    assert '<meta name="apple-mobile-web-app-title" content="Wisselweer">' in text
 
 
 def test_login_page_has_theme_assets_and_both_logos(anon):

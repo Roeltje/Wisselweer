@@ -22,6 +22,12 @@ Zie [docs/testing.md](docs/testing.md) voor de details van de tests.
 3. Draai `uv run pytest`, `uv run ruff check .` en `uv run ruff format --check .` (dezelfde controles als de CI).
 4. Open een pull request. Vul de checklist in de PR-template in.
 
+## Een release maken
+
+1. Verhoog de versie in `pyproject.toml` en `src/wisselweer/__init__.py` (een test bewaakt dat ze gelijk zijn) en merge naar `main`.
+2. Maak de tag `vX.Y.Z` (gelijk aan de versie) en push die. De workflow `release.yml` bouwt het image (amd64 en arm64) naar `ghcr.io/roeltje/wisselweer`, voegt provenance en SBOM toe en maakt de GitHub Release met `compose.yaml` (versie vastgezet), `env.example` en `docker-install.sh`.
+3. Zet het pakket na de eerste release op *public* (GitHub, Packages, Package settings), anders kunnen anderen het image niet ophalen.
+
 ## Ontwerpuitgangspunten
 
 - **Pure engine.** `wisselweer.core` bevat de adviesberekening zonder I/O, zodat die los test- en uitlegbaar blijft.

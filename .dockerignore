@@ -21,3 +21,4 @@ deploy
 compose.yaml
 Dockerfile
 .dockerignore
+compose.build.yaml
