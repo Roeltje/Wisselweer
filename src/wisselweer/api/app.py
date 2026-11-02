@@ -17,6 +17,7 @@ from wisselweer.api.auth import install_auth, require_user
 from wisselweer.api.deps import ensure_db
 from wisselweer.api.routers.garages import router as garages_router
 from wisselweer.api.routers.geocode import router as geocode_router
+from wisselweer.api.routers.rdw import router as rdw_router
 from wisselweer.api.routers.tires import router as tires_router
 from wisselweer.api.routers.v1 import health_router
 from wisselweer.api.routers.v1 import router as v1_router
@@ -171,6 +172,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(tires_router, dependencies=protected)
     app.include_router(garages_router, dependencies=protected)
     app.include_router(geocode_router, dependencies=protected)
+    app.include_router(rdw_router, dependencies=protected)
     app.mount("/static", web_routes.static_files, name="static")
     app.include_router(web_routes.router)
     return app

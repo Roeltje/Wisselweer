@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import field, csrf, geocode_widget, tire_groups with context %}
+{% from "_macros.html" import field, csrf, geocode_widget, rdw_widget, tire_groups with context %}
 {% block title %}{{ title }} · Wisselweer{% endblock %}
 {% block content %}
 <section class="card form-card">
@@ -15,6 +15,7 @@
     {% for f in fields %}
     {%- if geo and f.name == 'location_name' %}{{ geocode_widget(geo) }}{% endif %}
     {%- if f.kind == 'groups' %}{{ tire_groups(groups) }}{% else %}{{ field(f) }}{% endif %}
+    {%- if rdw and f.name == 'license_plate' %}{{ rdw_widget() }}{% endif %}
     {%- endfor %}
     {% if tire_catalog %}
     {#- Suggesties; vrije invoer blijft mogelijk. app.js past de typen aan op merk en seizoen. -#}

@@ -441,5 +441,19 @@
  "mail.period_latest": "uiterlijk rond {date}",
  "mail.ask": "Kunt u mij laten weten welke momenten beschikbaar zijn?",
  "mail.closing": "Met vriendelijke groet",
- "tire.positions_example": "LV,RV"
+ "tire.positions_example": "LV,RV",
+ "rdw.group": "Gegevens ophalen bij de RDW",
+ "rdw.lookup": "Gegevens ophalen bij RDW",
+ "rdw.privacy": "Alleen als je hierop klikt, gaat het kenteken naar RDW Open Data. Merk, type en bouwjaar worden ingevuld; je kunt ze daarna nog aanpassen.",
+ "rdw.searching": "Gegevens ophalen…",
+ "rdw.filled": "Merk, type en bouwjaar ingevuld uit de RDW-gegevens. Controleer ze even.",
+ "rdw.invalid": "Vul eerst een Nederlands kenteken in, bijvoorbeeld AB-123-C.",
+ "rdw.not_found": "Geen voertuig gevonden bij dit kenteken.",
+ "rdw.error": "De RDW is nu niet bereikbaar. Vul de gegevens zelf in of probeer het later opnieuw.",
+ "rdw.no_recall": "Geen openstaande terugroepactie bekend bij de RDW.",
+ "rdw.recall_title": "Openstaande terugroepactie",
+ "rdw.recall_unknown": "Volgens de RDW staat er voor dit voertuig een terugroepactie open.",
+ "rdw.recall_remedy": "Herstel:",
+ "rdw.recall_ref": "RDW-referentie",
+ "rdw.recall_advice": "Neem contact op met je merkdealer om het herstel in te plannen."
 }

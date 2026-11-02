@@ -280,4 +280,79 @@
     // Alleen tonen als er iets te doen valt (zoeken of de locatieknop).
     if (searchBtn || (locateBtn && !locateBtn.hidden)) { geo.hidden = false; }
   }
+
+  // Kenteken -> merk, type en bouwjaar via de RDW-API van de app (sessiecookie, alleen GET; de URL
+  // staat in data-url). Alleen op verzoek; alle tekst uit het antwoord gaat via textContent.
+  var rdw = document.querySelector("[data-rdw]");
+  var rdwForm = rdw ? rdw.closest("form") : null;
+  if (rdw && rdwForm) {
+    var plateInput = rdwForm.querySelector('input[name="license_plate"]');
+    var rdwBtn = rdw.querySelector("[data-rdw-lookup]");
+    var rdwStatus = rdw.querySelector("[data-rdw-status]");
+    var recallBox = rdw.querySelector("[data-rdw-recalls]");
+    var msg = function (key) { return rdw.getAttribute("data-msg-" + key) || ""; };
+    var field = function (name) { return rdwForm.querySelector('[name="' + name + '"]'); };
+    var setField = function (name, value) {
+      var el = field(name);
+      if (el && value !== null && value !== undefined && value !== "") { el.value = String(value); }
+    };
+    var el = function (tag, text) {
+      var node = document.createElement(tag);
+      if (text) { node.textContent = text; }
+      return node;
+    };
+    var showRecalls = function (data) {
+      recallBox.textContent = "";
+      if (!data.open_recall) {
+        recallBox.hidden = true;
+        return;
+      }
+      recallBox.appendChild(el("strong", msg("recall-title")));
+      var items = Array.isArray(data.recalls) ? data.recalls : [];
+      if (!items.length) { recallBox.appendChild(el("p", msg("recall-unknown"))); }
+      items.forEach(function (r) {
+        if (r.defect) { recallBox.appendChild(el("p", r.defect)); }
+        if (r.remedy) { recallBox.appendChild(el("p", msg("recall-remedy") + " " + r.remedy)); }
+        recallBox.appendChild(el("p", msg("recall-ref") + ": " + r.reference + (r.published ? " (" + r.published + ")" : "")));
+      });
+      recallBox.appendChild(el("p", msg("recall-advice")));
+      recallBox.hidden = false;
+    };
+    var lookup = function () {
+      var plate = (plateInput.value || "").replace(/[\s.-]/g, "").toUpperCase();
+      recallBox.hidden = true;
+      if (!/^[A-Z0-9]{4,8}$/.test(plate)) {
+        rdwStatus.textContent = msg("invalid");
+        plateInput.focus();
+        return;
+      }
+      rdwBtn.disabled = true;
+      rdwStatus.textContent = msg("searching");
+      fetch(rdw.getAttribute("data-url") + "?kenteken=" + encodeURIComponent(plate), {
+        credentials: "same-origin",
+        headers: { "Accept": "application/json" }
+      }).then(function (response) {
+        if (response.status === 404) { throw new Error("not-found"); }
+        if (!response.ok) { throw new Error("error"); }
+        return response.json();
+      }).then(function (data) {
+        setField("make", data.make);
+        setField("model", data.model);
+        setField("build_year", data.build_year);
+        // Naam alleen invullen als die nog leeg is (die kies je meestal zelf).
+        var name = field("name");
+        if (name && !name.value && (data.make || data.model)) {
+          name.value = [data.make, data.model].filter(Boolean).join(" ");
+        }
+        rdwStatus.textContent = msg("filled") + (data.open_recall === false ? " " + msg("no-recall") : "");
+        showRecalls(data);
+      }).catch(function (err) {
+        rdwStatus.textContent = msg(err && err.message === "not-found" ? "not-found" : "error");
+      }).then(function () {
+        rdwBtn.disabled = false;
+      });
+    };
+    rdwBtn.addEventListener("click", lookup);
+    rdw.hidden = false;
+  }
 })();

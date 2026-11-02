@@ -73,7 +73,7 @@ Details, variabelen en beperkingen: [docs/providers.md](docs/providers.md). Gebr
 
 ## Privacy
 
-Voertuig-, band-, garage- en locatiegegevens blijven in je eigen database. Naar weerbronnen gaan alleen afgeronde coördinaten (4 decimalen) en, bij MET Norway, je contactgegeven in de User-Agent. Alleen als je op "Zoek coördinaten" klikt, gaat de ingetypte zoektekst via de server naar de geocoder (standaard OpenStreetMap Nominatim); die tekst wordt niet opgeslagen, alleen de afgeronde coördinaten. Het gepubliceerde `advice.json` bevat uitsluitend een anoniem landelijk advies, gebouwd uit een allowlist; er gaan geen kentekens, namen of e-mailadressen in en geen eigen locaties.
+Voertuig-, band-, garage- en locatiegegevens blijven in je eigen database. Naar weerbronnen gaan alleen afgeronde coördinaten (4 decimalen) en, bij MET Norway, je contactgegeven in de User-Agent. Alleen als je op "Zoek coördinaten" klikt, gaat de ingetypte zoektekst via de server naar de geocoder (standaard OpenStreetMap Nominatim); die tekst wordt niet opgeslagen, alleen de afgeronde coördinaten. Alleen als je bij een voertuig op "Gegevens ophalen bij RDW" klikt, gaat het kenteken via de server naar RDW Open Data. Het gepubliceerde `advice.json` bevat uitsluitend een anoniem landelijk advies, gebouwd uit een allowlist; er gaan geen kentekens, namen of e-mailadressen in en geen eigen locaties.
 
 ## Documentatie
 

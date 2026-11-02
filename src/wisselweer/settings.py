@@ -15,6 +15,7 @@ from wisselweer.publisher.national import ReferenceLocation
 
 MIN_SECRET_KEY_LENGTH = 32
 DEFAULT_GEOCODER_URL = "https://nominatim.openstreetmap.org"
+DEFAULT_RDW_URL = "https://opendata.rdw.nl"
 # Waarden die geocoderen uitzetten. Een lege omgevingsvariabele telt als "niet gezet" (zie
 # `env_ignore_empty`), dus uitzetten via de omgeving kan met "off".
 _GEOCODER_OFF = {"", "off", "none", "false", "0", "uit"}
@@ -68,6 +69,8 @@ class Settings(BaseSettings):
     openmeteo_base_url: str = "https://api.open-meteo.com"
     # Nominatim-compatibele geocoder (adres/plaats -> coördinaten). Leeg of "off" = uit. Vereist `contact`.
     geocoder_url: str = DEFAULT_GEOCODER_URL
+    # RDW Open Data voor kenteken -> merk/type/bouwjaar en terugroepacties. Leeg of "off" = uit.
+    rdw_url: str = DEFAULT_RDW_URL
     openmeteo_api_key: SecretStr | None = None
     knmi_api_key: SecretStr | None = None
     wu_api_key: SecretStr | None = None
@@ -129,6 +132,15 @@ class Settings(BaseSettings):
             return ""
         return _require_https(value, "WISSELWEER_GEOCODER_URL").rstrip("/")
 
+    @field_validator("rdw_url")
+    @classmethod
+    def _rdw_url(cls, value: str) -> str:
+        """Leeg/"off" = uit; anders https (of loopback): het kenteken gaat in de query-string mee."""
+        value = value.strip()
+        if value.lower() in _GEOCODER_OFF:
+            return ""
+        return _require_https(value, "WISSELWEER_RDW_URL").rstrip("/")
+
     @model_validator(mode="after")
     def _default_publish_dir(self) -> Settings:
         if self.publish_dir is None:
@@ -139,6 +151,10 @@ class Settings(BaseSettings):
     def photos_dir(self) -> Path:
         """Voertuigfoto's; privé en nooit onderdeel van de publicatie."""
         return self.data_dir / "photos"
+
+    @property
+    def rdw_enabled(self) -> bool:
+        return bool(self.rdw_url)
 
     @property
     def geocoding_enabled(self) -> bool:
