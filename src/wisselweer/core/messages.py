@@ -38,7 +38,7 @@ DEFAULT_NL |= {
     "reason.not_warm_enough": "Het wordt nog niet aanhoudend warm genoeg.",
     "reason.drive_window_fallback": "Voor {days} dag(en) zonder rijmoment is het daggemiddelde gebruikt.",
     "reason.drive_window_used": "Temperaturen zijn gewogen naar je rijmomenten.",
-    "reason.appointment_urgent": "Plan zo snel mogelijk: de gewenste afspraakdatum is al verstreken.",
+    "reason.appointment_urgent": "Plan zo snel mogelijk: de gewenste voorbereidingstijd is al voorbij.",
     "reason.all_season_warnings_only": "Vierseizoenenbanden: alleen waarschuwingen, geen wisseladvies.",
     "reason.no_mounted_set": "Er is geen gemonteerde bandenset bekend.",
     "reason.no_forecast": "Er is geen weersverwachting beschikbaar.",

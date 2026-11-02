@@ -56,6 +56,9 @@
  "advice.no_reliable_date": "Nog geen betrouwbare wisseldatum beschikbaar.",
  "advice.plan_by": "Plan een afspraak vóór {date}",
  "advice.plan_asap": "Plan zo snel mogelijk een afspraak",
+ "advice.plan_self_by": "Plan het wisselen vóór {date}",
+ "advice.plan_self_asap": "Plan het wisselen zo snel mogelijk",
+ "advice.calendar": "Zet in agenda",
  "advice.horizon_until": "De weersverwachting is gebruikt tot en met {date}.",
  "advice.horizon_provider": "Bron: {name}, verwachting tot ongeveer {days} dagen vooruit.",
  "status.keep_current": "Geen wissel nodig",
@@ -457,5 +460,8 @@
  "rdw.recall_unknown": "Volgens de RDW staat er voor dit voertuig een terugroepactie open.",
  "rdw.recall_remedy": "Herstel:",
  "rdw.recall_ref": "RDW-referentie",
- "rdw.recall_advice": "Neem contact op met je merkdealer om het herstel in te plannen."
+ "rdw.recall_advice": "Neem contact op met je merkdealer om het herstel in te plannen.",
+ "ical.summary": "Banden wisselen: {vehicle}",
+ "ical.to_winter": "Wissel naar winterbanden (of all-season). Advies van Wisselweer, controleer het actuele advies in de app.",
+ "ical.to_summer": "Wissel naar zomerbanden. Advies van Wisselweer, controleer het actuele advies in de app."
 }

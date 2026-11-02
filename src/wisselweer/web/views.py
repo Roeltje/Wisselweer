@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
@@ -100,6 +100,8 @@ class AdviceView:
     horizon_text: str | None = None
     no_mounted: bool = False
     direction: str = "none"
+    # Er is een wisseldatum of -periode: dan kan de app een agenda-item (.ics) aanbieden.
+    calendar: bool = False
 
 
 @dataclass
@@ -145,7 +147,13 @@ def provider_map(infos: list[ProviderInfo]) -> dict[str, ProviderInfo]:
 
 
 def build_advice_view(
-    advice: Advice, locale: str, tz: ZoneInfo, infos: list[ProviderInfo], *, no_mounted: bool
+    advice: Advice,
+    locale: str,
+    tz: ZoneInfo,
+    infos: list[ProviderInfo],
+    *,
+    no_mounted: bool,
+    self_change: bool = False,
 ) -> AdviceView:
     tr = make_tr(locale)
     status = advice.status
@@ -169,12 +177,14 @@ def build_advice_view(
             date_line = tr("advice.no_reliable_date")
     plan_by = None
     if advice.plan_appointment_by and advice.direction != Direction.NONE:
+        # Zelf wisselen: geen garageafspraak, wel het wisselen inplannen.
+        prefix = "advice.plan_self" if self_change else "advice.plan"
         # "Vóór vandaag" (of een datum die al voorbij is) kan niet meer: dan zo snel mogelijk.
         # Vergeleken met nu, niet met het moment van berekenen: een advies kan een dag oud zijn.
         if advice.plan_appointment_by <= datetime.now(tz).date():
-            plan_by = tr("advice.plan_asap")
+            plan_by = tr(f"{prefix}_asap")
         else:
-            plan_by = tr("advice.plan_by", date=format_date(advice.plan_appointment_by, locale))
+            plan_by = tr(f"{prefix}_by", date=format_date(advice.plan_appointment_by, locale))
 
     warnings: list[WarningView] = []
     notices: list[str] = []
@@ -223,7 +233,17 @@ def build_advice_view(
         horizon_text=horizon_text,
         no_mounted=no_mounted,
         direction=advice.direction.value,
+        calendar=calendar_date(advice) is not None and not no_mounted,
     )
+
+
+def calendar_date(advice: Advice) -> date | None:
+    """Dag voor het agenda-item: de aanbevolen wisseldatum, anders het begin van de periode."""
+    if advice.direction == Direction.NONE:
+        return None
+    if advice.recommended_date:
+        return advice.recommended_date
+    return advice.recommended_period[0] if advice.recommended_period else None
 
 
 def mounted_set(sets: list[TireSetOut]) -> TireSetOut | None:

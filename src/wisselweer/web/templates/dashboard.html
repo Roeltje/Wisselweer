@@ -47,7 +47,7 @@
           <p>{{ badge(c.advice) }}</p>
           <p class="headline">{{ c.advice.heading }}</p>
           {% if c.advice.date_line %}<p class="when">{{ c.advice.date_line }}</p>{% endif %}
-          {% if c.advice.plan_by %}<p class="plan">{{ icon('calendar', 16) }} {{ c.advice.plan_by }}</p>{% endif %}
+          {% if c.advice.plan_by or c.advice.calendar %}<p class="plan">{{ icon('calendar', 16) }} {% if c.advice.plan_by %}{{ c.advice.plan_by }}{% endif %}{% if c.advice.plan_by and c.advice.calendar %} · {% endif %}{% if c.advice.calendar %}<a href="/vehicles/{{ v.id }}/advice.ics" download>{{ t('advice.calendar') }}</a>{% endif %}</p>{% endif %}
         {% endif %}
       </div>
       {% for n in c.advice.notices %}<p class="notice">{{ icon('cloud', 16) }} {{ n }}</p>{% endfor %}
