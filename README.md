@@ -16,7 +16,9 @@ Wisselweer adviseert wanneer je van zomer- naar winterbanden wisselt (en terug),
 
 ## Functies
 
-- Wisseladvies per voertuig: richting volgt de gemonteerde set, met waarschuwingen (vorst, sneeuw, gladheid), datum of periode, stabiliteit (hysterese) en "plan een afspraak uiterlijk"-datum.
+- Wisseladvies per voertuig: richting volgt de gemonteerde set, met waarschuwingen (vorst, sneeuw, gladheid), datum of periode en stabiliteit (hysterese). Het advies rekent met de eigen locatie, het rijprofiel (temperatuur op je rijtijden) en de wisselmethode: zelf wisselen of via een garage, met voorbereidingstijd ("plan het wisselen" of "plan een afspraak" uiterlijk). Daardoor kan het afwijken van het landelijke advies.
+- "Zet in agenda": een `.ics`-bestand per voertuig met de wisseldag en een herinnering (voorbereidingstijd vooraf), voor Apple Agenda, Google Agenda of Outlook. Zonder externe dienst.
+- Kenteken opzoeken bij RDW Open Data: merk, type en bouwjaar vooraf invullen en openstaande terugroepacties tonen (alleen op verzoek, uit te zetten): [docs/providers.md](docs/providers.md#rdw-kenteken).
 - Meerdere voertuigen en bandensets, profieldiepte- en kilometerregistratie, wisselhistorie. Een set kan uit groepen banden bestaan (eigen DOT-code, aankoopdatum, merk en 3PMSF-symbool per groep; leeftijdswaarschuwing uit de DOT-code, banden per groep vervangen), met merk- en typesuggesties.
 - Eén foto per voertuig (alleen in de privé-webinterface): wordt in de browser verkleind, EXIF/GPS wordt verwijderd en de foto komt nooit in `advice.json` of op een publieke site.
 - Garages en afspraken; een `mailto:`-link voor de garage (de app verstuurt zelf niets).
@@ -83,7 +85,7 @@ Voertuig-, band-, garage- en locatiegegevens blijven in je eigen database. Naar 
 - [docs/advice-rules.md](docs/advice-rules.md), [docs/providers.md](docs/providers.md), [docs/api.md](docs/api.md), [docs/home-assistant.md](docs/home-assistant.md)
 - [docs/publishing.md](docs/publishing.md), [docs/public-advice-contract.md](docs/public-advice-contract.md), [docs/regulations.md](docs/regulations.md)
 - [docs/backtesting.md](docs/backtesting.md), [docs/testing.md](docs/testing.md), [docs/examples/](docs/examples)
-- [docs/install-docker.md](docs/install-docker.md), [docs/install-lxc.md](docs/install-lxc.md)
+- [docs/install-docker.md](docs/install-docker.md), [docs/install-lxc.md](docs/install-lxc.md), [docs/releasing.md](docs/releasing.md), [CHANGELOG.md](CHANGELOG.md)
 - [SECURITY.md](SECURITY.md), [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Hoe Wisselweer gebouwd is
