@@ -15,7 +15,7 @@ curl -fsSLO https://github.com/Roeltje/Wisselweer/releases/latest/download/docke
 bash docker-install.sh            # installeert in ./wisselweer
 ```
 
-Kies een andere map met `bash docker-install.sh /pad/naar/map` en een vaste versie met `--version v0.1.0`. Het script:
+Kies een andere map met `bash docker-install.sh /pad/naar/map` en een vaste versie met `--version v0.2.0`. Het script:
 
 - controleert of `docker`, `docker compose` (v2) en toegang tot de daemon er zijn;
 - haalt `compose.yaml` en `.env.example` van de release (alleen https) en verplaatst ze pas als alles gelukt is;
@@ -127,7 +127,7 @@ Elk release-image heeft een herkomstverklaring (SLSA build provenance, onderteke
 gh attestation verify oci://ghcr.io/roeltje/wisselweer:<versie> --owner Roeltje
 ```
 
-Gebruik de versie zonder `v` (bijvoorbeeld `0.1.0`).
+Gebruik de versie zonder `v` (bijvoorbeeld `0.2.0`).
 
 ## Toegang op afstand
 
