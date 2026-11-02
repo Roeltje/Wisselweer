@@ -45,6 +45,7 @@ De database (SQLite) staat in `WISSELWEER_DATA_DIR` (standaard `./data`); de map
 | GET | `/providers` | Weerproviders en bronvermelding | 200 |
 | GET | `/public-preview` | Landelijk publiek advies berekenen zonder te publiceren (zie [publishing.md](publishing.md)) | 200 |
 | GET | `/geocode` | Adres, postcode of plaats zoeken (`q`, 2–200 tekens; optioneel `lang`): max. 5 × `{label, latitude, longitude}`, coördinaten op 3 decimalen. Zie [providers.md](providers.md#geocoderen) | 200 |
+| GET | `/rdw` | Kenteken opzoeken bij RDW Open Data (`kenteken`, bv. `AB-123-C`): `{plate, make, model, build_year, color, open_recall, recalls: [{reference, defect, remedy, published}]}`. Zie [providers.md](providers.md#rdw-kenteken) | 200 |
 | GET | `/advice` | Advies voor een locatie (`mounted`, `latitude`, `longitude`, `provider`) | 200 |
 | POST | `/advice/calculate` | Advies uit een meegegeven forecast of locatie | 200 |
 | GET | `/vehicles` | Alle voertuigen | 200 |
@@ -153,6 +154,10 @@ Alle fouten hebben de vorm `{"detail": "<code>"}` en bevatten nooit invoerwaarde
 | 503 | `geocoder_not_configured` | Geocoderen staat uit (`WISSELWEER_GEOCODER_URL` uit of `WISSELWEER_CONTACT` ontbreekt) |
 | 502 | `geocoder_unavailable` | De geocoder gaf een fout, time-out of onbruikbaar antwoord |
 | 429 | `geocoder_rate_limited` | Te veel zoekopdrachten kort na elkaar (header `Retry-After`) |
+| 422 | `rdw_invalid_plate` | Geen bruikbaar Nederlands kenteken |
+| 404 | `rdw_not_found` | Geen voertuig met dit kenteken in de RDW-data |
+| 502 | `rdw_unavailable` | De RDW gaf een fout, time-out of onbruikbaar antwoord |
+| 503 | `rdw_disabled` | De RDW-koppeling staat uit (`WISSELWEER_RDW_URL=off`) |
 
 ## Voorbeelden
 

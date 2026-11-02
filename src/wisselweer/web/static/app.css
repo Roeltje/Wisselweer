@@ -453,3 +453,9 @@ form:has(select[name="type"] option[value="summer"]:checked) .only-winter { disp
 .vehicle-thumb { flex: none; width: 96px; height: 72px; object-fit: cover; border-radius: var(--r-m); background: var(--surface-2); }
 .photo-preview canvas { display: block; width: 100%; max-width: 20rem; height: auto; border-radius: var(--r-m); background: var(--surface-2); }
 .photo-delete { margin-top: .75rem; }
+
+/* Kenteken -> RDW (voertuigformulier); alleen zichtbaar met JavaScript */
+.rdw { display: grid; gap: .5rem; margin-top: -.25rem; }
+.rdw > * { margin: 0; }
+.rdw-recalls { display: block; }
+.rdw-recalls p { margin: .35rem 0 0; }

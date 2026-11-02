@@ -160,11 +160,15 @@ def form_page(
     # de knop "Gebruik mijn locatie", die geen externe dienst gebruikt).
     is_location = any(f.name == "latitude" for f in fields)
     geo = {"enabled": request.app.state.settings.geocoding_enabled} if is_location else None
+    # Voertuigformulieren krijgen de RDW-knop (kenteken -> merk, type, bouwjaar, terugroepacties).
+    is_vehicle = any(f.name == "license_plate" for f in fields)
+    rdw = is_vehicle and request.app.state.settings.rdw_enabled
     return render(
         request,
         "form.html",
         {
             "geo": geo,
+            "rdw": rdw,
             "title": title,
             "fields": fields,
             "action": action,
@@ -281,10 +285,15 @@ def dashboard(
 
 def vehicle_fields(tr: Any) -> list[Field]:
     return [
+        # Kenteken eerst: daarmee kunnen merk, type en bouwjaar bij de RDW opgehaald worden.
+        Field(
+            "license_plate",
+            "vehicle.license_plate",
+            attrs={"maxlength": "20", "autocapitalize": "characters", "autocomplete": "off"},
+        ),
         Field("name", "vehicle.name", required=True, attrs={"maxlength": "120"}),
         Field("make", "vehicle.make", attrs={"maxlength": "80"}),
         Field("model", "vehicle.model", attrs={"maxlength": "80"}),
-        Field("license_plate", "vehicle.license_plate", attrs={"maxlength": "20"}),
         Field(
             "build_year",
             "vehicle.build_year",

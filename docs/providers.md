@@ -49,6 +49,15 @@ Bij het invullen van een locatie kan de webinterface een adres, postcode of plaa
 - **Privacy:** de zoektekst gaat alleen op het moment dat iemand op "Zoek coördinaten" klikt via de server naar de geocoder (met het IP van de server en het contactgegeven in de User-Agent; de browser spreekt de geocoder nooit rechtstreeks aan). De zoektekst wordt niet opgeslagen en niet gelogd (query's staan niet in de accesslog en de `httpx`-logger staat op WARNING). Alleen de door de gebruiker gekozen, op 3 decimalen (ca. 100 m) afgeronde coördinaten komen in de locatie. De knop "Gebruik mijn locatie" gebruikt `navigator.geolocation` van de browser (alleen via https of localhost, na toestemming) en stuurt niets naar een dienst; de `Permissions-Policy` staat `geolocation` alleen voor de eigen origin toe.
 - **Fouten:** upstream-fout, time-out, onverwachte status of onbruikbaar antwoord geeft `502 geocoder_unavailable` zonder details; een leeg resultaat is `200 []`.
 
+## RDW (kenteken)
+
+Bij het toevoegen of bewerken van een voertuig kan de webinterface met het kenteken merk, type en bouwjaar ophalen en laten zien of er een openstaande terugroepactie is (`GET /api/v1/rdw`, zie [api.md](api.md)). Alleen Nederlandse kentekens; dit is geen weerbron.
+
+- **Dienst:** RDW Open Data (<https://opendata.rdw.nl>), openbaar en zonder API-key. Instelbaar met `WISSELWEER_RDW_URL`; alleen `https://` (of loopback), uitzetten met `off`.
+- **Datasets:** `m9d7-ebf2` (gekentekende voertuigen: merk, handelsbenaming, datum eerste toelating, indicator openstaande terugroepactie), `t49b-isb7` (status per kenteken, `O` = openstaand) en `j9yg-7rg9` (omschrijving van defect en herstel, max. 5 acties).
+- **Privacy:** het kenteken gaat alleen naar de RDW als iemand op "Gegevens ophalen bij RDW" klikt, via de server (de browser spreekt de RDW niet zelf aan). Het kenteken wordt niet gelogd. Antwoorden worden 6 uur in het geheugen gecachet (max. 200). De ingevulde velden zijn gewone formuliervelden: pas je ze aan, dan geldt jouw waarde.
+- **Fouten:** ongeldig kenteken `422 rdw_invalid_plate`, onbekend kenteken `404 rdw_not_found`, RDW onbereikbaar `502 rdw_unavailable`, uitgezet `503 rdw_disabled`. Het formulier blijft dan gewoon met de hand in te vullen.
+
 ## Cache, service en vergelijking
 - `ForecastCache`: vers tot `Expires` (zonder: 30 min), daarna conditioneel ophalen (304 verlengt). Bij fouten wordt cache tot `max_stale_hours` (24) teruggegeven met `is_stale=True`; `retry_after` wordt gerespecteerd. Per sleutel (provider, lat4, lon4) één lock: meerdere voertuigen delen één request. De cache staat in SQLite (tabel `forecast_cache`, `storage/cache_backend.py`), zodat die een herstart overleeft; `InMemoryBackend` (in `weather/cache.py`) wordt alleen in tests gebruikt.
 - `compare_forecasts` toont per dag min/max/neerslag per provider en de spreiding. Alleen diagnostisch; combineert niets.

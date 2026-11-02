@@ -17,6 +17,7 @@ from wisselweer.settings import Settings
 
 if TYPE_CHECKING:
     from wisselweer.geocoding import Geocoder
+    from wisselweer.rdw import RdwClient
     from wisselweer.vehicles.advice import VehicleAdviceService
     from wisselweer.weather.service import ForecastService
 
@@ -115,6 +116,21 @@ def get_geocoder(request: Request) -> Geocoder:
                 geocoder = Geocoder(settings.geocoder_url, settings.contact)
                 app.state.geocoder = geocoder
     return geocoder
+
+
+def get_rdw(request: Request) -> RdwClient:
+    """Bouwt de RDW-client lazy en bewaart hem per app (cache blijft zo bewaard)."""
+    app = request.app
+    rdw = getattr(app.state, "rdw", None)
+    if rdw is None:
+        with _init_lock:
+            rdw = getattr(app.state, "rdw", None)
+            if rdw is None:
+                from wisselweer.rdw import RdwClient
+
+                rdw = RdwClient(app.state.settings.rdw_url)
+                app.state.rdw = rdw
+    return rdw
 
 
 def get_advice_service(

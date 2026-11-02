@@ -104,6 +104,20 @@
 </div>
 {%- endmacro %}
 
+{% macro rdw_widget() -%}
+{#- Alleen zichtbaar met JavaScript (app.js haalt hidden weg); zonder blijft het formulier gewoon werken. -#}
+<div class="rdw" data-rdw hidden role="group" aria-label="{{ t('rdw.group') }}" data-url="/api/v1/rdw"
+  data-msg-searching="{{ t('rdw.searching') }}" data-msg-filled="{{ t('rdw.filled') }}" data-msg-invalid="{{ t('rdw.invalid') }}"
+  data-msg-not-found="{{ t('rdw.not_found') }}" data-msg-error="{{ t('rdw.error') }}" data-msg-no-recall="{{ t('rdw.no_recall') }}"
+  data-msg-recall-title="{{ t('rdw.recall_title') }}" data-msg-recall-unknown="{{ t('rdw.recall_unknown') }}"
+  data-msg-recall-remedy="{{ t('rdw.recall_remedy') }}" data-msg-recall-ref="{{ t('rdw.recall_ref') }}" data-msg-recall-advice="{{ t('rdw.recall_advice') }}">
+  <div><button type="button" class="btn" data-rdw-lookup>{{ icon('car', 18) }} {{ t('rdw.lookup') }}</button></div>
+  <p class="hint">{{ t('rdw.privacy') }}</p>
+  <p class="hint" role="status" aria-live="polite" data-rdw-status></p>
+  <div class="notice notice-warn rdw-recalls" data-rdw-recalls hidden></div>
+</div>
+{%- endmacro %}
+
 {% macro csrf() -%}
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 {%- endmacro %}
