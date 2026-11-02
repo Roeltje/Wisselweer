@@ -40,13 +40,13 @@ def test_build_countries_content():
     svc = AnyForecasts(fc(SNOW))
     countries, disclaimer = build_public_countries(svc, NOW)
     by = {c.code: c for c in countries}
-    assert len(countries) == 8 and "geen juridisch advies" in disclaimer
+    assert len(countries) == 16 and "geen juridisch advies" in disclaimer
     assert by["DE"].weather.status == "winter_conditions_expected"
     assert by["DE"].weather.window_hours == 72 and len(by["DE"].weather.locations) == 6
     assert by["FR"].weather is None and by["BE"].weather is None
     assert by["AT"].period_label == "1 november – 15 april" and by["AT"].in_period is True
     assert by["DE"].period_label is None and by["DE"].in_period is None
-    assert len(svc.calls) == len(set(svc.calls)) == 18
+    assert len(svc.calls) == len(set(svc.calls)) == 36
 
 
 def test_mild_and_provider_failure():
@@ -103,7 +103,7 @@ def test_publish_countries_on(tmp_path):
     with pytest.raises(ValidationError):
         PublicAdvice.model_validate(data | {"countries": [data["countries"][0] | {"x": 1}]})
     assert set(data["countries"][0]) <= set(PublicCountry.model_fields)
-    assert len(svc.calls) == 18
+    assert len(svc.calls) == 36
 
 
 def base_or_any(base, svc):

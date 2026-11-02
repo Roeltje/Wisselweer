@@ -6,7 +6,9 @@ Regelgeving staat los van het meteorologische advies: het wisseladvies (engine) 
 
 ## Wat is gedekt
 
-Eerste acht landen, peildatum 2026-11-01: Duitsland (DE), Oostenrijk (AT), Frankrijk (FR), Zwitserland (CH), Italië (IT), België (BE), Luxemburg (LU) en Tsjechië (CZ). De overige acht (SI, HR, DK, SE, NO, FI, ES, PL) staan op de [roadmap](../ROADMAP.md).
+Zestien landen. Peildatum 2026-11-01: Duitsland (DE), Oostenrijk (AT), Frankrijk (FR), Zwitserland (CH), Italië (IT), België (BE), Luxemburg (LU) en Tsjechië (CZ). Peildatum 2026-11-02: Slovenië (SI), Kroatië (HR), Denemarken (DK), Zweden (SE), Noorwegen (NO), Finland (FI), Spanje (ES) en Polen (PL).
+
+Onzekerheden staan per land in `notes_nl` (met `confidence` lager dan `high`): Frankrijk, Denemarken (nieuwe regel sinds 1 juli 2025, geen wettelijk winterprofiel gevonden), Finland (afwijkende ANWB-periode voor Lapland), Spanje (M+S of alleen 3PMSF als alternatief voor kettingen) en Polen (geen officiële overheidspagina, wel de tekst van de verordening). Noorwegen heeft een periode die van Pasen afhangt; die staat daarom in de tekst en niet in `period`.
 
 ## Gegevensstructuur
 
@@ -41,4 +43,4 @@ Let op:
 
 ## Publiceren
 
-Standaard uit. Met `WISSELWEER_PUBLISH_COUNTRIES=true` krijgt `advice.json` de optionele velden `countries` en `countries_disclaimer` (contract: [public-advice-contract.md](public-advice-contract.md)). Dat kost per publicatie ca. 18 extra verwachtingsverzoeken (via dezelfde cache en weerbron). Uit = geen extra verzoeken en geen veld.
+Standaard uit. Met `WISSELWEER_PUBLISH_COUNTRIES=true` krijgt `advice.json` de optionele velden `countries` en `countries_disclaimer` (contract: [public-advice-contract.md](public-advice-contract.md)). Dat kost per publicatie ca. 36 extra verwachtingsverzoeken (via dezelfde cache en weerbron). Uit = geen extra verzoeken en geen veld.
