@@ -167,11 +167,14 @@ def build_advice_view(
             )
         else:
             date_line = tr("advice.no_reliable_date")
-    plan_by = (
-        tr("advice.plan_by", date=format_date(advice.plan_appointment_by, locale))
-        if advice.plan_appointment_by and advice.direction != Direction.NONE
-        else None
-    )
+    plan_by = None
+    if advice.plan_appointment_by and advice.direction != Direction.NONE:
+        # "Vóór vandaag" (of een datum die al voorbij is) kan niet meer: dan zo snel mogelijk.
+        # Vergeleken met nu, niet met het moment van berekenen: een advies kan een dag oud zijn.
+        if advice.plan_appointment_by <= datetime.now(tz).date():
+            plan_by = tr("advice.plan_asap")
+        else:
+            plan_by = tr("advice.plan_by", date=format_date(advice.plan_appointment_by, locale))
 
     warnings: list[WarningView] = []
     notices: list[str] = []

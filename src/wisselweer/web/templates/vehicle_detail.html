@@ -43,6 +43,7 @@
 
     <details class="why">
       <summary>{{ t('vehicle.why') }}</summary>
+      <p class="muted small">{{ t('vehicle.why_personal') }}</p>
       {% if adv.reasons %}<ul>{% for r in adv.reasons %}<li>{{ r }}</li>{% endfor %}</ul>{% else %}<p class="muted">{{ t('vehicle.no_reasons') }}</p>{% endif %}
     </details>
     <details class="why">

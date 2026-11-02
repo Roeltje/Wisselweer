@@ -417,7 +417,14 @@ def test_dashboard_shows_advice_and_weather(web):
     assert (
         "Waarom dit advies?" in detail and "Hoe ver vooruit" in detail and "Onzekerheden" in detail
     )
-    assert "Plan een afspraak vóór" in detail or "Nog geen betrouwbare wisseldatum" in detail
+    assert any(
+        s in detail
+        for s in (
+            "Plan een afspraak vóór",
+            "Plan zo snel mogelijk",
+            "Nog geen betrouwbare wisseldatum",
+        )
+    )
 
 
 def test_dashboard_works_when_provider_fails(app, web):
