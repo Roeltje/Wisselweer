@@ -5,6 +5,7 @@ import pytest
 import respx
 
 from tests.unit.weather.helpers import load
+from wisselweer import __version__
 from wisselweer.core.models import PrecipType
 from wisselweer.observations.wunderground import WundergroundProvider
 from wisselweer.weather.base import (
@@ -41,7 +42,9 @@ def test_metno_normalises():
     res = p.fetch(52.123456, 5.987654)
     req = route.calls.last.request
     assert req.url.params["lat"] == "52.1235" and req.url.params["lon"] == "5.9877"
-    assert req.headers["user-agent"].startswith("Wisselweer/0.1.0 (+https://wisselweer.nl; garage@")
+    assert req.headers["user-agent"].startswith(
+        f"Wisselweer/{__version__} (+https://wisselweer.nl; garage@"
+    )
     fc = res.forecast
     assert fc.timezone == "Europe/Amsterdam"
     assert res.expires == datetime(2026, 11, 1, 7, tzinfo=UTC)
