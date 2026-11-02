@@ -1,0 +1,13 @@
+# Bouwen vanaf broncode in plaats van het image van GHCR gebruiken (voor ontwikkelaars en
+# wie zelf wil bouwen). Combineer met compose.yaml:
+#   docker compose -f compose.yaml -f compose.build.yaml up -d --build
+#   docker compose -f compose.yaml -f compose.build.yaml --profile publish up -d --build
+# Gebruik altijd --build: de publisher gebruikt het image dat de webapp-service bouwt.
+services:
+  wisselweer:
+    build: .
+    image: wisselweer:local
+    pull_policy: never
+  publisher:
+    image: wisselweer:local
+    pull_policy: never

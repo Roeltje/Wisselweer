@@ -73,7 +73,7 @@ src/wisselweer/
 branding/                 # logo.svg, favicon.svg/.ico, icon-app.svg, og-image.svg, PNG's
 deploy/                   # systemd-units, installatiescripts
 scripts/generate_examples.py   # genereert de API-voorbeelden in docs/examples/
-Dockerfile  compose.yaml  .env.example
+Dockerfile  compose.yaml  compose.build.yaml  .env.example   # image op GHCR; deploy/docker-install.sh; .github/workflows/release.yml
 docs/                     # api, providers, advice-rules, publishing, public-advice-contract,
                           # regulations, backtesting, testing, install-*, STATUS
 docs/examples/            # voorbeeld-JSON (advies, voertuig, bandenwissel, public-advice)
@@ -117,7 +117,7 @@ tests/                    # unit/ integration/ security/ fixtures/
 
 ## 7. Beveiliging
 
-- Bindt standaard op `127.0.0.1`. Docker publiceert `127.0.0.1:8000`.
+- Bindt standaard op `127.0.0.1`. Docker publiceert `127.0.0.1:8000`; de SFTP-sleutel zit alleen in de publisher-container.
 - Eén lokale beheerder (`wisselweer create-admin`), wachtwoord met `hashlib.scrypt`; sessiecookie `HttpOnly`, `SameSite=Strict`, `Secure` configureerbaar; CSRF-token op alle muterende requests; optionele API-token (Bearer) voor Home Assistant.
 - `/docs` en `/openapi.json` alleen na login. Geen debug, generieke foutmeldingen, geen PII in logs.
 - Publiek JSON via `PublicAdvice` (Pydantic, `extra='forbid'`), gebouwd uit `NationalAdviceService` — nooit uit ORM-objecten. Test controleert dat kentekens/e-mail/namen niet in output staan.

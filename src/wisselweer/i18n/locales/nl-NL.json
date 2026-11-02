@@ -35,7 +35,7 @@
  "login.password": "Wachtwoord",
  "login.submit": "Inloggen",
  "login.no_admin": "Er is nog geen beheerder. Maak er een aan op de server, als root:",
- "login.no_admin_docker": "Draait Wisselweer in Docker, gebruik dan op de host:",
+ "login.no_admin_docker": "Draait Wisselweer in Docker, ga dan op de host naar de installatiemap (waar compose.yaml staat) en gebruik:",
  "dashboard.title": "Jouw voertuigen",
  "dashboard.empty_title": "Nog geen voertuigen",
  "dashboard.empty_text": "Voeg je eerste voertuig toe om te zien wanneer wisselen verstandig is.",

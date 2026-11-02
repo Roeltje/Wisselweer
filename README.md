@@ -41,7 +41,19 @@ uv run wisselweer serve         # http://127.0.0.1:8000
 
 De server luistert standaard alleen lokaal. Zie [SECURITY.md](SECURITY.md) voor toegang van buitenaf.
 
-Installeren als dienst: [Debian/Ubuntu-LXC](docs/install-lxc.md) (in de praktijk getest op Debian 13) of [Docker](docs/install-docker.md) (nog niet getest).
+## Installeren
+
+Met Docker (Compose v2), alleen bereikbaar op `127.0.0.1:8000`:
+
+```
+curl -fsSLO https://github.com/Roeltje/Wisselweer/releases/latest/download/docker-install.sh
+bash docker-install.sh
+cd wisselweer && docker compose exec wisselweer wisselweer create-admin --username jouwnaam
+```
+
+Het script haalt `compose.yaml` en het image (`ghcr.io/roeltje/wisselweer`, amd64 en arm64, met herkomstverklaring) van de release, maakt `.env` met een gegenereerde sleutel en maakt bij een update eerst een back-up. Het image wordt in CI bij elke wijziging gebouwd en gestart (amd64). Details, zelf bouwen, publiceren en back-up: [docs/install-docker.md](docs/install-docker.md).
+
+Als dienst zonder Docker: [Debian/Ubuntu-LXC](docs/install-lxc.md) (in de praktijk getest op Debian 13).
 
 ## Configuratie
 

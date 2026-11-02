@@ -1,7 +1,14 @@
+# Wisselweer in Docker. Het image komt van GHCR; bouwen vanaf broncode: zie compose.build.yaml.
+#   docker compose up -d                      # webapp
+#   docker compose --profile publish up -d    # webapp + periodieke publicatie (SFTP)
+# Installatie, update en back-up: docs/install-docker.md (of deploy/docker-install.sh).
+name: wisselweer
+
 services:
   wisselweer:
-    build: .
-    image: wisselweer:local
+    # IMAGE_TAG is een Compose-variabele (geen WISSELWEER_-voorvoegsel, dus de app negeert hem
+    # ook als hij via `.env` in de container terechtkomt). Releases pinnen hier hun eigen versie.
+    image: ghcr.io/roeltje/wisselweer:${IMAGE_TAG:-latest}
     container_name: wisselweer
     # Alleen localhost op de host. NIET openzetten naar 0.0.0.0 of het internet: gebruik een
     # VPN (WireGuard/Tailscale) of een reverse proxy MET extra authenticatie.
@@ -12,12 +19,10 @@ services:
     environment:
       WISSELWEER_HOST: "0.0.0.0"  # binnen de container; de host-binding hierboven beperkt dit
       WISSELWEER_DATA_DIR: /data
+    # Bewust geen SFTP-sleutel of known_hosts: een gecompromitteerde webapp kan de
+    # publicatiesleutel dan niet lezen. Die staat alleen bij de service `publisher`.
     volumes:
       - wisselweer-data:/data
-      # SFTP-publicatie (optioneel): zet in .env WISSELWEER_PUBLISH_SFTP_KEY=/run/secrets/deploy_key
-      # en WISSELWEER_PUBLISH_SFTP_KNOWN_HOSTS=/run/secrets/known_hosts
-      # - ./secrets/deploy_key:/run/secrets/deploy_key:ro
-      # - ./secrets/known_hosts:/run/secrets/known_hosts:ro
     restart: unless-stopped
     read_only: true
     tmpfs:
@@ -36,6 +41,43 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+
+  # Periodieke publicatie van het landelijke advies (`wisselweer publish --every-hours N`).
+  # Alleen met `--profile publish`. Dit is het Docker-equivalent van wisselweer-publish.timer:
+  # alleen deze container ziet de SFTP-sleutel. Laat WISSELWEER_PUBLISH_INTERVAL_HOURS in .env
+  # op 0, anders publiceert de webapp ook nog zelf.
+  publisher:
+    image: ghcr.io/roeltje/wisselweer:${IMAGE_TAG:-latest}
+    container_name: wisselweer-publisher
+    profiles: [publish]
+    command: ["wisselweer", "publish", "--every-hours", "${PUBLISH_EVERY_HOURS:-6}"]
+    env_file: .env
+    environment:
+      WISSELWEER_DATA_DIR: /data
+    volumes:
+      - wisselweer-data:/data
+      # Map ./secrets naast dit bestand met `deploy_key` en `known_hosts` (leesbaar voor UID 10001:
+      # `chown 10001 secrets/deploy_key; chmod 600 secrets/deploy_key`). Zet in .env
+      # WISSELWEER_PUBLISH_SFTP_KEY=/run/secrets/deploy_key en
+      # WISSELWEER_PUBLISH_SFTP_KNOWN_HOSTS=/run/secrets/known_hosts. Bestaat de map niet, dan
+      # weigert Compose te starten (er wordt geen lege, root-eigen map aangemaakt).
+      - type: bind
+        source: ./secrets
+        target: /run/secrets
+        read_only: true
+        bind:
+          create_host_path: false
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    # De HEALTHCHECK uit het image test de webserver, die in deze container niet draait.
+    healthcheck:
+      disable: true
 
 volumes:
   wisselweer-data:

@@ -138,6 +138,7 @@ def test_login_page_without_admin(tmp_path):
     r = TestClient(app).get("/login")
     assert "wisselweer create-admin" in r.text and "<form" not in r.text
     assert "docker compose exec wisselweer wisselweer create-admin" in r.text
+    assert "installatiemap" in r.text  # Docker: het commando draait vanuit de map met compose.yaml
 
 
 @pytest.mark.parametrize("method", ["post", "patch", "delete"])
