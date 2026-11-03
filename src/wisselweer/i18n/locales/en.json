@@ -87,7 +87,7 @@
  "vehicle.make_model": "Make and model",
  "vehicle.advice": "Tyre advice",
  "vehicle.why": "Why this advice?",
- "vehicle.why_personal": "This advice is for this car: its own location, your driving times and the lead time of your changeover method. The national advice (as on wisselweer.nl) looks at several places during the day, without lead time, so it can differ.",
+ "vehicle.why_personal": "This advice is for this car: its own location, your driving times and the lead time of your changeover method. The national advice (as on wisselweer.nl) looks at several places during rush hours and weekends, without lead time, so it can differ.",
  "vehicle.horizon": "How far ahead",
  "vehicle.uncertainties": "Uncertainties",
  "vehicle.no_reasons": "No explanation available.",

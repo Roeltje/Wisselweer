@@ -44,6 +44,10 @@ Naar winter reageert de engine sneller (veiligheid): korte koude reeks (3 dagen)
 
 `status` is gestabiliseerd t.o.v. `previous`; `raw_status` is de ongedempte uitkomst, `confirm_streak` telt opeenvolgende afwijkende evaluaties. Verhoging naar winter: direct. Verhoging naar zomer en elke verlaging: pas na `hysteresis_confirmations` opeenvolgende evaluaties; tot dan blijven status en datum van de vorige staan (`reason.status_held`). Richtingswissel of onvoldoende data reset. Waarschuwingen komen altijd uit de nieuwste evaluatie.
 
+## Landelijk advies
+
+Het landelijke advies (publisher, zie [publishing.md](publishing.md)) draait dezelfde engine op 7 referentieplaatsen, zonder voorbereidingstijd (`lead_time_days=0`), met een **landelijk rijprofiel**: werkdagen (ma–vr) 07:00–09:00 en 16:00–19:00 (ochtend- en avondspits) en za/zo 10:00–18:00. Dat volgt grofweg wanneer Nederland autorijdt volgens CBS ODiN (ochtend- en avondspits op werkdagen, drukke zaterdagmiddag); de grenzen zijn een ongevalideerde heuristiek. De vooruitblik toont per dag `temp_drive_c`: het gemiddelde over de uren in dit profiel, dezelfde rijmoment-temperatuur waarop het advies beslist.
+
 ## Drempels (`EngineConfig`, standaardwaarden)
 
 | Parameter | Standaard | Betekenis |

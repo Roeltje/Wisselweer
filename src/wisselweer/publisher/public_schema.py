@@ -56,6 +56,10 @@ class PublicOutlookDay(BaseModel):
     """Eén dag uit de vooruitblik van het referentiepunt De Bilt (niet landelijk representatief).
 
     `concrete` = dag 1-7 (betrouwbaarder), `trend` = dag 8-14 (indicatief).
+
+    `temp_drive_c`: gemiddelde temperatuur over de uren die in het landelijke rijprofiel vallen;
+    dezelfde maat (rijmoment-temperatuur) waarop het advies beslist (drempel `cold_day_mean_c`,
+    standaard 5 °C). `None` als er geen weerpunt in een rijmoment valt.
     """
 
     model_config = _STRICT
@@ -63,11 +67,12 @@ class PublicOutlookDay(BaseModel):
     date: date
     temp_min_c: float | None = None
     temp_max_c: float | None = None
+    temp_drive_c: float | None = None
     frost_night: bool
     snow_possible: bool
     kind: Literal["concrete", "trend"]
 
-    @field_validator("temp_min_c", "temp_max_c")
+    @field_validator("temp_min_c", "temp_max_c", "temp_drive_c")
     @classmethod
     def _round1(cls, v: float | None) -> float | None:
         return None if v is None else round(v, 1)

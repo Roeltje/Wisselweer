@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 from collections import Counter
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from typing import TYPE_CHECKING, Literal, cast
 from zoneinfo import ZoneInfo
 
@@ -19,6 +19,7 @@ from wisselweer.core import (
     Advice,
     AdviceInput,
     AdviceStatus,
+    DriveSlot,
     DrivingProfile,
     Forecast,
     TireType,
@@ -44,6 +45,23 @@ log = logging.getLogger("wisselweer.publisher")
 
 TZ = ZoneInfo("Europe/Amsterdam")
 _FORECAST_WARNINGS = {WarningCode.FORECAST_UNAVAILABLE, WarningCode.FORECAST_STALE}
+
+
+def national_profile() -> DrivingProfile:
+    """Landelijk rijprofiel: werkdagen (ma–vr) 07:00–09:00 en 16:00–19:00 (ochtend- en avondspits),
+    za/zo 10:00–18:00.
+
+    Bron van het idee: CBS Onderweg in Nederland (ODiN), waarin het autoverkeer pieken kent in de
+    ochtend- en avondspits op werkdagen en een drukke zaterdagmiddag. De exacte grenzen zijn een
+    ONGEVALIDEERDE HEURISTIEK (afgerond op de spitsen, niet gefit op ODiN-microdata).
+    """
+    slots = [
+        DriveSlot(weekday=d, start=time(*s), end=time(*e))
+        for d in range(5)
+        for s, e in (((7,), (9,)), ((16,), (19,)))
+    ]
+    slots += [DriveSlot(weekday=d, start=time(10), end=time(18)) for d in (5, 6)]
+    return DrivingProfile.custom(slots)
 
 
 class ReferenceLocation(BaseModel):
@@ -184,7 +202,7 @@ class NationalAdviceService:
             AdviceInput(
                 forecast=forecast,
                 mounted=mounted,
-                profile=DrivingProfile.daytime(),
+                profile=national_profile(),
                 now=now,
                 lead_time_days=0,
                 config=self._cfg.engine,
@@ -198,7 +216,7 @@ class NationalAdviceService:
         ref = results[0] if results else None
         if ref is None or ref.forecast is None:
             return None
-        return build_outlook(ref.forecast, now)
+        return build_outlook(ref.forecast, now, national_profile())
 
     def _aggregate(self, results: list[_RegionResult]) -> tuple[PublicStatus, list[_RegionResult]]:
         with_data = [r for r in results if r.has_data]

@@ -4,6 +4,12 @@ Alle noemenswaardige wijzigingen per versie. Nummering volgens [Semantic Version
 zolang de versie onder 1.0 is, kan een minor-versie nog wijzigingen bevatten die niet terugwaarts compatibel zijn.
 Hoe een release gemaakt wordt: [docs/releasing.md](docs/releasing.md).
 
+## [Unreleased]
+
+### Gewijzigd
+- **Landelijk advies**: gebruikt een landelijk rijprofiel (werkdagen 07:00–09:00 en 16:00–19:00, za/zo 10:00–18:00, gebaseerd op CBS ODiN; ongevalideerde heuristiek) in plaats van "overdag" 09:00–17:00.
+- **`advice.json`**: de vooruitblik heeft een optioneel veld `temp_drive_c` (gemiddelde temperatuur op de rijmomenten, 1 decimaal); terugwaarts compatibel.
+
 ## [0.2.0] - 2026-11
 
 Eerste release met een Docker-image op GHCR.

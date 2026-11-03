@@ -7,10 +7,11 @@ weerbron daadwerkelijk dekt; er wordt nooit iets bijgeschat. Geen extra provider
 
 from __future__ import annotations
 
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
-from wisselweer.core import Forecast, HourlyPoint, PrecipType
+from wisselweer.core import DrivingProfile, Forecast, HourlyPoint, PrecipType
+from wisselweer.core.engine import _in_slot
 from wisselweer.publisher.public_schema import PublicOutlookDay
 
 TZ = ZoneInfo("Europe/Amsterdam")
@@ -34,11 +35,30 @@ def _snowy(p: HourlyPoint) -> bool:
     return p.precip_type in _SNOWY or (p.snow_cm is not None and p.snow_cm > 0)
 
 
-def build_outlook(forecast: Forecast, now: datetime) -> list[PublicOutlookDay] | None:
+def _drive_mean(
+    temps: list[tuple[HourlyPoint, float]], profile: DrivingProfile | None, day: date
+) -> float | None:
+    """Gemiddelde over de rijmomenten van `day`; None als er geen punt in een slot valt."""
+    if profile is None:
+        return None
+    vals = []
+    for p, v in temps:
+        local = p.time.astimezone(TZ)
+        if _in_slot(profile, day.weekday(), local.hour * 60 + local.minute):
+            vals.append(v)
+    return sum(vals) / len(vals) if vals else None
+
+
+def build_outlook(
+    forecast: Forecast, now: datetime, profile: DrivingProfile | None = None
+) -> list[PublicOutlookDay] | None:
     """Dagelijkse min/max, vorstnacht en sneeuwkans, vanaf de lokale dag van `now`.
 
     `snow_possible`: ergens op die dag sneeuw/natte sneeuw als neerslagtype of `snow_cm` > 0
     (alleen als de bron die variabelen levert; anders False). Geeft None zonder dekking.
+
+    `temp_drive_c`: gemiddelde temperatuur over de punten die in een slot van `profile` vallen
+    (zelfde `_in_slot`-definitie als de engine). Zonder profiel of zonder punten in een slot None.
     """
     horizon = forecast.horizon_end()
     if horizon is None:
@@ -65,6 +85,7 @@ def build_outlook(forecast: Forecast, now: datetime) -> list[PublicOutlookDay] |
                 date=day,
                 temp_min_c=min(values),
                 temp_max_c=max(values),
+                temp_drive_c=_drive_mean(temps, profile, day),
                 frost_night=bool(night) and min(night) <= 0.0,
                 snow_possible=any(_snowy(p) for p in points),
                 kind="concrete" if i < CONCRETE_DAYS else "trend",

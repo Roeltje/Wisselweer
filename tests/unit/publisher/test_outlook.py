@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import json
+from zoneinfo import ZoneInfo
 
 import pytest
 from pydantic import ValidationError
 
 from tests.fixtures.builders import Day, repeat
 from tests.unit.publisher.helpers import COLD, MILD, NOW, START, FakeForecasts, fc, uniform
-from wisselweer.core import PrecipType
-from wisselweer.publisher.national import NationalAdviceService, NationalConfig
+from wisselweer.core import Forecast, HourlyPoint, PrecipType
+from wisselweer.publisher.national import NationalAdviceService, NationalConfig, national_profile
 from wisselweer.publisher.outlook import build_outlook
 from wisselweer.publisher.public_schema import PublicOutlookDay
 
@@ -88,7 +89,68 @@ def test_outlook_contains_no_pii_fields():
         "date",
         "temp_min_c",
         "temp_max_c",
+        "temp_drive_c",
         "frost_night",
         "snow_possible",
         "kind",
     }
+
+
+def test_national_profile_slots():
+    prof = national_profile()
+    slots = {(s.weekday, s.start.hour, s.end.hour) for s in prof.slots}
+    assert slots == (
+        {(d, 7, 9) for d in range(5)} | {(d, 16, 19) for d in range(5)} | {(5, 10, 18), (6, 10, 18)}
+    )
+
+
+def _drive_mean(fc_: Forecast, day, windows: list[tuple[int, int]]) -> float:
+    tz = ZoneInfo("Europe/Amsterdam")
+    vals = [
+        p.temperature_c
+        for p in fc_.hourly
+        if p.time.astimezone(tz).date() == day
+        and any(lo <= p.time.astimezone(tz).hour < hi for lo, hi in windows)
+    ]
+    return sum(vals) / len(vals)
+
+
+def test_temp_drive_c_weekday_and_weekend():
+    f = fc(repeat(Day(0, 10), 16))
+    out = build_outlook(f, NOW, national_profile())
+    assert out is not None
+    tue, sat = out[0], out[4]  # 2026-11-10 = dinsdag, 2026-11-14 = zaterdag
+    assert tue.date.weekday() == 1 and sat.date.weekday() == 5
+    assert tue.temp_drive_c == round(_drive_mean(f, tue.date, [(7, 9), (16, 19)]), 1)
+    assert sat.temp_drive_c == round(_drive_mean(f, sat.date, [(10, 18)]), 1)
+    assert tue.temp_drive_c != sat.temp_drive_c
+    assert tue.temp_min_c is not None and tue.temp_max_c is not None
+    assert tue.temp_min_c < tue.temp_drive_c < tue.temp_max_c
+
+
+def test_temp_drive_c_none_without_profile():
+    out = build_outlook(fc(MILD), NOW)
+    assert out is not None and all(d.temp_drive_c is None for d in out)
+
+
+def test_temp_drive_c_none_when_no_points_in_slot():
+    f = fc(MILD)
+    # Alleen nachtpunten (01, 03, 05 en 22 uur) op de eerste dag: geen punt in een slot.
+    tz = ZoneInfo("Europe/Amsterdam")
+    night = {1, 3, 5, 22}
+    pts: list[HourlyPoint] = []
+    for p in f.hourly:
+        local = p.time.astimezone(tz)
+        if local.date() == START and local.hour not in night:
+            continue
+        pts.append(p)
+    sparse = f.model_copy(update={"hourly": pts})
+    out = build_outlook(sparse, NOW, national_profile())
+    assert out is not None
+    assert out[0].temp_drive_c is None
+    assert out[1].temp_drive_c is not None
+
+
+def test_service_outlook_uses_national_profile():
+    a = NationalAdviceService(uniform(MILD), NationalConfig()).compute(NOW)
+    assert a.outlook is not None and all(d.temp_drive_c is not None for d in a.outlook)

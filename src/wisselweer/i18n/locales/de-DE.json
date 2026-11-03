@@ -87,7 +87,7 @@
  "vehicle.make_model": "Marke und Modell",
  "vehicle.advice": "Reifenempfehlung",
  "vehicle.why": "Warum diese Empfehlung?",
- "vehicle.why_personal": "Diese Empfehlung gilt für dieses Auto: der eigene Standort, deine Fahrzeiten und die Vorlaufzeit deiner Wechselmethode. Die landesweite Empfehlung (wie auf wisselweer.nl) betrachtet mehrere Orte tagsüber ohne Vorlaufzeit und kann daher abweichen.",
+ "vehicle.why_personal": "Diese Empfehlung gilt für dieses Auto: der eigene Standort, deine Fahrzeiten und die Vorlaufzeit deiner Wechselmethode. Die landesweite Empfehlung (wie auf wisselweer.nl) betrachtet mehrere Orte im Berufsverkehr und am Wochenende ohne Vorlaufzeit und kann daher abweichen.",
  "vehicle.horizon": "Wie weit im Voraus",
  "vehicle.uncertainties": "Unsicherheiten",
  "vehicle.no_reasons": "Keine Erläuterung verfügbar.",

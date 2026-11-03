@@ -51,6 +51,7 @@ def test_public_json_contains_no_private_data(tmp_path):
             "date",
             "temp_min_c",
             "temp_max_c",
+            "temp_drive_c",
             "frost_night",
             "snow_possible",
             "kind",
