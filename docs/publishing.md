@@ -6,7 +6,7 @@
 
 1. **Richting** volgt de datum (lokale tijd, Europe/Amsterdam): 1 aug t/m 31 jan ⇒ vraag "winterbanden" (engine met zomerbanden gemonteerd); 1 feb t/m 31 jul ⇒ "zomerbanden" (winterbanden gemonteerd). Configureerbaar via `NationalConfig.winter_question_from` / `summer_question_from`.
 2. **Referentielocaties** (kust, binnenland, noord, oost, zuid): De Bilt, Groningen, Den Helder, Vlissingen, Maastricht, Twente (Enschede), Arnhem. Eigen lijst via `WISSELWEER_NATIONAL_LOCATIONS` (JSON).
-3. Per locatie draait dezelfde engine als voor voertuigen, met profiel "overdag" en zonder voorbereidingstijd. Een providerfout maakt van die regio `INSUFFICIENT_DATA`.
+3. Per locatie draait dezelfde engine als voor voertuigen, met het **landelijk rijprofiel** (werkdagen 07:00–09:00 en 16:00–19:00, za/zo 10:00–18:00; zie [advice-rules.md](advice-rules.md#landelijk-advies)) en zonder voorbereidingstijd. De vooruitblik toont per dag ook `temp_drive_c`, de gemiddelde temperatuur op die rijmomenten. Een providerfout maakt van die regio `INSUFFICIENT_DATA`.
 4. **Samenvoegen**:
    - minder dan de helft plus één regio met data (4 van 7) ⇒ `INSUFFICIENT_DATA`;
    - zegt minstens 75% van de regio's met data hetzelfde ⇒ die status; anders `REGIONAL_DIFFERENCES`;
