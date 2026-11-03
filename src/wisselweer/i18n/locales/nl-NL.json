@@ -87,7 +87,7 @@
  "vehicle.make_model": "Merk en model",
  "vehicle.advice": "Bandenadvies",
  "vehicle.why": "Waarom dit advies?",
- "vehicle.why_personal": "Dit advies geldt voor deze auto: de eigen locatie, je rijtijden en de voorbereidingstijd van je wisselmethode. Het landelijke advies (zoals op wisselweer.nl) kijkt naar meerdere plaatsen overdag, zonder voorbereidingstijd, en kan daardoor afwijken.",
+ "vehicle.why_personal": "Dit advies geldt voor deze auto: de eigen locatie, je rijtijden en de voorbereidingstijd van je wisselmethode. Het landelijke advies (zoals op wisselweer.nl) kijkt naar meerdere plaatsen in de spits en het weekend, zonder voorbereidingstijd, en kan daardoor afwijken.",
  "vehicle.horizon": "Hoe ver vooruit",
  "vehicle.uncertainties": "Onzekerheden",
  "vehicle.no_reasons": "Geen toelichting beschikbaar.",
