@@ -6,15 +6,19 @@ Hoe een release gemaakt wordt: [docs/releasing.md](docs/releasing.md).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11
+
+Betere uitleg en een rustiger landelijk advies; sneeuw of ijzel op korte termijn gaat voor.
+
 ### Nieuw
-- **Sneeuw of ijzel op korte termijn**: met zomerbanden gemonteerd geeft sneeuw of ijzelneerslag (minimaal 2 uur, parameter `short_term_wintry_min_hours`) binnen 72 uur direct "Tijd om te wisselen" met datum vandaag, ook buiten het winterseizoen. Gladheid alleen door dauwpunt blijft een waarschuwing. `rules_version` is nu `0.2.0`.
+- **Sneeuw of ijzel op korte termijn**: met zomerbanden gemonteerd geeft sneeuw of ijzelneerslag (minimaal 2 uur, parameter `short_term_wintry_min_hours`) binnen 72 uur direct "Tijd om te wisselen" met datum vandaag, ook buiten het winterseizoen. Gladheid alleen door dauwpunt blijft een waarschuwing. `rules_version` is nu `0.2.0` (#33).
 
 ### Opgelost
-- **Landelijk advies sprong heen en weer** binnen een dag: de hysterese werkte landelijk nooit. Regio's en de landelijke status worden nu gedempt via `<DATA_DIR>/national_state.json` (wegwerpbaar, geen back-up nodig); verlagingen en wijzigingen van/naar "regionale verschillen" vergen twee opeenvolgende berekeningen, verhogingen richting winter blijven direct.
+- **Landelijk advies sprong heen en weer** binnen een dag: de hysterese werkte landelijk nooit. Regio's en de landelijke status worden nu gedempt via `<DATA_DIR>/national_state.json` (wegwerpbaar, geen back-up nodig); verlagingen en wijzigingen van/naar "regionale verschillen" vergen twee opeenvolgende berekeningen, verhogingen richting winter blijven direct (#33).
 
 ### Gewijzigd
-- **Landelijk advies**: gebruikt een landelijk rijprofiel (werkdagen 07:00–09:00 en 16:00–19:00, za/zo 10:00–18:00, gebaseerd op CBS ODiN; ongevalideerde heuristiek) in plaats van "overdag" 09:00–17:00.
-- **`advice.json`**: de vooruitblik heeft een optioneel veld `temp_drive_c` (gemiddelde temperatuur op de rijmomenten, 1 decimaal); terugwaarts compatibel.
+- **Landelijk advies**: gebruikt een landelijk rijprofiel (werkdagen 07:00–09:00 en 16:00–19:00, za/zo 10:00–18:00, gebaseerd op CBS ODiN; ongevalideerde heuristiek) in plaats van "overdag" 09:00–17:00 (#32).
+- **`advice.json`**: de vooruitblik heeft een optioneel veld `temp_drive_c` (gemiddelde temperatuur op de rijmomenten, 1 decimaal); terugwaarts compatibel (#32).
 
 ## [0.2.0] - 2026-11
 
@@ -47,5 +51,7 @@ Eerste versie (MVP): advies per voertuig op basis van meerdere weerbronnen, voer
 garages en afspraken, privé-webinterface met login, REST-API, publicatie van een landelijk
 `advice.json` en installatie op Debian/Ubuntu (LXC).
 
+[Unreleased]: https://github.com/Roeltje/Wisselweer/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Roeltje/Wisselweer/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Roeltje/Wisselweer/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Roeltje/Wisselweer/releases/tag/v0.1.0
