@@ -1,4 +1,4 @@
-# Adviesregels (rules_version 0.1.0)
+# Adviesregels (rules_version 0.2.0)
 
 > **Alle drempels hieronder zijn ONGEVALIDEERDE HEURISTIEKEN.** Ze zijn niet gekalibreerd aan bandenprestaties, ongevallen- of klimaatdata. Ze zijn bedoeld als configureerbare startwaarden (`EngineConfig`) en worden pas aangescherpt na backtesting op `advice_snapshot`-data. Dit is geen juridisch of veiligheidsgarantie-advies.
 
@@ -29,6 +29,12 @@ Kan de reeks door een te korte horizon niet bevestigd worden, dan geen datum en 
 - `plan_appointment_by` = datum (of begin periode) − `lead_time_days`; ligt dat in het verleden dan wordt het vandaag met reden `reason.appointment_urgent`.
 - Seizoensvenster: winteradvies alleen buiten [`summer_earliest`, `winter_earliest`), zomeradvies alleen binnen dat venster. Waarschuwingen gelden altijd.
 
+## Sneeuw of ijzel op korte termijn (richting winter)
+
+Met **zomerbanden gemonteerd** geldt voor de komende `short_term_hours` (72 u): zijn er minimaal `short_term_wintry_min_hours` (2) uren met sneeuw/natte sneeuw of ijzelneerslag, dan is de uitkomst direct `CHANGE_RECOMMENDED` met `recommended_date` = vandaag en reden `reason.short_term_wintry` (parameters `start` = eerste datum, `kind` = `snow` of `ice`; sneeuw wint als beide voorkomen). Deze regel gaat **vóór** het seizoensvenster en alle andere regels: sneeuw op zomerbanden is ook in september gevaarlijk. Het lopende uur telt mee; één los uur geldt als modelruis en triggert niet.
+
+"IJzelneerslag" is ijzel (`FREEZING_RAIN`) of niet-sneeuw-neerslag bij ≤ `icy_precip_temp_c`. Gladheid alleen door dauwpunt/rijp (zonder neerslag) blijft een waarschuwing en geeft nooit een wisseladvies. Met winterbanden gemonteerd is de regel niet van toepassing.
+
 ## Asymmetrie
 
 Naar winter reageert de engine sneller (veiligheid): korte koude reeks (3 dagen) volstaat, aanhoudende vorst/sneeuw telt zwaar, en een statusverhoging is direct. Naar zomer is meer bevestiging nodig: lange warme reeks (7 dagen), niet vóór 1 maart, **geen vorst of sneeuw in de hele beschikbare horizon**, en een verhoging wordt pas na `hysteresis_confirmations` evaluaties doorgevoerd.
@@ -48,6 +54,19 @@ Naar winter reageert de engine sneller (veiligheid): korte koude reeks (3 dagen)
 
 Het landelijke advies (publisher, zie [publishing.md](publishing.md)) draait dezelfde engine op 7 referentieplaatsen, zonder voorbereidingstijd (`lead_time_days=0`), met een **landelijk rijprofiel**: werkdagen (ma–vr) 07:00–09:00 en 16:00–19:00 (ochtend- en avondspits) en za/zo 10:00–18:00. Dat volgt grofweg wanneer Nederland autorijdt volgens CBS ODiN (ochtend- en avondspits op werkdagen, drukke zaterdagmiddag); de grenzen zijn een ongevalideerde heuristiek. De vooruitblik toont per dag `temp_drive_c`: het gemiddelde over de uren in dit profiel, dezelfde rijmoment-temperatuur waarop het advies beslist.
 
+### Demping van het landelijke advies
+
+Zonder demping sprong het landelijke advies binnen een dag heen en weer. De publicatie bewaart daarom de vorige uitkomst in `<DATA_DIR>/national_state.json` en past twee lagen toe:
+
+1. **Per regio**: het vorige `Advice` van de regio gaat als `previous` naar de engine, dus gelden dezelfde hysteresisregels als per voertuig (richting winter strenger: direct; lichter of richting zomer strenger: na `hysteresis_confirmations` opeenvolgende evaluaties). `regions` in `advice.json` toont de gedempte regiostatussen.
+2. **Landelijke status** (na het samenvoegen), met rang `KEEP_CURRENT` < `PREPARE_CHANGE` < `CHANGE_RECOMMENDED`:
+   - `INSUFFICIENT_DATA` (nieuw of vorig): altijd direct.
+   - Seizoen `winter` en nieuwe status hoger dan de vastgehouden status: direct.
+   - Elke andere wijziging (lager, van/naar `REGIONAL_DIFFERENCES`, of hoger in seizoen `summer`): pas als dezelfde ruwe landelijke status `hysteresis_confirmations` berekeningen op rij voorkomt.
+   - Tijdens vasthouden blijven status, `status_label`, samenvatting, `recommended_date` en `recommended_period` van de vorige berekening staan (de waarschuwingsnotitie volgt de nieuwe berekening).
+
+Omdat beide lagen dempen, kan een landelijke daling in totaal drie publicaties duren (twee voor de regio's, daarna de landelijke bevestiging). Dat is bewust: liever te lang "Tijd om te wisselen" dan heen-en-weer. De staat wordt genegeerd als het bestand ontbreekt of onleesbaar is, ouder is dan 48 uur, of van een ander seizoen is. Alleen `wisselweer publish` schrijft de staat; `GET /api/v1/public-preview` leest hem alleen.
+
 ## Drempels (`EngineConfig`, standaardwaarden)
 
 | Parameter | Standaard | Betekenis |
@@ -60,6 +79,7 @@ Het landelijke advies (publisher, zie [publishing.md](publishing.md)) draait dez
 | `frost_threshold_c` | 0.0 | vorst: temp ≤ |
 | `persistent_frost_days` | 3 | aaneengesloten vorstdagen = zwaar winterargument |
 | `persistent_snow_days` | 2 | aaneengesloten sneeuwdagen = zwaar winterargument |
+| `short_term_wintry_min_hours` | 2 | uren sneeuw/ijzelneerslag binnen `short_term_hours` voor direct wisseladvies met zomerbanden |
 | `icy_precip_temp_c` | 1.0 | neerslag bij ≤ deze temp ⇒ gladheid |
 | `icy_dewpoint_margin_c` | 1.0 | dauwpuntmarge bij vorst |
 | `icy_humidity_pct` | 85 | minimale vochtigheid voor dauwpuntregel |

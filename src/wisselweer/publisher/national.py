@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 from collections import Counter
 from datetime import UTC, date, datetime, time, timedelta
+from pathlib import Path
 from typing import TYPE_CHECKING, Literal, cast
 from zoneinfo import ZoneInfo
 
@@ -28,6 +29,13 @@ from wisselweer.core import (
 )
 from wisselweer.core.config import EngineConfig, _parse_month_day
 from wisselweer.i18n import t
+from wisselweer.publisher.national_stability import (
+    NationalHold,
+    NationalState,
+    dampen_national_status,
+    load_state,
+    save_state,
+)
 from wisselweer.publisher.outlook import build_outlook
 from wisselweer.publisher.public_schema import (
     PublicAdvice,
@@ -143,18 +151,44 @@ class _RegionResult:
 
 
 class NationalAdviceService:
-    def __init__(self, forecast_service: ForecastService, config: NationalConfig | None = None):
+    def __init__(
+        self,
+        forecast_service: ForecastService,
+        config: NationalConfig | None = None,
+        state_path: Path | None = None,
+        persist: bool = True,
+    ):
+        """`state_path`: statebestand voor de demping tussen berekeningen. Alleen de publicatie
+        schrijft (`persist=True`); een API-aanroep leest alleen (`persist=False`)."""
         self._forecasts = forecast_service
         self._cfg = config or NationalConfig()
+        self._state_path = state_path
+        self._persist = persist
 
     def compute(self, now: datetime | None = None) -> PublicAdvice:
         cfg = self._cfg
         now = (now or datetime.now(UTC)).astimezone(UTC).replace(microsecond=0)
         season = cfg.season_for(now.astimezone(TZ).date())
         mounted = TireType.SUMMER if season == "winter" else TireType.WINTER
-        results = [self._region(loc, mounted, now) for loc in cfg.locations]
-        status, agreeing = self._aggregate(results)
-        recommended_date, period = self._dates(status, agreeing)
+        state = load_state(self._state_path, now, season)
+        previous_regions = state.regions if state else {}
+        results = [
+            self._region(loc, mounted, now, previous_regions.get(loc.name)) for loc in cfg.locations
+        ]
+        raw_status, agreeing = self._aggregate(results)
+        recommended_date, period = self._dates(raw_status, agreeing)
+        decision = dampen_national_status(
+            raw_status,
+            season,
+            state.national if state else None,
+            cfg.engine.hysteresis_confirmations,
+        )
+        status = decision.status
+        if decision.held:
+            assert state is not None and state.national is not None
+            recommended_date = state.national.recommended_date
+            period = state.national.recommended_period
+            agreeing = []
 
         horizons = [
             r.advice.horizon_until
@@ -171,6 +205,23 @@ class NationalAdviceService:
         )
         if local_warning and status != "INSUFFICIENT_DATA":
             summary = f"{summary} {t('public.warning_note')}"
+
+        if self._persist and self._state_path is not None:
+            save_state(
+                self._state_path,
+                NationalState(
+                    regions={r.name: r.advice for r in results if r.advice is not None},
+                    national=NationalHold(
+                        season=season,
+                        status=status,
+                        raw_status=decision.raw_status,
+                        streak=decision.streak,
+                        recommended_date=recommended_date,
+                        recommended_period=period,
+                    ),
+                    generated_at=now,
+                ),
+            )
 
         return PublicAdvice(
             next_season=season,
@@ -192,7 +243,13 @@ class NationalAdviceService:
 
     # ------------------------------------------------------------------ intern
 
-    def _region(self, loc: ReferenceLocation, mounted: TireType, now: datetime) -> _RegionResult:
+    def _region(
+        self,
+        loc: ReferenceLocation,
+        mounted: TireType,
+        now: datetime,
+        previous: Advice | None = None,
+    ) -> _RegionResult:
         try:
             forecast = self._forecasts.get_forecast(loc.latitude, loc.longitude)
         except Exception as exc:  # noqa: BLE001 - elke providerfout ⇒ regio zonder data
@@ -205,6 +262,7 @@ class NationalAdviceService:
                 profile=national_profile(),
                 now=now,
                 lead_time_days=0,
+                previous=previous,
                 config=self._cfg.engine,
             )
         )

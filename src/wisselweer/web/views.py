@@ -124,7 +124,10 @@ def _params(params: dict, locale: str) -> dict:
 
 
 def _item(item: ReasonItem, locale: str) -> str:
-    return t(item.key, locale, **_params(item.params, locale))
+    params = _params(item.params, locale)
+    if item.key == "reason.short_term_wintry" and "kind" in params:
+        params["kind"] = t(f"reason.short_term_wintry.kind.{params['kind']}", locale)
+    return t(item.key, locale, **params)
 
 
 def _own_text(tr: Tr, key: str, default: str) -> str:

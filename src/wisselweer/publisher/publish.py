@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 from pydantic import ValidationError
 
 from wisselweer.publisher.national import NationalAdviceService
+from wisselweer.publisher.national_stability import STATE_FILENAME
 from wisselweer.publisher.public_schema import PublicAdvice
 
 if TYPE_CHECKING:
@@ -147,11 +148,18 @@ def build_default_forecast_service(settings: Settings) -> ForecastService:
     return service
 
 
+def national_state_path(settings: Settings) -> Path:
+    """Statebestand voor de demping van het landelijke advies (wegwerpbaar, geen back-up nodig)."""
+    return settings.data_dir / STATE_FILENAME
+
+
 def run_publish(
     settings: Settings, forecast_service: ForecastService | None = None
 ) -> PublicAdvice:
     service = forecast_service or build_default_forecast_service(settings)
-    advice = NationalAdviceService(service, settings.national_config()).compute()
+    advice = NationalAdviceService(
+        service, settings.national_config(), state_path=national_state_path(settings)
+    ).compute()
     if settings.publish_countries:
         from wisselweer.publisher.countries import build_public_countries
 

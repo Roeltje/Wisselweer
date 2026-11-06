@@ -88,8 +88,12 @@ class _SafeDict(dict[str, object]):
 
 def render_nl(item: ReasonItem) -> str:
     template = DEFAULT_NL.get(item.key, item.key)
+    params = dict(item.params)
+    if item.key == "reason.short_term_wintry" and "kind" in params:
+        kind_key = f"reason.short_term_wintry.kind.{params['kind']}"
+        params["kind"] = DEFAULT_NL.get(kind_key, params["kind"])
     try:
-        return template.format_map(_SafeDict(item.params))
+        return template.format_map(_SafeDict(params))
     except (ValueError, IndexError, AttributeError):
         return template
 

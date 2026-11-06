@@ -26,6 +26,10 @@ WISSELWEER_CONTACT=https://example.invalid/contact uv run wisselweer publish
 
 Schrijft naar `WISSELWEER_PUBLISH_DIR` (standaard `<DATA_DIR>/public/advice.json`). Het bestand wordt eerst als `advice.json.tmp` geschreven, teruggelezen en gevalideerd en daarna met `os.replace` op zijn plaats gezet (rechten 0644). Bij een fout blijft een bestaand `advice.json` ongewijzigd en is de exitcode ongelijk aan 0. In de webinterface laat Instellingen > "Publiek advies (voorbeeld)" (`GET /api/v1/public-preview`, alleen na inloggen) de uitkomst zien zonder te publiceren.
 
+## Statebestand (demping)
+
+Om te voorkomen dat het advies binnen een dag heen en weer springt, bewaart elke publicatie de vorige uitkomst in `<DATA_DIR>/national_state.json` (rechten 0640, atomisch geschreven via tmp-bestand en `os.replace`). Het bevat per regio het vorige (gedempte) advies, de landelijke status met teller en `generated_at`. Een ontbrekend, onleesbaar, ouder dan 48 uur of van een ander seizoen zijnde bestand wordt genegeerd; het advies start dan ongedempt. Het bestand is wegwerpbaar: geen back-up nodig en verwijderen is veilig. Alleen `wisselweer publish` (en de interne planner) schrijven het; `GET /api/v1/public-preview` leest het alleen. Regels: [advice-rules.md](advice-rules.md#demping-van-het-landelijke-advies).
+
 ## Uploaden via SFTP (optioneel)
 
 Zet `WISSELWEER_PUBLISH_SFTP_HOST` (en `_USER`, `_KEY`, `_PATH`, `_PORT`, `_KNOWN_HOSTS`, zie `.env.example`). Wisselweer gebruikt het systeemcommando `sftp` (zonder shell, argumenten als lijst; host, gebruiker en paden worden gevalideerd) met `BatchMode=yes` en `StrictHostKeyChecking=yes`: de hostsleutel moet dus al in `known_hosts` staan. Het bestand gaat naar `advice.json.tmp` en wordt daarna met `rename` hernoemd; OpenSSH `sftp` gebruikt daarvoor `posix-rename` als de server dat ondersteunt (OpenSSH-servers doen dat), waardoor het vervangen atomisch is. Er geldt een time-out van 60 seconden en foutmeldingen bevatten geen sleutelpaden.

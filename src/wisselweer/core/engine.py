@@ -111,7 +111,8 @@ def aggregate_days(
 # --------------------------------------------------------------------------- waarschuwingen
 
 
-def _icy(p: HourlyPoint, cfg: EngineConfig) -> bool:
+def _icy_precip(p: HourlyPoint, cfg: EngineConfig) -> bool:
+    """Gladheid door neerslag: ijzel, of (niet-sneeuw) neerslag bij temperatuur ≤ drempel."""
     if p.precip_type == PrecipType.FREEZING_RAIN:
         return True
     t = p.temperature_c
@@ -120,16 +121,24 @@ def _icy(p: HourlyPoint, cfg: EngineConfig) -> bool:
     has_precip = (p.precip_mm is not None and p.precip_mm >= cfg.precip_threshold_mm) or (
         p.precip_type in _ANY_PRECIP
     )
-    if has_precip and p.precip_type != PrecipType.SNOW and t <= cfg.icy_precip_temp_c:
-        return True
-    if (
+    return has_precip and p.precip_type != PrecipType.SNOW and t <= cfg.icy_precip_temp_c
+
+
+def _icy_dew(p: HourlyPoint, cfg: EngineConfig) -> bool:
+    """Gladheid door rijp/ijzel uit dauwpunt bij vorst (geen neerslag nodig)."""
+    t = p.temperature_c
+    if t is None:
+        return False
+    return (
         t <= cfg.frost_threshold_c
         and p.dew_point_c is not None
         and p.dew_point_c >= t - cfg.icy_dewpoint_margin_c
         and (p.humidity_pct is None or p.humidity_pct >= cfg.icy_humidity_pct)
-    ):
-        return True
-    return False
+    )
+
+
+def _icy(p: HourlyPoint, cfg: EngineConfig) -> bool:
+    return _icy_precip(p, cfg) or _icy_dew(p, cfg)
 
 
 class HourFlags(NamedTuple):
@@ -234,6 +243,30 @@ def _iso(d: date) -> str:
     return d.isoformat()
 
 
+def _short_term_wintry(
+    points: list[HourlyPoint], now: datetime, cfg: EngineConfig, tz: ZoneInfo
+) -> ReasonItem | None:
+    """Sneeuw of ijzelneerslag in de komende `short_term_hours` (minimaal
+    `short_term_wintry_min_hours` uren; het lopende uur telt mee). Gladheid alleen door
+    dauwpunt/rijp telt hier bewust niet."""
+    end = now + timedelta(hours=cfg.short_term_hours)
+    hits: list[tuple[datetime, bool]] = []  # (tijd, is_sneeuw)
+    for p in points:
+        if not (now < p.time + _HOUR and p.time < end):
+            continue
+        snow = _is_wintry(p)
+        if snow or _icy_precip(p, cfg):
+            hits.append((p.time, snow))
+    if len(hits) < cfg.short_term_wintry_min_hours:
+        return None
+    first = min(t for t, _ in hits)
+    kind = "snow" if any(snow for _, snow in hits) else "ice"
+    return ReasonItem(
+        key="reason.short_term_wintry",
+        params={"start": first.astimezone(tz).date().isoformat(), "kind": kind},
+    )
+
+
 def _to_winter(
     days: list[date],
     agg: dict[date, DayAggregate],
@@ -241,7 +274,16 @@ def _to_winter(
     cfg: EngineConfig,
     reasons: list[ReasonItem],
     uncertainties: list[ReasonItem],
+    points: list[HourlyPoint],
+    now: datetime,
+    tz: ZoneInfo,
 ) -> _Outcome:
+    # Sneeuw/ijzel op korte termijn met zomerbanden is altijd gevaarlijk: voorrang op het seizoen.
+    wintry = _short_term_wintry(points, now, cfg, tz)
+    if wintry is not None:
+        reasons.append(wintry)
+        return _Outcome(AdviceStatus.CHANGE_RECOMMENDED, today)
+
     if not _season_open(today, cfg, Direction.TO_WINTER):
         reasons.append(ReasonItem(key="reason.winter_season_not_open"))
         return _Outcome(AdviceStatus.KEEP_CURRENT)
@@ -294,6 +336,9 @@ def _to_summer(
     cfg: EngineConfig,
     reasons: list[ReasonItem],
     uncertainties: list[ReasonItem],
+    points: list[HourlyPoint],  # noqa: ARG001 - zelfde signatuur als _to_winter
+    now: datetime,  # noqa: ARG001
+    tz: ZoneInfo,  # noqa: ARG001
 ) -> _Outcome:
     warm = [d in agg and agg[d].decision_c >= cfg.warm_day_mean_c for d in days]
     n = cfg.warm_streak_days
@@ -515,4 +560,4 @@ def evaluate(inp: AdviceInput) -> Advice:
         reasons.append(ReasonItem(key="reason.drive_window_fallback", params={"days": len(used)}))
 
     fn = _to_winter if direction == Direction.TO_WINTER else _to_summer
-    return done(fn(days, agg, today, cfg, reasons, uncertainties))
+    return done(fn(days, agg, today, cfg, reasons, uncertainties, fc.hourly, now, tz))

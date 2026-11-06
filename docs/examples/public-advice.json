@@ -176,7 +176,7 @@
     "attribution": "Weerdata: MET Norway (CC BY 4.0)",
     "license_url": "https://api.met.no/doc/License"
   },
-  "rules_version": "0.1.0",
+  "rules_version": "0.2.0",
   "countries": [
     {
       "code": "DE",

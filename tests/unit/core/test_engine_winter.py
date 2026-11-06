@@ -72,12 +72,11 @@ def test_persistent_frost_counts_heavily():
     assert WarningCode.POSSIBLE_FROST in codes(a)
 
 
-def test_single_snow_day_with_summer_tires_warns_but_no_auto_change():
-    days = [MILD, Day(-1, 1, 6.0, PrecipType.SNOW), *repeat(MILD, 12)]
+def test_single_snow_day_beyond_short_term_is_no_auto_change():
+    # Dag 5: buiten de waarschuwingshorizon van 72 uur; één sneeuwdag is geen aanhoudende sneeuw.
+    days = [*repeat(MILD, 4), Day(-1, 1, 6.0, PrecipType.SNOW), *repeat(MILD, 9)]
     a = run(days, TireType.SUMMER)
-    assert WarningCode.POSSIBLE_SNOW in codes(a)
-    snow = next(w for w in a.warnings if w.code == WarningCode.POSSIBLE_SNOW)
-    assert snow.detail_key == "warning.snow.summer_tires"
+    assert WarningCode.POSSIBLE_SNOW not in codes(a)
     assert a.status == S.KEEP_CURRENT
 
 
@@ -89,7 +88,7 @@ def test_snow_warning_not_emphasised_on_winter_tires():
 
 
 def test_persistent_snow_recommends_change():
-    days = [MILD, *repeat(Day(-1, 1, 6.0, PrecipType.SNOW), 2), *repeat(MILD, 11)]
+    days = [*repeat(MILD, 4), *repeat(Day(-1, 1, 6.0, PrecipType.SNOW), 2), *repeat(MILD, 8)]
     a = run(days)
     assert a.status == S.CHANGE_RECOMMENDED
     assert "reason.persistent_snow" in keys(a.reasons)
