@@ -20,6 +20,7 @@ from wisselweer.api.schemas import (
 from wisselweer.core import RULES_VERSION, AdviceInput, DrivingProfile, Forecast, TireType, evaluate
 from wisselweer.publisher.national import NationalAdviceService
 from wisselweer.publisher.public_schema import PublicAdvice
+from wisselweer.publisher.publish import national_state_path
 from wisselweer.settings import Settings
 
 if TYPE_CHECKING:
@@ -95,7 +96,10 @@ def get_advice(
 @router.get("/public-preview", response_model=PublicAdvice)
 def public_preview(service: ServiceDep, settings: SettingsDep) -> PublicAdvice:
     """Berekent het landelijke publieke advies zonder het te publiceren."""
-    return NationalAdviceService(service, settings.national_config()).compute()
+    # Alleen lezen: een API-aanroep mag de demping van de publicatie niet beïnvloeden.
+    return NationalAdviceService(
+        service, settings.national_config(), state_path=national_state_path(settings), persist=False
+    ).compute()
 
 
 @router.get("/providers", response_model=ProvidersResponse)

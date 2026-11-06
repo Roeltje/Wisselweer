@@ -69,6 +69,14 @@ class EngineConfig(BaseModel):
 
     # --- Horizonnen ---
     short_term_hours: int = Field(72, ge=1, description="Waarschuwingshorizon in uren.")
+    short_term_wintry_min_hours: int = Field(
+        2,
+        ge=1,
+        description=(
+            "Minimaal aantal uren met sneeuw of ijzelneerslag binnen de korte termijn "
+            "voor direct wisseladvies met zomerbanden (één los uur is modelruis)."
+        ),
+    )
     concrete_until_day: int = Field(7, ge=1, description="Tot en met deze dag: concrete datum.")
     trend_until_day: int = Field(
         14, ge=1, description="Tot en met deze dag: alleen periode (trend)."

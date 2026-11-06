@@ -183,7 +183,7 @@ Alle fouten hebben de vorm `{"detail": "<code>"}` en bevatten nooit invoerwaarde
       {"key": "reason.appointment_urgent", "params": {"days_late": 7}}
     ],
     "uncertainties": [],
-    "rules_version": "0.1.0",
+    "rules_version": "0.2.0",
     "evaluated_at": "2026-10-31T16:53:43Z",
     "forecast_provider": "metno",
     "raw_status": "change_recommended",

@@ -38,7 +38,7 @@
       }
     ],
     "uncertainties": [],
-    "rules_version": "0.1.0",
+    "rules_version": "0.2.0",
     "evaluated_at": "2026-10-31T18:36:59.326184Z",
     "forecast_provider": "fake",
     "raw_status": "change_recommended",
