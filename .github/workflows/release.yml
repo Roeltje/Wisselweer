@@ -81,7 +81,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Herkomstverklaring (attestation) naar GHCR
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-name: ${{ env.IMAGE }}
           subject-digest: ${{ steps.build.outputs.digest }}
