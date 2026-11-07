@@ -76,7 +76,7 @@ jobs:
           build="$(docker compose -f compose.yaml -f compose.build.yaml config)"
           grep -q 'image: wisselweer:local' <<<"$build"
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
 
       - name: Image bouwen (amd64, lokaal geladen)
         uses: docker/build-push-action@v6
