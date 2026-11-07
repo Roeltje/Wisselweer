@@ -52,7 +52,7 @@ jobs:
 
       - name: Tags en labels bepalen
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.IMAGE }}
           # 0.1.0, 0.1 en latest. De OCI-labels (o.a. source = deze repository) komen hieruit.
